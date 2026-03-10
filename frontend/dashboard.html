@@ -2,245 +2,353 @@
 <html>
 
 <head>
-    <title>Dashboard</title>
+    <title>EV Charging Station Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
 </head>
 
-<body class="bg-light">
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h2 class="mb-1">EV Charging Dashboard</h2>
-                <p id="roleDisplay" class="text-muted mb-0"></p>
+<body class="dashboard-body">
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>EV Charging Hub</span>
             </div>
-            <div class="d-flex gap-2">
-                <button id="openProfileBtn" class="btn btn-outline-primary" style="display:none;">View Profile</button>
-                <button class="btn btn-danger" onclick="logout()">Logout</button>
-            </div>
-        </div>
+            
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a href="#" onclick="switchTab('dashboard')" class="nav-link active">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="switchTab('stations')" class="nav-link">
+                        <i class="bi bi-plug"></i>
+                        <span>Stations</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="switchTab('bookings')" class="nav-link">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>Bookings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="switchTab('profile')" class="nav-link">
+                        <i class="bi bi-person"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+            </ul>
 
-        <div id="profileSection" class="card shadow-sm mb-4" style="display:none;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">My Profile</h5>
-                    <div class="d-flex gap-2">
-                        <button id="profileEditBtn" class="btn btn-outline-primary btn-sm">Edit Profile</button>
-                        <button id="profileCancelBtn" class="btn btn-outline-secondary btn-sm" style="display:none;">Cancel</button>
-                    </div>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Top Navigation Bar -->
+        <div class="top-navbar">
+            <div class="navbar-content">
+                <div class="navbar-left">
+                    <h5 class="mb-0" id="pageTitle">Dashboard</h5>
+                    <p class="mb-0 text-muted" id="roleDisplay"></p>
                 </div>
-                <p id="profileModeText" class="small text-muted mb-3">View mode</p>
-                <form id="profileForm" class="row g-2">
-                    <div class="col-md-4">
-                        <input id="profileName" class="form-control" type="text" placeholder="Name" required>
-                    </div>
-                    <div class="col-md-4">
-                        <input id="profileEmail" class="form-control" type="email" placeholder="Email" required>
-                    </div>
-                    <div class="col-md-4">
-                        <input id="profilePhone" class="form-control" type="text" placeholder="Phone (10-13 digits)" required>
-                    </div>
-                    <div class="col-md-6">
-                        <input id="profileCurrentPassword" class="form-control" type="password"
-                            placeholder="Current password (only if changing password)">
-                    </div>
-                    <div class="col-md-6">
-                        <input id="profileNewPassword" class="form-control" type="password"
-                            placeholder="New password (min 8 chars)">
-                    </div>
-                    <div class="col-12 d-grid">
-                        <button id="profileSaveBtn" type="submit" class="btn btn-outline-primary">Save Profile</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div id="stationFilterSection" class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-3">Find Charging Stations</h5>
-                <div class="row g-2">
-                    <div class="col-md-6">
-                        <input id="locationFilter" class="form-control" type="text" placeholder="Filter by location">
-                    </div>
-                    <div class="col-md-3">
-                        <select id="slotTypeFilter" class="form-select">
-                            <option value="">All slot types</option>
-                            <option value="fast">Fast</option>
-                            <option value="normal">Normal</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-grid">
-                        <button id="applyStationFilters" class="btn btn-primary">Apply Filters</button>
-                    </div>
+                <div class="navbar-right">
+                    <button id="openProfileBtn" class="btn btn-outline-primary btn-sm" style="display:none;">
+                        <i class="bi bi-person-circle"></i> View Profile
+                    </button>
                 </div>
             </div>
         </div>
 
-        <h4>Available Charging Stations</h4>
-        <div id="stationsList" class="row mt-3"></div>
+        <!-- Main Content Area -->
+        <main class="main-content">
 
-        <div id="slotsSection" class="mt-4" style="display:none;">
-            <h4 id="slotsTitle">Station Slots</h4>
-            <div id="slotsList" class="row mt-3"></div>
-        </div>
-
-        <div id="customerBookingsSection" class="card shadow-sm mt-4" style="display:none;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">My Bookings</h5>
-                    <div class="btn-group">
-                        <button id="customerUpcomingBtn" class="btn btn-outline-primary btn-sm">Upcoming</button>
-                        <button id="customerPastBtn" class="btn btn-outline-primary btn-sm">Past</button>
-                        <button id="refreshMyBookings" class="btn btn-outline-secondary btn-sm">Refresh</button>
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content active">
+                <div id="dashboardStatsCards" class="row mb-4"></div>
+                
+                <div id="customerDashboardSection">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card content-card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Available Charging Stations</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="filter-group mb-4">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <input id="locationFilter" class="form-control" type="text" placeholder="Filter by location">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <select id="slotTypeFilter" class="form-select">
+                                                    <option value="">All slot types</option>
+                                                    <option value="fast">Fast</option>
+                                                    <option value="normal">Normal</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button id="applyStationFilters" class="btn btn-primary w-100">Apply Filters</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="stationsList" class="row g-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card content-card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Quick Stats</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="quickStats" class="space-y-3"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div id="myBookingsList" class="table-responsive"></div>
-            </div>
-        </div>
 
-        <div id="bookingQrSection" class="card shadow-sm mt-4" style="display:none;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Booking QR</h5>
-                    <button id="closeBookingQrBtn" class="btn btn-outline-secondary btn-sm">Close</button>
+                <div id="ownerDashboardSection" style="display:none;">
+                    <div id="ownerStatsCards" class="row mb-4"></div>
                 </div>
-                <p id="bookingQrMeta" class="small text-muted"></p>
-                <div class="d-flex flex-column align-items-start gap-2">
-                    <canvas id="bookingQrCanvas"></canvas>
-                    <small class="text-muted">Scan this QR at station to start charging.</small>
-                    <code id="bookingQrValue" class="small"></code>
-                </div>
-                <div class="mt-3 d-flex gap-2 flex-wrap">
-                    <button id="scanBookingQrBtn" class="btn btn-success btn-sm">Simulate Scan & Start Charging</button>
+
+                <div id="adminDashboardSection" style="display:none;">
+                    <div id="adminStatsCards" class="row mb-4"></div>
                 </div>
             </div>
-        </div>
 
-        <div id="ownerSection" class="mt-4" style="display:none;">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Revenue Dashboard</h5>
-                        <button id="refreshOwnerStats" class="btn btn-outline-secondary btn-sm">Refresh</button>
+            <!-- Stations Tab -->
+            <div id="stationsTab" class="tab-content" style="display:none;">
+                <div class="card content-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Charging Stations</h6>
+                        <button id="refreshStationsBtn" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
                     </div>
-                    <div id="ownerStatsCards" class="row g-2"></div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Create Charging Station</h5>
-                    <form id="createStationForm" class="row g-2">
-                        <div class="col-md-6">
-                            <input id="ownerStationName" class="form-control" type="text" placeholder="Station name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <input id="ownerLocation" class="form-control" type="text" placeholder="Location" required>
-                        </div>
-                        <div class="col-md-4">
-                            <input id="ownerContact" class="form-control" type="text" placeholder="Contact number (optional)">
-                        </div>
-                        <div class="col-md-4">
-                            <input id="ownerTotalSlots" class="form-control" type="number" min="1" value="1" placeholder="Total slots" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label mb-1">Slot Type Per Charger</label>
-                            <div id="ownerSlotTypeRows" class="row g-2"></div>
-                            <small class="text-muted">Set each charger as fast or normal (slot-wise).</small>
-                        </div>
-                        <div class="col-md-4">
-                            <input id="ownerPowerKw" class="form-control" type="number" min="0.1" step="0.1"
-                                placeholder="Power kW (optional)">
-                        </div>
-                        <div class="col-md-4">
-                            <input id="ownerPricePerKwh" class="form-control" type="number" min="0.01" step="0.01"
-                                placeholder="Price per kWh (optional)">
-                        </div>
-                        <div class="col-md-4">
-                            <input id="ownerPricePerMinute" class="form-control" type="number" min="0.01" step="0.01"
-                                placeholder="Price per minute (optional)">
-                        </div>
-                        <div class="col-12">
-                            <small class="text-muted">Set either price per kWh or price per minute.</small>
-                        </div>
-                        <div class="col-12 d-grid">
-                            <button type="submit" class="btn btn-success">Create Station</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">My Stations</h5>
-                        <button id="refreshOwnerStations" class="btn btn-outline-secondary btn-sm">Refresh</button>
+                    <div class="card-body">
+                        <div id="stationsFullList" class="row g-3"></div>
                     </div>
-                    <div id="ownerStationsList" class="row"></div>
                 </div>
-            </div>
 
-            <div class="card shadow-sm mt-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Bookings Per Station</h5>
-                        <div class="btn-group">
-                            <button id="ownerStationBookingsUpcomingBtn" class="btn btn-outline-primary btn-sm">Upcoming</button>
-                            <button id="ownerStationBookingsPastBtn" class="btn btn-outline-primary btn-sm">Past</button>
-                            <button id="ownerStationBookingsAllBtn" class="btn btn-outline-primary btn-sm">All</button>
-                            <button id="refreshOwnerStationBookings" class="btn btn-outline-secondary btn-sm">Refresh</button>
+                <div id="slotsSection" class="mt-4" style="display:none;">
+                    <div class="card content-card">
+                        <div class="card-header">
+                            <h6 class="mb-0" id="slotsTitle">Station Slots</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="slotsList" class="row g-3"></div>
                         </div>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <select id="ownerStationScheduleFilter" class="form-select form-select-sm"></select>
+                </div>
+
+                <div id="ownerStationsSection" style="display:none;">
+                    <div class="card content-card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Create New Station</h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="createStationForm" class="row g-3">
+                                <div class="col-md-6">
+                                    <input id="ownerStationName" class="form-control" type="text" placeholder="Station name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input id="ownerLocation" class="form-control" type="text" placeholder="Location" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <input id="ownerContact" class="form-control" type="text" placeholder="Contact number (optional)">
+                                </div>
+                                <div class="col-md-4">
+                                    <input id="ownerTotalSlots" class="form-control" type="number" min="1" value="1" placeholder="Total slots" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <input id="ownerPowerKw" class="form-control" type="number" min="0.1" step="0.1" placeholder="Power kW">
+                                </div>
+                                <div class="col-md-6">
+                                    <input id="ownerPricePerKwh" class="form-control" type="number" min="0.01" step="0.01" placeholder="Price per kWh">
+                                </div>
+                                <div class="col-md-6">
+                                    <input id="ownerPricePerMinute" class="form-control" type="number" min="0.01" step="0.01" placeholder="Price per minute">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label mb-2">Slot Types Per Charger</label>
+                                    <div id="ownerSlotTypeRows" class="row g-2"></div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-plus-circle"></i> Create Station
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                    <div id="ownerStationScheduleList"></div>
+
+                    <div class="card content-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">My Stations</h6>
+                            <button id="refreshOwnerStations" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="ownerStationsList" class="row g-3"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm mt-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Station Bookings</h5>
-                        <div class="btn-group">
-                            <button id="ownerBookingsUpcomingBtn" class="btn btn-outline-primary btn-sm">Upcoming</button>
-                            <button id="ownerBookingsPastBtn" class="btn btn-outline-primary btn-sm">Past</button>
-                            <button id="refreshOwnerBookings" class="btn btn-outline-secondary btn-sm">Refresh</button>
+            <!-- Bookings Tab -->
+            <div id="bookingsTab" class="tab-content" style="display:none;">
+                <div id="customerBookingsSection">
+                    <div class="card content-card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">My Bookings</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button id="customerUpcomingBtn" class="btn btn-outline-primary">Upcoming</button>
+                                <button id="customerPastBtn" class="btn btn-outline-primary">Past</button>
+                                <button id="refreshMyBookings" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="myBookingsList" class="table-responsive"></div>
                         </div>
                     </div>
-                    <div id="ownerBookingsList" class="table-responsive"></div>
-                </div>
-            </div>
-        </div>
 
-        <div id="adminSection" class="mt-4" style="display:none;">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">System Stats</h5>
-                        <button id="refreshAdminStats" class="btn btn-outline-secondary btn-sm">Refresh</button>
-                    </div>
-                    <div id="adminStatsCards" class="row g-2"></div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Station Approvals</h5>
-                        <div class="btn-group">
-                            <button id="adminPendingStationsBtn" class="btn btn-outline-primary btn-sm">Pending</button>
-                            <button id="adminApprovedStationsBtn" class="btn btn-outline-primary btn-sm">Approved</button>
-                            <button id="adminRejectedStationsBtn" class="btn btn-outline-primary btn-sm">Rejected</button>
-                            <button id="adminAllStationsBtn" class="btn btn-outline-primary btn-sm">All</button>
-                            <button id="refreshAdminStations" class="btn btn-outline-secondary btn-sm">Refresh</button>
+                    <div id="bookingQrSection" class="card content-card" style="display:none;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Booking QR Code</h6>
+                            <button id="closeBookingQrBtn" class="btn btn-outline-secondary btn-sm">Close</button>
+                        </div>
+                        <div class="card-body">
+                            <p id="bookingQrMeta" class="small text-muted mb-3"></p>
+                            <div class="d-flex flex-column align-items-center gap-3">
+                                <canvas id="bookingQrCanvas"></canvas>
+                                <small class="text-muted">Scan this QR code at the station to start charging</small>
+                                <code id="bookingQrValue" class="small text-center"></code>
+                                <button id="scanBookingQrBtn" class="btn btn-success btn-sm">
+                                    <i class="bi bi-play-circle"></i> Simulate Scan & Start
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div id="adminStationsApprovalList" class="table-responsive"></div>
+                </div>
+
+                <div id="ownerBookingsSection" style="display:none;">
+                    <div class="card content-card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Bookings Per Station</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button id="ownerStationBookingsUpcomingBtn" class="btn btn-outline-primary">Upcoming</button>
+                                <button id="ownerStationBookingsPastBtn" class="btn btn-outline-primary">Past</button>
+                                <button id="ownerStationBookingsAllBtn" class="btn btn-outline-primary">All</button>
+                                <button id="refreshOwnerStationBookings" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <select id="ownerStationScheduleFilter" class="form-select form-select-sm"></select>
+                                </div>
+                            </div>
+                            <div id="ownerStationScheduleList"></div>
+                        </div>
+                    </div>
+
+                    <div class="card content-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Station Bookings</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button id="ownerBookingsUpcomingBtn" class="btn btn-outline-primary">Upcoming</button>
+                                <button id="ownerBookingsPastBtn" class="btn btn-outline-primary">Past</button>
+                                <button id="refreshOwnerBookings" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ownerBookingsList" class="table-responsive"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="adminStationBookingsSection" style="display:none;">
+                    <div class="card content-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">System Station Approvals</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button id="adminPendingStationsBtn" class="btn btn-outline-primary">Pending</button>
+                                <button id="adminApprovedStationsBtn" class="btn btn-outline-primary">Approved</button>
+                                <button id="adminRejectedStationsBtn" class="btn btn-outline-primary">Rejected</button>
+                                <button id="adminAllStationsBtn" class="btn btn-outline-primary">All</button>
+                                <button id="refreshAdminStations" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="adminStationsApprovalList" class="table-responsive"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Profile Tab -->
+            <div id="profileTab" class="tab-content" style="display:none;">
+                <div class="card content-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">My Profile</h6>
+                        <div class="d-flex gap-2">
+                            <button id="profileEditBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button id="profileCancelBtn" class="btn btn-outline-secondary btn-sm" style="display:none;">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p id="profileModeText" class="small text-muted mb-4">View mode</p>
+                        <form id="profileForm" class="row g-3">
+                            <div class="col-md-4">
+                                <input id="profileName" class="form-control" type="text" placeholder="Full Name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <input id="profileEmail" class="form-control" type="email" placeholder="Email Address" required>
+                            </div>
+                            <div class="col-md-4">
+                                <input id="profilePhone" class="form-control" type="text" placeholder="Phone (10-13 digits)" required>
+                            </div>
+                            <div class="col-12 border-top pt-3">
+                                <h6 class="mb-3">Change Password (Optional)</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <input id="profileCurrentPassword" class="form-control" type="password" placeholder="Current password">
+                            </div>
+                            <div class="col-md-6">
+                                <input id="profileNewPassword" class="form-control" type="password" placeholder="New password (min 8 chars)">
+                            </div>
+                            <div class="col-12">
+                                <button id="profileSaveBtn" type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -253,6 +361,7 @@
     <script src="js/dashboard_owner_overview.js"></script>
     <script src="js/dashboard_admin.js"></script>
     <script src="js/dashboard_init.js"></script>
+    <script src="js/dashboard_ui.js"></script>
 </body>
 
 </html>
