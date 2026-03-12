@@ -1,5 +1,5 @@
 /**
- * Dashboard UI - Tab Navigation and Sidebar Management
+ * Dashboard UI - Tab Navigation, Sidebar Management, and Header Scroll
  */
 
 // Tab switching functionality
@@ -37,9 +37,35 @@ function switchTab(tabName) {
     }
 }
 
+// Header scroll hide/show behaviour
+function initHeaderScroll() {
+    var mainContent = document.querySelector('.main-content');
+    var topNavbar = document.querySelector('.top-navbar');
+    if (!mainContent || !topNavbar) return;
+
+    var lastScrollTop = 0;
+    var scrollThreshold = 10;
+
+    mainContent.addEventListener('scroll', function () {
+        var currentScroll = mainContent.scrollTop;
+        if (Math.abs(currentScroll - lastScrollTop) < scrollThreshold) return;
+
+        if (currentScroll > lastScrollTop && currentScroll > 60) {
+            // Scrolling down – hide the header
+            topNavbar.classList.add('header-hidden');
+        } else {
+            // Scrolling up – show the header
+            topNavbar.classList.remove('header-hidden');
+        }
+        lastScrollTop = currentScroll;
+    }, { passive: true });
+}
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
     console.log('[v0] Dashboard UI initialized');
     // Default to dashboard tab
     switchTab('dashboard');
+    // Initialize header scroll behaviour
+    initHeaderScroll();
 });

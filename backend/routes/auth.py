@@ -74,6 +74,57 @@ def register():
     return jsonify({"message": "User registered successfully"}), 201
 
 
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json(silent=True) or {}
+
+    email = _clean_text(data.get("email")).lower()
+    new_password = data.get("new_password") if isinstance(data.get("new_password"), str) else ""
+
+    if not email or not new_password:
+        return jsonify({"error": "Email and new password are required"}), 400
+    if not EMAIL_PATTERN.match(email):
+        return jsonify({"error": "Invalid email format"}), 400
+    if len(new_password) < MIN_PASSWORD_LENGTH:
+        return jsonify({"error": f"Password must be at least {MIN_PASSWORD_LENGTH} characters"}), 400
+
+    cursor = None
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            """
+            SELECT user_id
+            FROM Users
+            WHERE LOWER(email) = %s
+            LIMIT 1
+            """,
+            (email,),
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({"error": "No account found with that email"}), 404
+
+        cursor.execute(
+            """
+            UPDATE Users
+            SET password = %s
+            WHERE user_id = %s
+            """,
+            (generate_password_hash(new_password), user[0]),
+        )
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        current_app.logger.exception("Password reset failed for email=%s", email)
+        return jsonify({"error": "Password reset failed"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return jsonify({"message": "Password reset successful"}), 200
+
+
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json(silent=True) or {}

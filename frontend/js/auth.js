@@ -85,9 +85,55 @@ async function handleLogin(event) {
     }
 }
 
+async function handleForgotPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById("resetEmail").value.trim();
+    const newPassword = document.getElementById("resetNewPassword").value;
+    const confirmPassword = document.getElementById("resetConfirmPassword").value;
+
+    if (!email || !newPassword || !confirmPassword) {
+        alert("All fields are required");
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+    }
+    if (newPassword.length < 8) {
+        alert("Password must be at least 8 characters");
+        return;
+    }
+
+    try {
+        const result = await apiRequest("/api/auth/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email, new_password: newPassword }),
+            headers: { "Content-Type": "application/json" },
+        });
+        alert(result.message || "Password reset successful");
+        document.getElementById("forgotPasswordSection").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 function bindAuthForms() {
     document.getElementById("registerForm")?.addEventListener("submit", handleRegister);
     document.getElementById("loginForm")?.addEventListener("submit", handleLogin);
+    document.getElementById("forgotPasswordForm")?.addEventListener("submit", handleForgotPassword);
+
+    document.getElementById("forgotPasswordLink")?.addEventListener("click", function (e) {
+        e.preventDefault();
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("forgotPasswordSection").style.display = "block";
+    });
+    document.getElementById("backToLoginLink")?.addEventListener("click", function (e) {
+        e.preventDefault();
+        document.getElementById("forgotPasswordSection").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+    });
 }
 
 document.addEventListener("DOMContentLoaded", bindAuthForms);

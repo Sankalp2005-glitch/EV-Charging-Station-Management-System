@@ -36,6 +36,37 @@
     --radius-xl: 1rem;
 }
 
+/* ==================== EVgo Brand ==================== */
+.evgo-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.evgo-brand .ev {
+    color: var(--color-primary);
+}
+
+.evgo-brand .go {
+    color: var(--color-bg-light);
+}
+
+/* ==================== Optional Labels ==================== */
+.optional-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background-color: var(--color-border-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.1rem 0.4rem;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+}
+
 /* ==================== Global Styles ==================== */
 * {
     margin: 0;
@@ -166,6 +197,12 @@ html, body {
     position: sticky;
     top: 0;
     z-index: 100;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.top-navbar.header-hidden {
+    transform: translateY(-100%);
+    opacity: 0;
 }
 
 .navbar-content {
@@ -231,6 +268,7 @@ html, body {
     background: var(--color-bg-light);
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
+    overflow: hidden;
 }
 
 .content-card:hover {
@@ -247,10 +285,14 @@ html, body {
     font-size: 1rem;
     font-weight: 600;
     color: var(--color-text);
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .content-card .card-body {
     padding: 1.25rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 /* ==================== Stats Cards ==================== */
@@ -262,6 +304,7 @@ html, body {
     text-align: center;
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
+    overflow: hidden;
 }
 
 .stat-card:hover {
@@ -292,6 +335,8 @@ html, body {
     font-weight: 700;
     color: var(--color-text);
     margin: 0.5rem 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .stat-card .stat-label {
@@ -329,6 +374,8 @@ html, body {
     font-weight: 600;
     color: var(--color-text);
     margin-bottom: 0.25rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .station-card-location {

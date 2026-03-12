@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>EV Charging Station Management</title>
+    <title>EVgo - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
@@ -14,7 +14,7 @@
         <nav class="sidebar">
             <div class="sidebar-header">
                 <i class="bi bi-lightning-charge-fill"></i>
-                <span>EV Charging Hub</span>
+                <span class="evgo-brand"><span class="ev">EV</span><span class="go">go</span></span>
             </div>
             
             <ul class="sidebar-nav">
@@ -164,18 +164,22 @@
                                     <input id="ownerLocation" class="form-control" type="text" placeholder="Location" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <input id="ownerContact" class="form-control" type="text" placeholder="Contact number (optional)">
+                                    <label class="form-label">Contact Number <span class="optional-label">Optional</span></label>
+                                    <input id="ownerContact" class="form-control" type="text" placeholder="Contact number">
                                 </div>
                                 <div class="col-md-4">
                                     <input id="ownerTotalSlots" class="form-control" type="number" min="1" value="1" placeholder="Total slots" required>
                                 </div>
                                 <div class="col-md-4">
+                                    <label class="form-label">Power (kW) <span class="optional-label">Optional</span></label>
                                     <input id="ownerPowerKw" class="form-control" type="number" min="0.1" step="0.1" placeholder="Power kW">
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Price per kWh <span class="optional-label">Optional</span></label>
                                     <input id="ownerPricePerKwh" class="form-control" type="number" min="0.01" step="0.01" placeholder="Price per kWh">
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Price per Minute <span class="optional-label">Optional</span></label>
                                     <input id="ownerPricePerMinute" class="form-control" type="number" min="0.01" step="0.01" placeholder="Price per minute">
                                 </div>
                                 <div class="col-12">
@@ -331,7 +335,7 @@
                                 <input id="profilePhone" class="form-control" type="text" placeholder="Phone (10-13 digits)" required>
                             </div>
                             <div class="col-12 border-top pt-3">
-                                <h6 class="mb-3">Change Password (Optional)</h6>
+                                <h6 class="mb-3">Change Password <span class="optional-label">Optional</span></h6>
                             </div>
                             <div class="col-md-6">
                                 <input id="profileCurrentPassword" class="form-control" type="password" placeholder="Current password">
