@@ -103,7 +103,7 @@ def forgot_password():
         user = cursor.fetchone()
 
         if not user:
-            return jsonify({"error": "No account found with that email"}), 404
+            return jsonify({"message": "If the email is registered, the password has been reset"}), 200
 
         cursor.execute(
             """
@@ -122,7 +122,7 @@ def forgot_password():
         if cursor:
             cursor.close()
 
-    return jsonify({"message": "Password reset successful"}), 200
+    return jsonify({"message": "If the email is registered, the password has been reset"}), 200
 
 
 @auth_bp.route("/login", methods=["POST"])

@@ -37,17 +37,17 @@ function switchTab(tabName) {
     }
 }
 
-// Header scroll hide/show behaviour
+// Header scroll hide/show behavior
 function initHeaderScroll() {
-    var mainContent = document.querySelector('.main-content');
-    var topNavbar = document.querySelector('.top-navbar');
+    const mainContent = document.querySelector('.main-content');
+    const topNavbar = document.querySelector('.top-navbar');
     if (!mainContent || !topNavbar) return;
 
-    var lastScrollTop = 0;
-    var scrollThreshold = 10;
+    let lastScrollTop = 0;
+    const scrollThreshold = 10;
 
     mainContent.addEventListener('scroll', function () {
-        var currentScroll = mainContent.scrollTop;
+        const currentScroll = mainContent.scrollTop;
         if (Math.abs(currentScroll - lastScrollTop) < scrollThreshold) return;
 
         if (currentScroll > lastScrollTop && currentScroll > 60) {
@@ -66,6 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[v0] Dashboard UI initialized');
     // Default to dashboard tab
     switchTab('dashboard');
-    // Initialize header scroll behaviour
+    // Initialize header scroll behavior
     initHeaderScroll();
 });

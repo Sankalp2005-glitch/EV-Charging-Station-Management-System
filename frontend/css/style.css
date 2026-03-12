@@ -203,6 +203,7 @@ html, body {
 .top-navbar.header-hidden {
     transform: translateY(-100%);
     opacity: 0;
+    pointer-events: none;
 }
 
 .navbar-content {
