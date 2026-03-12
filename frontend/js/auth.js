@@ -15,6 +15,32 @@ function resolveErrorMessage(payload, fallback = "Request failed") {
     return payload.error || payload.message || fallback;
 }
 
+function setAuthFeedback(message = "", tone = "danger") {
+    const feedback = document.getElementById("authFeedback");
+    if (!feedback) {
+        if (message) {
+            alert(message);
+        }
+        return;
+    }
+    feedback.className = `auth-feedback auth-feedback--${tone}${message ? " is-visible" : ""}`;
+    feedback.innerText = message;
+}
+
+function setSubmitState(buttonId, isLoading, loadingLabel) {
+    const button = document.getElementById(buttonId);
+    if (!button) {
+        return;
+    }
+    if (!button.dataset.defaultLabel) {
+        button.dataset.defaultLabel = button.innerHTML;
+    }
+    button.disabled = Boolean(isLoading);
+    button.innerHTML = isLoading
+        ? `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${loadingLabel}`
+        : button.dataset.defaultLabel;
+}
+
 async function apiRequest(path, options = {}) {
     const requestOptions = { ...options };
     requestOptions.headers = requestOptions.headers || {};
@@ -34,8 +60,26 @@ async function apiRequest(path, options = {}) {
     return payload;
 }
 
+function bindPasswordToggles() {
+    document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const targetId = button.dataset.target;
+            const input = targetId ? document.getElementById(targetId) : null;
+            if (!input) {
+                return;
+            }
+            const shouldShow = input.type === "password";
+            input.type = shouldShow ? "text" : "password";
+            button.setAttribute("aria-label", shouldShow ? "Hide password" : "Show password");
+            button.setAttribute("aria-pressed", shouldShow ? "true" : "false");
+            button.innerHTML = `<i class="bi ${shouldShow ? "bi-eye-slash" : "bi-eye"}"></i>`;
+        });
+    });
+}
+
 async function handleRegister(event) {
     event.preventDefault();
+    setAuthFeedback("");
 
     const payload = {
         name: document.getElementById("name").value.trim(),
@@ -46,20 +90,26 @@ async function handleRegister(event) {
     };
 
     try {
+        setSubmitState("registerSubmitBtn", true, "Creating account...");
         const result = await apiRequest("/api/auth/register", {
             method: "POST",
             body: JSON.stringify(payload),
             headers: { "Content-Type": "application/json" },
         });
-        alert(result.message || "Registration successful");
-        window.location.href = "login.html";
+        setAuthFeedback(result.message || "Registration successful. Redirecting to sign in...", "success");
+        window.setTimeout(() => {
+            window.location.href = "login.html";
+        }, 700);
     } catch (error) {
-        alert(error.message);
+        setAuthFeedback(error.message, "danger");
+    } finally {
+        setSubmitState("registerSubmitBtn", false, "Creating account...");
     }
 }
 
 async function handleLogin(event) {
     event.preventDefault();
+    setAuthFeedback("");
 
     const payload = {
         email: document.getElementById("loginEmail").value.trim(),
@@ -67,6 +117,7 @@ async function handleLogin(event) {
     };
 
     try {
+        setSubmitState("loginSubmitBtn", true, "Signing in...");
         const result = await apiRequest("/api/auth/login", {
             method: "POST",
             body: JSON.stringify(payload),
@@ -79,13 +130,19 @@ async function handleLogin(event) {
             localStorage.setItem("user_id", String(result.user_id));
         }
 
-        window.location.href = "dashboard.html";
+        setAuthFeedback(result.message || "Login successful. Opening EVgo...", "success");
+        window.setTimeout(() => {
+            window.location.href = "dashboard.html";
+        }, 300);
     } catch (error) {
-        alert(error.message);
+        setAuthFeedback(error.message, "danger");
+    } finally {
+        setSubmitState("loginSubmitBtn", false, "Signing in...");
     }
 }
 
 function bindAuthForms() {
+    bindPasswordToggles();
     document.getElementById("registerForm")?.addEventListener("submit", handleRegister);
     document.getElementById("loginForm")?.addEventListener("submit", handleLogin);
 }

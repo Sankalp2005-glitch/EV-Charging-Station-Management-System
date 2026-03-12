@@ -5,9 +5,13 @@ from flask import current_app, jsonify, request
 from extensions import mysql
 from routes.booking_bp import booking_bp
 from services.booking_config import (
+    BOOKING_STATUS_CHARGING_STARTED,
+    BOOKING_STATUS_WAITING_TO_START,
     DEFAULT_POWER_KW_BY_SLOT_TYPE,
     DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE,
+    LEGACY_BOOKING_STATUS_CONFIRMED,
 )
+from services.charging_profiles import build_live_charging_snapshot, normalize_vehicle_category
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
@@ -32,8 +36,11 @@ from utils.station_approval import (
 def get_stations(_current_user):
     location_filter = (request.args.get("location") or "").strip().lower()
     slot_type_filter = (request.args.get("slot_type") or "").strip().lower()
+    vehicle_category_filter = normalize_vehicle_category(request.args.get("vehicle_category"))
     if slot_type_filter and slot_type_filter not in {"fast", "normal"}:
         return jsonify({"error": "slot_type must be 'fast' or 'normal'"}), 400
+    if request.args.get("vehicle_category") and not vehicle_category_filter:
+        return jsonify({"error": "vehicle_category must be one of: bike_scooter, car"}), 400
 
     cursor = None
     lifecycle_records = []
@@ -53,7 +60,11 @@ def get_stations(_current_user):
                 cs.total_slots,
                 COUNT(sl.slot_id) AS matching_slots,
                 SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
-                SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots
+                SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
+                SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                MIN(sl.price_per_kwh) AS min_price_kwh,
+                MIN(sl.price_per_minute) AS min_price_minute,
+                GROUP_CONCAT(DISTINCT sl.vehicle_category ORDER BY sl.vehicle_category SEPARATOR ',') AS vehicle_categories
             FROM ChargingStation cs
             JOIN StationApproval sa ON sa.station_id = cs.station_id
             LEFT JOIN ChargingSlot sl ON cs.station_id = sl.station_id
@@ -67,17 +78,56 @@ def get_stations(_current_user):
         if slot_type_filter:
             query += " AND sl.slot_type = %s"
             params.append(slot_type_filter)
+        if vehicle_category_filter:
+            query += " AND sl.vehicle_category = %s"
+            params.append(vehicle_category_filter)
 
         query += """
             GROUP BY cs.station_id, cs.station_name, cs.location, cs.total_slots
             ORDER BY cs.station_name ASC
         """
-        cursor.execute(query, tuple(params))
+        try:
+            cursor.execute(query, tuple(params))
+        except Exception as inner_exc:
+            # if price columns don't exist (older schema), retry without them
+            err_msg = str(inner_exc).lower()
+            if "unknown column" in err_msg and ("price_per_kwh" in err_msg or "price_per_minute" in err_msg):
+                current_app.logger.warning("Price columns not found, retrying stations query without pricing aggregation")
+                fallback_query = """
+                    SELECT
+                        cs.station_id,
+                        cs.station_name,
+                        cs.location,
+                        cs.total_slots,
+                        COUNT(sl.slot_id) AS matching_slots,
+                        SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
+                        SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
+                        SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                        GROUP_CONCAT(DISTINCT sl.vehicle_category ORDER BY sl.vehicle_category SEPARATOR ',') AS vehicle_categories
+                    FROM ChargingStation cs
+                    JOIN StationApproval sa ON sa.station_id = cs.station_id
+                    LEFT JOIN ChargingSlot sl ON cs.station_id = sl.station_id
+                    WHERE sa.status = %s
+                """
+                if location_filter:
+                    fallback_query += " AND LOWER(cs.location) LIKE %s"
+                if slot_type_filter:
+                    fallback_query += " AND sl.slot_type = %s"
+                if vehicle_category_filter:
+                    fallback_query += " AND sl.vehicle_category = %s"
+                fallback_query += """
+                    GROUP BY cs.station_id, cs.station_name, cs.location, cs.total_slots
+                    ORDER BY cs.station_name ASC
+                """
+                cursor.execute(fallback_query, tuple(params))
+            else:
+                raise
         stations = cursor.fetchall()
-    except Exception:
+    except Exception as exc:
         mysql.connection.rollback()
         current_app.logger.exception("Failed to fetch charging stations")
-        return jsonify({"error": "Failed to fetch stations"}), 500
+        # return the exception message for debugging (development only)
+        return jsonify({"error": f"Failed to fetch stations: {str(exc)}"}), 500
     finally:
         _close_cursor(cursor)
 
@@ -88,6 +138,12 @@ def get_stations(_current_user):
         matching_slots = int(station[4] or 0)
         available_slots = int(station[5] or 0)
         occupied_slots = int(station[6] or 0)
+        charging_slots = int(station[7] or 0) if len(station) > 7 else 0
+        # pricing info may not be available if fallback query executed
+        has_pricing_aggregates = len(station) > 10
+        min_price_kwh = station[8] if has_pricing_aggregates else None
+        min_price_minute = station[9] if has_pricing_aggregates else None
+        supported_categories = (_to_str(station[10] if has_pricing_aggregates else station[8]) or "").split(",")
 
         if matching_slots == 0:
             availability_status = "no-compatible-slots"
@@ -95,6 +151,13 @@ def get_stations(_current_user):
             availability_status = "available"
         else:
             availability_status = "busy"
+
+        # determine displayable price information
+        price_info = None
+        if min_price_kwh is not None and min_price_kwh > 0:
+            price_info = f"₹{min_price_kwh:.2f}/kWh"
+        elif min_price_minute is not None and min_price_minute > 0:
+            price_info = f"₹{min_price_minute:.2f}/min"
 
         result.append(
             {
@@ -105,7 +168,10 @@ def get_stations(_current_user):
                 "matching_slots": matching_slots,
                 "available_slots": available_slots,
                 "occupied_slots": occupied_slots,
+                "charging_slots": charging_slots,
                 "availability_status": availability_status,
+                "price_info": price_info,
+                "vehicle_categories": [category for category in supported_categories if category],
             }
         )
 
@@ -157,12 +223,23 @@ def get_slots(current_user, station_id):
             slot_id = slot["slot_id"]
             cursor.execute(
                 """
-                SELECT booking_id, start_time, end_time
-                FROM Booking
-                WHERE slot_id = %s
-                  AND status = 'confirmed'
-                  AND end_time > NOW()
-                ORDER BY start_time ASC
+                SELECT
+                    b.booking_id,
+                    b.start_time,
+                    b.end_time,
+                    b.status,
+                    b.estimated_duration_minutes,
+                    b.current_battery_percent,
+                    b.target_battery_percent,
+                    b.energy_required_kwh,
+                    sess.start_time,
+                    sess.end_time
+                FROM Booking b
+                LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+                WHERE b.slot_id = %s
+                  AND b.status IN ('waiting_to_start', 'charging_started', 'confirmed')
+                  AND b.end_time > NOW()
+                ORDER BY b.start_time ASC
                 LIMIT 5
                 """,
                 (slot_id,),
@@ -171,15 +248,47 @@ def get_slots(current_user, station_id):
 
             booking_list = []
             active_booking = None
+            active_session = None
             for booking in bookings:
+                booking_status = _to_str(booking[3])
+                duration_minutes = int(
+                    booking[4] or max(int((booking[2] - booking[1]).total_seconds() // 60), 0)
+                )
                 booking_item = {
                     "booking_id": booking[0],
                     "start_time": _format_dt(booking[1]),
                     "end_time": _format_dt(booking[2]),
+                    "status": booking_status,
                 }
                 booking_list.append(booking_item)
 
-                if booking[1] <= now < booking[2]:
+                is_current_window = booking[1] <= now < booking[2]
+                has_session_started = booking[8] is not None
+                if is_current_window and has_session_started:
+                    live_snapshot = build_live_charging_snapshot(
+                        booking_status=booking_status,
+                        charging_started_at=booking[8],
+                        charging_completed_at=booking[9],
+                        estimated_duration_minutes=duration_minutes,
+                        current_battery_percent=booking[5],
+                        target_battery_percent=booking[6],
+                        energy_required_kwh=booking[7],
+                        now=now,
+                    )
+                    active_session = {
+                        "booking_id": booking[0],
+                        "status": "charging",
+                        "charging_started_at": _format_dt(booking[8]),
+                        "charging_completed_at": _format_dt(booking[9]),
+                        "duration_minutes": duration_minutes,
+                        "current_battery_percent": float(booking[5]) if booking[5] is not None else None,
+                        "target_battery_percent": float(booking[6]) if booking[6] is not None else None,
+                        "progress_percent": live_snapshot["progress_percent"],
+                        "estimated_current_battery_percent": live_snapshot["estimated_current_battery_percent"],
+                        "estimated_completion_time": _format_dt(live_snapshot["estimated_completion_time"]),
+                        "remaining_minutes": live_snapshot["remaining_minutes"],
+                    }
+                elif is_current_window:
                     active_booking = booking_item
 
             parsed_power_kw = slot["power_kw"]
@@ -195,7 +304,12 @@ def get_slots(current_user, station_id):
                     "slot_id": slot_id,
                     "slot_number": slot["slot_number"],
                     "slot_type": slot_type,
-                    "current_status": "occupied" if active_booking else "available",
+                    "charger_type": slot_type,
+                    "charger_name": slot.get("charger_name"),
+                    "vehicle_category": slot.get("vehicle_category"),
+                    "connector_type": slot.get("connector_type"),
+                    "charging_speed": slot.get("charging_speed"),
+                    "current_status": "charging" if active_session else "occupied" if active_booking else "available",
                     "status": slot["status"],
                     "power_kw": round(
                         parsed_power_kw or DEFAULT_POWER_KW_BY_SLOT_TYPE.get(slot_type, 7.0),
@@ -211,8 +325,9 @@ def get_slots(current_user, station_id):
                         if parsed_price_per_minute
                         else None
                     ),
-                    "is_available_now": active_booking is None,
+                    "is_available_now": active_booking is None and active_session is None,
                     "active_booking": active_booking,
+                    "active_session": active_session,
                     "bookings": booking_list,
                 }
             )

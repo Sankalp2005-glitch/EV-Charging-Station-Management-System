@@ -1,0 +1,36 @@
+{
+  "status": "failed",
+  "failedStep": "browser-check",
+  "error": "Timed out waiting for navigation to dashboard.html",
+  "completedSteps": [
+    {
+      "step": "register:owner",
+      "detail": "owner1773258556049@test.com"
+    },
+    {
+      "step": "register:customer",
+      "detail": "customer1773258556049@test.com"
+    },
+    {
+      "step": "owner-dashboard-ui",
+      "detail": "header, tabs, chart shells, and station flows verified"
+    },
+    {
+      "step": "logout:owner",
+      "detail": "ok"
+    }
+  ],
+  "uiMessages": [
+    {
+      "label": "owner-login",
+      "type": "alert",
+      "message": "Station created and submitted for admin approval"
+    },
+    {
+      "label": "owner-login",
+      "type": "alert",
+      "message": "Failed to fetch"
+    }
+  ],
+  "runtimeErrors": []
+}

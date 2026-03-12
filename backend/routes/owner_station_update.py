@@ -8,6 +8,13 @@ from services.booking_config import (
     DEFAULT_POWER_KW_BY_SLOT_TYPE,
     DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE,
 )
+from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
+from services.charging_profiles import (
+    default_power_kw,
+    normalize_charger_type,
+    normalize_connector_type,
+    normalize_vehicle_category,
+)
 from services.db_errors import is_unknown_column_error as _is_unknown_column_error
 from services.value_utils import parse_positive_float as _parse_positive_float
 from services.value_utils import to_str as _to_str
@@ -49,16 +56,26 @@ def update_owner_station(current_user, station_id):
             return jsonify({"error": "Duplicate slot_id in payload"}), 400
         seen_slot_ids.add(slot_id)
 
-        slot_type = clean_text(item.get("slot_type")).lower()
+        slot_type = normalize_charger_type(item.get("charger_type") or item.get("slot_type"))
         if slot_type not in {"fast", "normal"}:
             return jsonify({"error": "Each slot type must be 'fast' or 'normal'"}), 400
+
+        charger_name = clean_text(item.get("charger_name"))
+        vehicle_category = normalize_vehicle_category(item.get("vehicle_category"))
+        connector_type = normalize_connector_type(item.get("connector_type"))
+        if not charger_name:
+            return jsonify({"error": f"charger_name is required for slot_id={slot_id}"}), 400
+        if not vehicle_category:
+            return jsonify({"error": f"vehicle_category must be bike_scooter or car for slot_id={slot_id}"}), 400
+        if not connector_type:
+            return jsonify({"error": f"connector_type is required for slot_id={slot_id}"}), 400
 
         raw_power_kw = item.get("power_kw")
         power_kw = _parse_positive_float(raw_power_kw)
         if raw_power_kw not in {None, ""} and power_kw is None:
             return jsonify({"error": f"power_kw must be positive for slot_id={slot_id}"}), 400
         if power_kw is None:
-            power_kw = DEFAULT_POWER_KW_BY_SLOT_TYPE.get(slot_type, 7.0)
+            power_kw = default_power_kw(vehicle_category, slot_type)
 
         raw_price_per_kwh = item.get("price_per_kwh")
         raw_price_per_minute = item.get("price_per_minute")
@@ -78,6 +95,9 @@ def update_owner_station(current_user, station_id):
             {
                 "slot_id": slot_id,
                 "slot_type": slot_type,
+                "charger_name": charger_name,
+                "vehicle_category": vehicle_category,
+                "connector_type": connector_type,
                 "power_kw": power_kw,
                 "price_per_kwh": price_per_kwh,
                 "price_per_minute": price_per_minute,
@@ -87,6 +107,7 @@ def update_owner_station(current_user, station_id):
     cursor = None
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         cursor.execute(
             """
             SELECT station_id
@@ -126,41 +147,34 @@ def update_owner_station(current_user, station_id):
             (station_name, location, contact_number or None, station_id),
         )
 
-        try:
-            cursor.executemany(
-                """
-                UPDATE ChargingSlot
-                SET
-                    slot_type = %s,
-                    power_kw = %s,
-                    price_per_kwh = %s,
-                    price_per_minute = %s
-                WHERE slot_id = %s
-                """,
-                [
-                    (
-                        slot["slot_type"],
-                        slot["power_kw"],
-                        slot["price_per_kwh"],
-                        slot["price_per_minute"],
-                        slot["slot_id"],
-                    )
-                    for slot in normalized_slots
-                ],
-            )
-            pricing_columns_supported = True
-        except OperationalError as error:
-            if not _is_unknown_column_error(error):
-                raise
-            cursor.executemany(
-                """
-                UPDATE ChargingSlot
-                SET slot_type = %s
-                WHERE slot_id = %s
-                """,
-                [(slot["slot_type"], slot["slot_id"]) for slot in normalized_slots],
-            )
-            pricing_columns_supported = False
+        cursor.executemany(
+            """
+            UPDATE ChargingSlot
+            SET
+                slot_type = %s,
+                power_kw = %s,
+                price_per_kwh = %s,
+                price_per_minute = %s,
+                charger_name = %s,
+                vehicle_category = %s,
+                connector_type = %s
+            WHERE slot_id = %s
+            """,
+            [
+                (
+                    slot["slot_type"],
+                    slot["power_kw"],
+                    slot["price_per_kwh"],
+                    slot["price_per_minute"],
+                    slot["charger_name"],
+                    slot["vehicle_category"],
+                    slot["connector_type"],
+                    slot["slot_id"],
+                )
+                for slot in normalized_slots
+            ],
+        )
+        pricing_columns_supported = True
 
         mysql.connection.commit()
     except Exception:
@@ -205,6 +219,7 @@ def update_owner_station_slot_types(current_user, station_id):
     cursor = None
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         cursor.execute(
             """
             SELECT station_id

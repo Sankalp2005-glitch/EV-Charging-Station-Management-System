@@ -1,32 +1,38 @@
 function setupDashboardRoleSections() {
     const role = getRole();
-    const profileSection = document.getElementById("profileSection");
     const openProfileBtn = document.getElementById("openProfileBtn");
-    const customerSection = document.getElementById("customerBookingsSection");
-    const ownerSection = document.getElementById("ownerSection");
-    const adminSection = document.getElementById("adminSection");
-    const customerBookingsTitle = document.querySelector("#customerBookingsSection h5");
+    const customerDashboardSection = document.getElementById("customerDashboardSection");
+    const ownerDashboardSection = document.getElementById("ownerDashboardSection");
+    const adminDashboardSection = document.getElementById("adminDashboardSection");
+    const customerBookingsSection = document.getElementById("customerBookingsSection");
+    const ownerBookingsSection = document.getElementById("ownerBookingsSection");
+    const adminStationBookingsSection = document.getElementById("adminStationBookingsSection");
+    const ownerStationsSection = document.getElementById("ownerStationsSection");
 
-    if ((role === CUSTOMER_ROLE || role === OWNER_ROLE) && profileSection) {
-        profileSection.style.display = "none";
-        setProfileEditMode(false);
-        if (openProfileBtn) {
-            openProfileBtn.style.display = "inline-block";
-        }
-    } else if (openProfileBtn) {
-        openProfileBtn.style.display = "none";
+    if (openProfileBtn) {
+        openProfileBtn.style.display = role ? "inline-flex" : "none";
     }
-    if ((role === CUSTOMER_ROLE || role === OWNER_ROLE) && customerSection) {
-        customerSection.style.display = "block";
-        if (role === OWNER_ROLE && customerBookingsTitle) {
-            customerBookingsTitle.innerText = "My Bookings (Owner)";
-        }
+
+    if (customerDashboardSection) {
+        customerDashboardSection.style.display = role === "admin" ? "none" : "block";
     }
-    if (role === OWNER_ROLE && ownerSection) {
-        ownerSection.style.display = "block";
+    if (ownerDashboardSection) {
+        ownerDashboardSection.style.display = role === OWNER_ROLE ? "block" : "none";
     }
-    if (role === "admin" && adminSection) {
-        adminSection.style.display = "block";
+    if (adminDashboardSection) {
+        adminDashboardSection.style.display = role === "admin" ? "block" : "none";
+    }
+    if (customerBookingsSection) {
+        customerBookingsSection.style.display = role === CUSTOMER_ROLE ? "block" : "none";
+    }
+    if (ownerBookingsSection) {
+        ownerBookingsSection.style.display = role === OWNER_ROLE ? "block" : "none";
+    }
+    if (adminStationBookingsSection) {
+        adminStationBookingsSection.style.display = role === "admin" ? "block" : "none";
+    }
+    if (ownerStationsSection) {
+        ownerStationsSection.style.display = role === OWNER_ROLE ? "block" : "none";
     }
 }
 
@@ -36,12 +42,16 @@ async function initDashboard() {
         return;
     }
 
+    const role = getRole();
+
     setRoleDisplay();
     startInactivityTracking();
     initRealtimeUpdates();
+    startChargingProgressTicker();
     setupDashboardRoleSections();
 
     document.getElementById("applyStationFilters")?.addEventListener("click", loadStations);
+    document.getElementById("refreshStationsBtn")?.addEventListener("click", loadStations);
     document.getElementById("customerUpcomingBtn")?.addEventListener("click", () => loadMyBookings("upcoming"));
     document.getElementById("customerPastBtn")?.addEventListener("click", () => loadMyBookings("past"));
     document.getElementById("refreshMyBookings")?.addEventListener("click", () =>
@@ -50,13 +60,25 @@ async function initDashboard() {
     document.getElementById("ownerBookingsUpcomingBtn")?.addEventListener("click", () =>
         loadOwnerBookings("upcoming")
     );
-    document.getElementById("ownerBookingsPastBtn")?.addEventListener("click", () =>
-        loadOwnerBookings("past")
-    );
+    document.getElementById("ownerBookingsPastBtn")?.addEventListener("click", () => loadOwnerBookings("past"));
     document.getElementById("refreshOwnerBookings")?.addEventListener("click", () =>
         loadOwnerBookings(bookingViewState.owner)
     );
-    document.getElementById("refreshOwnerStats")?.addEventListener("click", loadOwnerStats);
+    document.getElementById("ownerMyBookingsUpcomingBtn")?.addEventListener("click", () =>
+        loadOwnerMyBookings("upcoming")
+    );
+    document.getElementById("ownerMyBookingsPastBtn")?.addEventListener("click", () =>
+        loadOwnerMyBookings("past")
+    );
+    document.getElementById("refreshOwnerMyBookings")?.addEventListener("click", () =>
+        loadOwnerMyBookings(bookingViewState.ownerMine)
+    );
+    document.getElementById("ownerScopeStationBtn")?.addEventListener("click", () =>
+        switchOwnerBookingScope("station")
+    );
+    document.getElementById("ownerScopeMineBtn")?.addEventListener("click", () =>
+        switchOwnerBookingScope("mine")
+    );
     document.getElementById("ownerStationBookingsUpcomingBtn")?.addEventListener("click", () =>
         loadOwnerStationSchedule("upcoming")
     );
@@ -73,7 +95,6 @@ async function initDashboard() {
         ownerStationScheduleState.stationId = Number(event.target.value || 0) || null;
         loadOwnerStationSchedule(ownerStationScheduleState.view);
     });
-    document.getElementById("refreshAdminStats")?.addEventListener("click", loadAdminStats);
     document.getElementById("adminPendingStationsBtn")?.addEventListener("click", () =>
         loadAdminStationApprovals("pending")
     );
@@ -105,7 +126,9 @@ async function initDashboard() {
         setProfileEditMode(false);
     });
     document.getElementById("closeBookingQrBtn")?.addEventListener("click", hideBookingQrSection);
-    document.getElementById("scanBookingQrBtn")?.addEventListener("click", scanCurrentQrBooking);
+    document.getElementById("closeOwnerQrVerificationBtn")?.addEventListener("click", hideOwnerQrVerification);
+    document.getElementById("ownerVerifyQrBtn")?.addEventListener("click", submitOwnerQrVerification);
+
     const ownerTotalSlotsInput = document.getElementById("ownerTotalSlots");
     ownerTotalSlotsInput?.addEventListener("input", () => {
         renderOwnerSlotTypeInputs(ownerTotalSlotsInput.value);
@@ -114,18 +137,30 @@ async function initDashboard() {
 
     await loadMyProfile();
     await loadStations();
-    await loadMyBookings(bookingViewState.customer);
-    await loadOwnerStats();
-    await loadOwnerStations();
-    await loadOwnerBookings(bookingViewState.owner);
-    await loadAdminStats();
-    await loadAdminStationApprovals(adminViewState.stationStatus);
+
+    if (role === CUSTOMER_ROLE) {
+        await loadMyBookings(bookingViewState.customer);
+    }
+    if (role === OWNER_ROLE) {
+        await loadOwnerStats();
+        await loadOwnerRevenueAnalytics();
+        await loadOwnerStations();
+        await loadOwnerBookings(bookingViewState.owner);
+        await loadOwnerMyBookings(bookingViewState.ownerMine);
+        switchOwnerBookingScope("station");
+    }
+    if (role === "admin") {
+        await loadAdminStats();
+        await loadAdminRevenueAnalytics();
+        await loadAdminStationApprovals(adminViewState.stationStatus);
+    }
 }
 
 function logout() {
     stopInactivityTracking();
     disconnectRealtimeUpdates();
     hideBookingQrSection();
+    closeDashboardSidebar?.();
     localStorage.clear();
     window.location.href = "login.html";
 }

@@ -4,7 +4,12 @@ from flask import current_app, jsonify, request
 
 from extensions import mysql
 from routes.booking_bp import booking_bp
-from services.booking_config import GRACE_PERIOD_MINUTES
+from services.booking_config import (
+    BOOKING_STATUS_CHARGING_STARTED,
+    BOOKING_STATUS_WAITING_TO_START,
+    GRACE_PERIOD_MINUTES,
+    LEGACY_BOOKING_STATUS_CONFIRMED,
+)
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     refresh_single_slot_status as _refresh_single_slot_status,
@@ -14,6 +19,7 @@ from services.booking_schema import ensure_phase5_tables as _ensure_phase5_table
 from services.booking_security import (
     decode_qr_token as _decode_qr_token,
     encode_qr_token as _encode_qr_token,
+    normalize_qr_token_input as _normalize_qr_token_input,
 )
 from services.value_utils import (
     close_cursor as _close_cursor,
@@ -79,13 +85,13 @@ def get_booking_qr(current_user, booking_id):
     station_owner_id = int(row[7] or 0)
     requester_id = int(current_user.get("user_id") or 0)
     requester_role = current_user.get("role")
-    can_access = requester_role == "admin" or requester_id in {booking_owner_id, station_owner_id}
+    can_access = requester_role == "admin" or requester_id == booking_owner_id
     if not can_access:
         return jsonify({"error": "Unauthorized"}), 403
 
     status = (_to_str(row[5]) or "").lower()
-    if status != "confirmed":
-        return jsonify({"error": "QR is available only for confirmed bookings"}), 409
+    if status not in {BOOKING_STATUS_WAITING_TO_START, LEGACY_BOOKING_STATUS_CONFIRMED}:
+        return jsonify({"error": "QR is available only for waiting-to-start bookings"}), 409
     if row[4] <= datetime.now():
         return jsonify({"error": "Booking already ended"}), 409
 
@@ -117,11 +123,15 @@ def get_booking_qr(current_user, booking_id):
 @token_required
 def scan_booking_qr(current_user):
     payload = request.get_json(silent=True) or {}
-    qr_token = payload.get("qr_token")
-    if not isinstance(qr_token, str) or not qr_token.strip():
+    qr_token = _normalize_qr_token_input(payload.get("qr_token"))
+    if not qr_token:
         return jsonify({"error": "qr_token is required"}), 400
 
-    decoded = _decode_qr_token(qr_token.strip())
+    requester_role = current_user.get("role")
+    if requester_role not in {"owner", "admin"}:
+        return jsonify({"error": "Only a station owner or admin can verify this QR"}), 403
+
+    decoded = _decode_qr_token(qr_token)
     if not decoded:
         return jsonify({"error": "Invalid QR token"}), 400
 
@@ -176,22 +186,19 @@ def scan_booking_qr(current_user):
 
         if booking_user_id != expected_user_id or slot_id != expected_slot_id:
             return jsonify({"error": "QR token does not match booking details"}), 409
-        if status != "confirmed":
-            return jsonify({"error": "Booking is not in confirmed state"}), 409
+        if status not in {BOOKING_STATUS_WAITING_TO_START, BOOKING_STATUS_CHARGING_STARTED, LEGACY_BOOKING_STATUS_CONFIRMED}:
+            return jsonify({"error": "Booking is not eligible for QR verification"}), 409
         if payment_status != "paid":
             return jsonify({"error": "Payment not completed"}), 409
         if booking[4] <= datetime.now():
             return jsonify({"error": "Booking already ended"}), 409
 
         requester_id = int(current_user.get("user_id") or 0)
-        requester_role = current_user.get("role")
         if requester_role == "admin":
             pass
         elif requester_role == "owner":
-            if requester_id != station_owner_id and requester_id != booking_user_id:
+            if requester_id != station_owner_id:
                 return jsonify({"error": "Owner can scan only station bookings they own"}), 403
-        elif requester_id != booking_user_id:
-            return jsonify({"error": "Unauthorized QR scan attempt"}), 403
 
         cursor.execute(
             """
@@ -206,6 +213,15 @@ def scan_booking_qr(current_user):
         if existing_session and existing_session[0] is not None:
             already_started = True
             started_at = existing_session[0]
+            if status != BOOKING_STATUS_CHARGING_STARTED:
+                cursor.execute(
+                    """
+                    UPDATE Booking
+                    SET status = %s, qr_verified_at = COALESCE(qr_verified_at, %s)
+                    WHERE booking_id = %s
+                    """,
+                    (BOOKING_STATUS_CHARGING_STARTED, started_at, booking_id),
+                )
         else:
             cursor.execute(
                 """
@@ -215,6 +231,14 @@ def scan_booking_qr(current_user):
                     start_time = COALESCE(start_time, VALUES(start_time))
                 """,
                 (booking_id,),
+            )
+            cursor.execute(
+                """
+                UPDATE Booking
+                SET status = %s, qr_verified_at = NOW(), qr_verified_by = %s
+                WHERE booking_id = %s
+                """,
+                (BOOKING_STATUS_CHARGING_STARTED, requester_id, booking_id),
             )
             cursor.execute(
                 """
@@ -247,7 +271,7 @@ def scan_booking_qr(current_user):
         station_id=station_id,
         slot_id=slot_id,
         booking_id=booking_id,
-        status="confirmed",
+        status=BOOKING_STATUS_CHARGING_STARTED,
     )
 
     return (
@@ -259,6 +283,7 @@ def scan_booking_qr(current_user):
                 "station_id": station_id,
                 "allow_charging": True,
                 "already_started": already_started,
+                "status": BOOKING_STATUS_CHARGING_STARTED,
                 "charging_started_at": _format_dt(started_at),
             }
         ),

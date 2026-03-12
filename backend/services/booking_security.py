@@ -25,6 +25,20 @@ def parse_payment_method(value):
     return method if method in VALID_PAYMENT_METHODS else None
 
 
+def normalize_qr_token_input(value):
+    if not isinstance(value, str):
+        return None
+
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    marker = "token="
+    if marker in cleaned:
+        return cleaned.split(marker, 1)[1].strip()
+    return cleaned
+
+
 def _qr_serializer():
     return URLSafeSerializer(current_app.config["SECRET_KEY"], salt=QR_TOKEN_SALT)
 

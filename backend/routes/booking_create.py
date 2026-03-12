@@ -1,4 +1,3 @@
-import math
 from datetime import datetime, timedelta
 
 from flask import current_app, jsonify, request
@@ -6,12 +5,16 @@ from flask import current_app, jsonify, request
 from extensions import mysql
 from routes.booking_bp import booking_bp
 from services.booking_config import (
+    BOOKING_STATUS_WAITING_TO_START,
     DATETIME_FMT,
-    DEFAULT_POWER_KW_BY_SLOT_TYPE,
     DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE,
     GRACE_PERIOD_MINUTES,
     MAX_BOOKING_MINUTES,
-    MIN_BOOKING_MINUTES,
+)
+from services.charging_profiles import (
+    default_power_kw,
+    estimate_charging_duration,
+    normalize_vehicle_category,
 )
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
@@ -52,6 +55,10 @@ def book_slot(current_user):
     start_time = _parse_start_time(payload.get("start_time"))
     if not start_time:
         return jsonify({"error": f"start_time must match {DATETIME_FMT}"}), 400
+
+    vehicle_category = normalize_vehicle_category(payload.get("vehicle_category"))
+    if not vehicle_category:
+        return jsonify({"error": "vehicle_category must be one of: bike_scooter, car"}), 400
 
     battery_capacity_kwh = _parse_positive_float(payload.get("battery_capacity_kwh"))
     if battery_capacity_kwh is None:
@@ -104,16 +111,31 @@ def book_slot(current_user):
             return jsonify({"error": "Slot not found"}), 404
 
         slot_type = slot["slot_type"]
-        power_kw = slot["power_kw"] or DEFAULT_POWER_KW_BY_SLOT_TYPE.get(slot_type, 7.0)
+        slot_vehicle_category = slot.get("vehicle_category")
+        if slot_vehicle_category and slot_vehicle_category != vehicle_category:
+            return jsonify(
+                {
+                    "error": (
+                        f"This charger supports {slot_vehicle_category}. "
+                        f"Select a compatible {slot_vehicle_category} charger."
+                    )
+                }
+            ), 409
 
-        energy_required_kwh = battery_capacity_kwh * (
-            (target_battery_percent - current_battery_percent) / 100.0
-        )
-        charging_time_hours = energy_required_kwh / power_kw
-        duration_minutes = max(
-            MIN_BOOKING_MINUTES,
-            int(math.ceil(charging_time_hours * 60)),
-        )
+        power_kw = slot["power_kw"] or default_power_kw(vehicle_category, slot_type)
+        try:
+            charging_estimate = estimate_charging_duration(
+                battery_capacity_kwh=battery_capacity_kwh,
+                current_battery_percent=current_battery_percent,
+                target_battery_percent=target_battery_percent,
+                charger_power_kw=power_kw,
+                vehicle_category=vehicle_category,
+            )
+        except ValueError as error:
+            return jsonify({"error": str(error)}), 400
+
+        energy_required_kwh = charging_estimate["energy_required_kwh"]
+        duration_minutes = charging_estimate["duration_minutes"]
         if duration_minutes > MAX_BOOKING_MINUTES:
             return jsonify(
                 {
@@ -147,7 +169,7 @@ def book_slot(current_user):
             SELECT booking_id, start_time, end_time
             FROM Booking
             WHERE slot_id = %s
-              AND status = 'confirmed'
+              AND status IN ('waiting_to_start', 'charging_started', 'confirmed')
               AND (%s < end_time AND %s > start_time)
             LIMIT 1
             """,
@@ -168,10 +190,34 @@ def book_slot(current_user):
 
         cursor.execute(
             """
-            INSERT INTO Booking (user_id, slot_id, start_time, end_time, status)
-            VALUES (%s, %s, %s, %s, 'confirmed')
+            INSERT INTO Booking (
+                user_id,
+                slot_id,
+                start_time,
+                end_time,
+                status,
+                vehicle_category,
+                battery_capacity_kwh,
+                current_battery_percent,
+                target_battery_percent,
+                energy_required_kwh,
+                estimated_duration_minutes
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (current_user["user_id"], slot_id, start_time, end_time),
+            (
+                current_user["user_id"],
+                slot_id,
+                start_time,
+                end_time,
+                BOOKING_STATUS_WAITING_TO_START,
+                vehicle_category,
+                battery_capacity_kwh,
+                current_battery_percent,
+                target_battery_percent,
+                energy_required_kwh,
+                duration_minutes,
+            ),
         )
         booking_id = cursor.lastrowid
         cursor.execute(
@@ -200,7 +246,7 @@ def book_slot(current_user):
         station_id=slot.get("station_id") if slot else None,
         slot_id=slot_id,
         booking_id=booking_id,
-        status="confirmed",
+        status=BOOKING_STATUS_WAITING_TO_START,
         extra={
             "payment_status": payment_status,
             "grace_period_minutes": GRACE_PERIOD_MINUTES,
@@ -218,16 +264,22 @@ def book_slot(current_user):
             "station_id": slot.get("station_id") if slot else None,
             "start_time": _format_dt(start_time),
             "end_time": _format_dt(end_time),
+            "charger_name": slot.get("charger_name"),
+            "charger_type": slot_type,
+            "vehicle_category": vehicle_category,
+            "connector_type": slot.get("connector_type"),
             "battery_capacity_kwh": round(battery_capacity_kwh, 2),
             "current_battery_percent": round(current_battery_percent, 2),
             "target_battery_percent": round(target_battery_percent, 2),
             "energy_required_kwh": round(energy_required_kwh, 3),
             "charger_power_kw": round(power_kw, 2),
             "duration_minutes": duration_minutes,
+            "duration_display": charging_estimate["duration_display"],
+            "charging_speed": charging_estimate["charging_speed"],
             "pricing_model": pricing_model,
             "rate": round(rate, 2),
             "estimated_cost": estimated_cost,
-            "status": "confirmed",
+            "status": BOOKING_STATUS_WAITING_TO_START,
             "payment_method": payment_method,
             "payment_status": payment_status,
             "payment_success": True,

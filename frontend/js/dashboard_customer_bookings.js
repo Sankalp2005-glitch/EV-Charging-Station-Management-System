@@ -1,12 +1,67 @@
 let currentQrToken = null;
 let currentQrBookingId = null;
 
-function renderMyBookings(bookings) {
-    const container = document.getElementById("myBookingsList");
+function resolveBookingChargingLabel(booking) {
+    const normalizedStatus = String(booking.status || "").toLowerCase();
+    if (booking.charging_completed_at) {
+        return `Completed ${booking.charging_completed_at}`;
+    }
+    if (booking.charging_started_at) {
+        return `Started ${booking.charging_started_at}`;
+    }
+    if (normalizedStatus === "waiting_to_start") {
+        return "Waiting for QR verification";
+    }
+    if (normalizedStatus === "cancelled") {
+        return "Not applicable";
+    }
+    if (normalizedStatus === "charging_completed" || normalizedStatus === "completed") {
+        return "Charging completed";
+    }
+    return "Not started";
+}
 
+function buildBookingChargingCell(booking) {
+    const normalizedStatus = String(booking.status || "").toLowerCase();
+    const shouldRenderProgress =
+        normalizedStatus === "waiting_to_start" ||
+        normalizedStatus === "charging_started" ||
+        normalizedStatus === "charging_completed" ||
+        normalizedStatus === "completed" ||
+        Boolean(booking.charging_started_at) ||
+        Boolean(booking.charging_completed_at);
+
+    const progressHtml = shouldRenderProgress
+        ? buildChargingProgressWidget(
+              {
+                  status: booking.status,
+                  charging_started_at: booking.charging_started_at,
+                  charging_completed_at: booking.charging_completed_at,
+                  duration_minutes: booking.duration_minutes,
+                  current_battery_percent: booking.current_battery_percent,
+                  target_battery_percent: booking.target_battery_percent,
+                  charging_progress_percent: booking.charging_progress_percent,
+                  estimated_current_battery_percent: booking.estimated_current_battery_percent,
+                  estimated_completion_time: booking.estimated_completion_time,
+                  remaining_minutes: booking.remaining_minutes,
+              },
+              { title: "EVgo session" }
+          )
+        : "";
+
+    return `
+        <div class="charging-cell">
+            <div class="charging-cell__label">${escapeHtml(resolveBookingChargingLabel(booking))}</div>
+            ${progressHtml}
+        </div>
+    `;
+}
+
+function buildUserBookingsTable(bookings, options = {}) {
     if (!Array.isArray(bookings) || bookings.length === 0) {
-        container.innerHTML = "<p class='text-muted mb-0'>No bookings yet.</p>";
-        return;
+        return `<div class='empty-state'>${escapeHtml(
+            options.emptyMessage || "No bookings found for this view."
+        )}</div>`;
     }
 
     const rows = bookings
@@ -14,66 +69,116 @@ function renderMyBookings(bookings) {
             const actionButtons = [];
             if (booking.can_cancel) {
                 actionButtons.push(
-                    `<button class="btn btn-outline-danger btn-sm" onclick="cancelBooking(${booking.booking_id})">Cancel</button>`
+                    `<button class="btn btn-outline-danger btn-sm" type="button" onclick="cancelBooking(${booking.booking_id})">Cancel</button>`
                 );
             }
             if (booking.can_show_qr) {
                 actionButtons.push(
-                    `<button class="btn btn-outline-primary btn-sm" onclick="showBookingQr(${booking.booking_id})">Show QR</button>`
+                    `<button class="btn btn-outline-primary btn-sm" type="button" onclick="showBookingQr(${booking.booking_id})">Show QR</button>`
                 );
             }
-            const chargingState = booking.charging_started_at
-                ? `Started at ${booking.charging_started_at}`
-                : "Not started";
-            const paymentText = booking.payment_status
-                ? `${booking.payment_status}${booking.payment_method ? ` (${booking.payment_method})` : ""}`
-                : "-";
-            const actions = actionButtons.length > 0 ? actionButtons.join(" ") : "-";
+
+            const normalizedStatus = String(booking.status || "").toLowerCase();
+            const paymentLabel = booking.payment_status
+                ? `${normalizeStatusLabel(booking.payment_status)}${booking.payment_method ? ` (${booking.payment_method})` : ""}`
+                : "Pending";
+            const durationLabel = booking.duration_display || formatDurationHuman(booking.duration_minutes || 0);
+            const durationNote =
+                normalizedStatus === "cancelled"
+                    ? "Cancelled booking"
+                    : normalizedStatus === "charging_completed" || normalizedStatus === "completed"
+                    ? "Completed session"
+                    : booking.is_future_booking
+                    ? "Upcoming session"
+                    : "In progress / recent";
+            const fallbackActionLabel =
+                normalizedStatus === "cancelled" || normalizedStatus === "charging_completed" || normalizedStatus === "completed"
+                    ? "Closed"
+                    : "No actions";
 
             return `
                 <tr>
-                    <td>${booking.booking_id}</td>
-                    <td>${booking.station_name}</td>
-                    <td>${booking.slot_number} (${booking.slot_type})</td>
-                    <td>${booking.start_time}</td>
-                    <td>${booking.end_time}</td>
-                    <td>${booking.duration_minutes} min</td>
-                    <td>${booking.status}</td>
-                    <td>${paymentText}</td>
-                    <td>${chargingState}</td>
-                    <td>${actions}</td>
+                    <td>
+                        <span class="booking-table__primary">#${escapeHtml(booking.booking_id)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(booking.location || "Location unavailable")}</span>
+                    </td>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(booking.station_name)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(
+                            booking.charger_name || `Slot ${booking.slot_number}`
+                        )} | ${escapeHtml(normalizeVehicleCategoryLabel(booking.vehicle_category))}</span>
+                    </td>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(booking.start_time)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(booking.end_time)}</span>
+                    </td>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(durationLabel)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(durationNote)}</span>
+                    </td>
+                    <td>${buildStatusBadge(booking.status)}</td>
+                    <td>${buildStatusBadge(booking.payment_status || "pending", paymentLabel)}</td>
+                    <td>${buildBookingChargingCell(booking)}</td>
+                    <td>
+                        <div class="booking-table__actions">
+                            ${actionButtons.length > 0 ? actionButtons.join("") : `<span class='text-muted'>${fallbackActionLabel}</span>`}
+                        </div>
+                    </td>
                 </tr>
             `;
         })
         .join("");
 
-    container.innerHTML = `
-        <table class="table table-striped table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Station</th>
-                    <th>Slot</th>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th>Charging</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>
+    return `
+        <div class="table-shell">
+            <table class="table booking-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Booking</th>
+                        <th>Station / Charger</th>
+                        <th>Schedule</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Charging</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
     `;
+}
+
+function renderMyBookings(bookings) {
+    const container = document.getElementById("myBookingsList");
+    if (!container) {
+        return;
+    }
+    container.innerHTML = buildUserBookingsTable(bookings, {
+        emptyMessage: "No bookings yet. Book a charger to see your sessions here.",
+    });
+    refreshChargingProgressWidgets(container);
+}
+
+function renderOwnerMyBookings(bookings) {
+    const container = document.getElementById("ownerMyBookingsList");
+    if (!container) {
+        return;
+    }
+    container.innerHTML = buildUserBookingsTable(bookings, {
+        emptyMessage: "No personal bookings found for this view.",
+    });
+    refreshChargingProgressWidgets(container);
 }
 
 async function loadMyBookings(view = bookingViewState.customer) {
     const section = document.getElementById("customerBookingsSection");
     const role = getRole();
-    if (!section || (role !== CUSTOMER_ROLE && role !== OWNER_ROLE)) {
+    if (!section || role !== CUSTOMER_ROLE) {
         return;
     }
+
     bookingViewState.customer = view;
     setBookingViewButtons("customer", bookingViewState.customer);
 
@@ -84,8 +189,34 @@ async function loadMyBookings(view = bookingViewState.customer) {
             true
         );
         renderMyBookings(bookings);
+        updateDashboardSummaryState({ customerBookings: bookings });
     } catch (error) {
-        document.getElementById("myBookingsList").innerHTML = `<p class="text-danger mb-0">${error.message}</p>`;
+        document.getElementById("myBookingsList").innerHTML = `<div class="empty-state text-danger">${escapeHtml(
+            error.message
+        )}</div>`;
+    }
+}
+
+async function loadOwnerMyBookings(view = bookingViewState.ownerMine) {
+    if (getRole() !== OWNER_ROLE) {
+        return;
+    }
+
+    bookingViewState.ownerMine = view;
+    setBookingViewButtons("ownerMyBookings", bookingViewState.ownerMine);
+
+    try {
+        const bookings = await apiRequest(
+            `/api/bookings/my-bookings?view=${encodeURIComponent(bookingViewState.ownerMine)}`,
+            { method: "GET" },
+            true
+        );
+        renderOwnerMyBookings(bookings);
+    } catch (error) {
+        const container = document.getElementById("ownerMyBookingsList");
+        if (container) {
+            container.innerHTML = `<div class="empty-state text-danger">${escapeHtml(error.message)}</div>`;
+        }
     }
 }
 
@@ -102,6 +233,13 @@ async function cancelBooking(bookingId) {
         }
         await loadStations();
         await loadMyBookings(bookingViewState.customer);
+        if (getRole() === OWNER_ROLE) {
+            await loadOwnerMyBookings(bookingViewState.ownerMine);
+            await loadOwnerBookings(bookingViewState.owner);
+            await loadOwnerStations();
+            await loadOwnerStats();
+            await loadOwnerRevenueAnalytics();
+        }
         if (dashboardState.openStationId) {
             await toggleSlots(dashboardState.openStationId, dashboardState.openStationName, true);
         }
@@ -135,63 +273,40 @@ function hideBookingQrSection() {
     }
 }
 
-async function showBookingQr(bookingId) {
-    try {
-        const qrPayload = await apiRequest(`/api/bookings/${bookingId}/qr`, { method: "GET" }, true);
-        const section = document.getElementById("bookingQrSection");
-        const meta = document.getElementById("bookingQrMeta");
-        const value = document.getElementById("bookingQrValue");
-        const canvas = document.getElementById("bookingQrCanvas");
+function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
+    const section = document.getElementById("bookingQrSection");
+    const meta = document.getElementById("bookingQrMeta");
+    const value = document.getElementById("bookingQrValue");
+    const canvas = document.getElementById("bookingQrCanvas");
+    const bookingId = Number(bookingIdOverride || qrPayload?.booking_id || 0);
 
-        if (!section || !meta || !value || !canvas) {
-            alert("QR section is not available on this page.");
-            return;
-        }
-
-        currentQrToken = qrPayload.qr_token;
-        currentQrBookingId = bookingId;
-        section.style.display = "block";
-        meta.innerText = `Booking #${bookingId} | Valid until ${qrPayload.end_time}`;
-        value.innerText = qrPayload.qr_value || "";
-
-        if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
-            await window.QRCode.toCanvas(canvas, qrPayload.qr_value || qrPayload.qr_token || "", {
-                width: 220,
-                margin: 1,
-            });
-        }
-        window.scrollTo({ top: section.offsetTop - 20, behavior: "smooth" });
-    } catch (error) {
-        alert(error.message);
-    }
-}
-
-async function scanCurrentQrBooking() {
-    if (!currentQrToken) {
-        alert("Open a booking QR first.");
+    if (!section || !meta || !value || !canvas) {
+        alert("QR section is not available on this page.");
         return;
     }
 
+    currentQrToken = qrPayload?.qr_token || null;
+    currentQrBookingId = bookingId || null;
+    section.style.display = "block";
+    meta.innerText = `Booking #${bookingId} | Valid until ${qrPayload?.end_time || "-"} | Show this QR to the station owner`;
+    value.innerText = qrPayload?.qr_value || "";
+
+    if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
+        window.QRCode.toCanvas(canvas, qrPayload?.qr_value || qrPayload?.qr_token || "", {
+            width: 220,
+            margin: 1,
+        }).catch(() => {
+            value.innerText = qrPayload?.qr_value || "";
+        });
+    }
+
+    window.scrollTo({ top: section.offsetTop - 20, behavior: "smooth" });
+}
+
+async function showBookingQr(bookingId) {
     try {
-        const result = await apiRequest(
-            "/api/bookings/scan-qr",
-            {
-                method: "POST",
-                body: JSON.stringify({ qr_token: currentQrToken }),
-            },
-            true
-        );
-        alert(result.message || "Charging session started.");
-        await loadStations();
-        await loadMyBookings(bookingViewState.customer);
-        if (getRole() === OWNER_ROLE) {
-            await loadOwnerBookings(bookingViewState.owner);
-            await loadOwnerStations();
-            await loadOwnerStats();
-        }
-        if (dashboardState.openStationId) {
-            await toggleSlots(dashboardState.openStationId, dashboardState.openStationName, true);
-        }
+        const qrPayload = await apiRequest(`/api/bookings/${bookingId}/qr`, { method: "GET" }, true);
+        renderBookingQrPayload(qrPayload, bookingId);
     } catch (error) {
         alert(error.message);
     }
@@ -199,3 +314,5 @@ async function scanCurrentQrBooking() {
 
 window.cancelBooking = cancelBooking;
 window.showBookingQr = showBookingQr;
+window.renderBookingQrPayload = renderBookingQrPayload;
+window.loadOwnerMyBookings = loadOwnerMyBookings;

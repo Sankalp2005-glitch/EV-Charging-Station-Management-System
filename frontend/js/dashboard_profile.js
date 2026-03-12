@@ -5,7 +5,8 @@ function setRoleDisplay() {
     if (!roleDisplay) {
         return;
     }
-    roleDisplay.innerText = `Logged in as: ${getRole() || "unknown"}`;
+    const role = String(getRole() || "unknown");
+    roleDisplay.innerText = `Signed in as ${role.charAt(0).toUpperCase()}${role.slice(1)}`;
 }
 
 function setProfileEditMode(enabled) {
@@ -55,15 +56,11 @@ function setProfileEditMode(enabled) {
 }
 
 function openProfileSection(enableEdit = false) {
-    const role = getRole();
-    if (role !== CUSTOMER_ROLE && role !== OWNER_ROLE) {
-        return;
-    }
     const section = document.getElementById("profileSection");
     if (!section) {
         return;
     }
-    section.style.display = "block";
+    switchTab("profile");
     setProfileEditMode(enableEdit);
     window.scrollTo({ top: section.offsetTop - 20, behavior: "smooth" });
 }

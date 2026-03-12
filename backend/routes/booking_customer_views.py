@@ -4,6 +4,8 @@ from flask import current_app, jsonify, request
 
 from extensions import mysql
 from routes.booking_bp import booking_bp
+from services.booking_config import BOOKING_STATUS_WAITING_TO_START
+from services.charging_profiles import build_live_charging_snapshot, format_duration_human
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     refresh_single_slot_status as _refresh_single_slot_status,
@@ -53,12 +55,21 @@ def my_bookings(current_user):
                 cs.location,
                 sl.slot_number,
                 sl.slot_type,
+                sl.charger_name,
+                sl.vehicle_category,
                 b.start_time,
                 b.end_time,
                 b.status,
                 p.payment_status,
                 p.payment_method,
-                sess.start_time AS charging_started_at
+                sess.start_time AS charging_started_at,
+                sess.end_time AS charging_completed_at,
+                b.estimated_duration_minutes,
+                b.battery_capacity_kwh,
+                b.current_battery_percent,
+                b.target_battery_percent,
+                b.energy_required_kwh,
+                sl.power_kw
             FROM Booking b
             JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
             JOIN ChargingStation cs ON sl.station_id = cs.station_id
@@ -69,9 +80,9 @@ def my_bookings(current_user):
         params = [current_user["user_id"]]
 
         if view == "upcoming":
-            query += " AND b.status = 'confirmed' AND b.end_time >= NOW()"
+            query += " AND b.status IN ('waiting_to_start', 'charging_started', 'confirmed') AND b.end_time >= NOW()"
         elif view == "past":
-            query += " AND (b.status IN ('completed', 'cancelled') OR b.end_time < NOW())"
+            query += " AND (b.status IN ('charging_completed', 'cancelled', 'completed') OR b.end_time < NOW())"
 
         if view == "past":
             query += " ORDER BY b.start_time DESC"
@@ -93,15 +104,31 @@ def my_bookings(current_user):
 
     result = []
     for row in bookings:
-        duration_minutes = int((row[7] - row[6]).total_seconds() // 60)
-        status = _to_str(row[8])
-        payment_status = (_to_str(row[9]) or "pending").lower()
-        payment_method = (_to_str(row[10]) or "").lower() or None
-        charging_started_at = row[11]
-        can_cancel = status == "confirmed" and row[7] > now and charging_started_at is None
-        is_future_booking = row[6] >= now
-        can_show_qr = status == "confirmed" and row[7] > now and payment_status == "paid"
+        duration_minutes = int(row[15] or max(int((row[9] - row[8]).total_seconds() // 60), 0))
+        status = _to_str(row[10])
+        payment_status = (_to_str(row[11]) or "pending").lower()
+        payment_method = (_to_str(row[12]) or "").lower() or None
+        charging_started_at = row[13]
+        charging_completed_at = row[14]
+        battery_capacity_kwh = float(row[16]) if row[16] is not None else None
+        current_battery_percent = float(row[17]) if row[17] is not None else None
+        target_battery_percent = float(row[18]) if row[18] is not None else None
+        energy_required_kwh = float(row[19]) if row[19] is not None else None
+        charger_power_kw = float(row[20]) if row[20] is not None else None
+        can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[9] > now and charging_started_at is None
+        is_future_booking = row[8] >= now
+        can_show_qr = status == BOOKING_STATUS_WAITING_TO_START and row[9] > now and payment_status == "paid"
         can_start_charging = can_show_qr and charging_started_at is None
+        live_snapshot = build_live_charging_snapshot(
+            booking_status=status,
+            charging_started_at=charging_started_at,
+            charging_completed_at=charging_completed_at,
+            estimated_duration_minutes=duration_minutes,
+            current_battery_percent=current_battery_percent,
+            target_battery_percent=target_battery_percent,
+            energy_required_kwh=energy_required_kwh,
+            now=now,
+        )
 
         result.append(
             {
@@ -111,15 +138,29 @@ def my_bookings(current_user):
                 "location": _to_str(row[3]),
                 "slot_number": row[4],
                 "slot_type": _to_str(row[5]),
-                "start_time": _format_dt(row[6]),
-                "end_time": _format_dt(row[7]),
+                "charger_name": _to_str(row[6]),
+                "vehicle_category": _to_str(row[7]),
+                "start_time": _format_dt(row[8]),
+                "end_time": _format_dt(row[9]),
                 "duration_minutes": duration_minutes,
+                "duration_display": format_duration_human(duration_minutes),
                 "status": status,
                 "can_cancel": can_cancel,
                 "is_future_booking": is_future_booking,
                 "payment_status": payment_status,
                 "payment_method": payment_method,
                 "charging_started_at": _format_dt(charging_started_at),
+                "charging_completed_at": _format_dt(charging_completed_at),
+                "battery_capacity_kwh": battery_capacity_kwh,
+                "current_battery_percent": current_battery_percent,
+                "target_battery_percent": target_battery_percent,
+                "energy_required_kwh": energy_required_kwh,
+                "charger_power_kw": charger_power_kw,
+                "charging_progress_percent": live_snapshot["progress_percent"],
+                "estimated_current_battery_percent": live_snapshot["estimated_current_battery_percent"],
+                "estimated_completion_time": _format_dt(live_snapshot["estimated_completion_time"]),
+                "remaining_minutes": live_snapshot["remaining_minutes"],
+                "estimated_energy_delivered_kwh": live_snapshot["estimated_energy_delivered_kwh"],
                 "can_show_qr": can_show_qr,
                 "can_start_charging": can_start_charging,
             }
@@ -162,8 +203,8 @@ def cancel_booking(current_user, booking_id):
             return jsonify({"error": "Unauthorized"}), 403
 
         status = _to_str(booking[3])
-        if status != "confirmed":
-            return jsonify({"error": "Only confirmed bookings can be cancelled"}), 409
+        if status != BOOKING_STATUS_WAITING_TO_START:
+            return jsonify({"error": "Only waiting-to-start bookings can be cancelled"}), 409
         if booking[2] <= now:
             return jsonify({"error": "Booking already ended"}), 409
         if booking[5] is not None:

@@ -1,12 +1,12 @@
 from flask import Blueprint, current_app, jsonify, request
-from MySQLdb import OperationalError
 
 from extensions import mysql
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
-from services.db_errors import is_unknown_column_error as _is_unknown_column_error
+from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
+from services.revenue_analytics import fetch_revenue_analytics as _fetch_revenue_analytics
 from services.value_utils import format_dt as _format_dt, to_str as _to_str
 from utils.jwt_handler import get_active_session_count, role_required, token_required
 from utils.station_approval import (
@@ -35,6 +35,7 @@ def get_admin_stats(_current_user):
     lifecycle_records = []
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
@@ -49,64 +50,9 @@ def get_admin_stats(_current_user):
         cursor.execute("SELECT COUNT(*) FROM Booking")
         total_bookings = int((cursor.fetchone() or [0])[0] or 0)
 
-        revenue = 0.0
+        revenue_analytics = _fetch_revenue_analytics(cursor)
+        revenue = float(revenue_analytics["summary"]["total_revenue"] or 0.0)
         revenue_supported = True
-        try:
-            cursor.execute(
-                """
-                SELECT
-                    SUM(
-                        CASE
-                            WHEN b.status IN ('confirmed', 'completed')
-                            THEN
-                                CASE
-                                    WHEN sl.price_per_minute IS NOT NULL AND sl.price_per_minute > 0
-                                    THEN TIMESTAMPDIFF(MINUTE, b.start_time, b.end_time) * sl.price_per_minute
-                                    ELSE
-                                        (
-                                            TIMESTAMPDIFF(MINUTE, b.start_time, b.end_time) / 60.0
-                                        ) * COALESCE(
-                                            sl.power_kw,
-                                            CASE WHEN sl.slot_type = 'fast' THEN 50.0 ELSE 7.0 END
-                                        ) * COALESCE(
-                                            sl.price_per_kwh,
-                                            CASE WHEN sl.slot_type = 'fast' THEN 18.0 ELSE 12.0 END
-                                        )
-                                END
-                            ELSE 0
-                        END
-                    ) AS total_revenue
-                FROM Booking b
-                JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
-                """
-            )
-            revenue = float((cursor.fetchone() or [0])[0] or 0.0)
-        except OperationalError as error:
-            if not _is_unknown_column_error(error):
-                raise
-            revenue_supported = False
-            cursor.execute(
-                """
-                SELECT
-                    SUM(
-                        CASE
-                            WHEN b.status IN ('confirmed', 'completed')
-                            THEN
-                                (
-                                    TIMESTAMPDIFF(MINUTE, b.start_time, b.end_time) / 60.0
-                                ) * (
-                                    CASE WHEN sl.slot_type = 'fast' THEN 50.0 ELSE 7.0 END
-                                ) * (
-                                    CASE WHEN sl.slot_type = 'fast' THEN 18.0 ELSE 12.0 END
-                                )
-                            ELSE 0
-                        END
-                    ) AS total_revenue
-                FROM Booking b
-                JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
-                """
-            )
-            revenue = float((cursor.fetchone() or [0])[0] or 0.0)
     except Exception:
         mysql.connection.rollback()
         current_app.logger.exception("Failed to fetch admin stats")
@@ -129,6 +75,25 @@ def get_admin_stats(_current_user):
     ), 200
 
 
+@admin_bp.route("/revenue-analytics", methods=["GET"])
+@token_required
+@role_required("admin")
+def get_admin_revenue_analytics(_current_user):
+    cursor = None
+    try:
+        cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
+        analytics = _fetch_revenue_analytics(cursor)
+    except Exception:
+        current_app.logger.exception("Failed to fetch admin revenue analytics")
+        return jsonify({"error": "Failed to fetch admin revenue analytics"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return jsonify(analytics), 200
+
+
 @admin_bp.route("/stations", methods=["GET"])
 @token_required
 @role_required("admin")
@@ -140,6 +105,7 @@ def get_admin_stations(_current_user):
     cursor = None
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor)
         mysql.connection.commit()
@@ -236,6 +202,7 @@ def update_station_approval(current_user, station_id):
     cursor = None
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor)
         mysql.connection.commit()

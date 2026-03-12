@@ -67,6 +67,11 @@ def generate_token(user_id, role, ttl_minutes=None, session_id=None):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        # allow CORS preflight requests through without authentication
+        if request.method == "OPTIONS":
+            from flask import make_response
+            return make_response(('', 200))
+
         auth_header = request.headers.get("Authorization", "")
         parts = auth_header.split()
 

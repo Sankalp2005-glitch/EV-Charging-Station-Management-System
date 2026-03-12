@@ -1,14 +1,15 @@
 from flask import current_app, jsonify
-from MySQLdb import OperationalError
 
 from extensions import mysql
 from routes.owner_bp import owner_bp
 from routes.owner_common import clean_text
+from services.booking_config import BOOKING_STATUS_CHARGING_STARTED
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
-from services.db_errors import is_unknown_column_error as _is_unknown_column_error
+from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
+from services.revenue_analytics import fetch_revenue_analytics as _fetch_revenue_analytics
 from services.value_utils import (
     parse_positive_float as _parse_positive_float,
     to_str as _to_str,
@@ -31,6 +32,7 @@ def get_owner_stations(current_user):
 
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor, default_status=APPROVAL_STATUS_APPROVED)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
@@ -44,18 +46,12 @@ def get_owner_stations(current_user):
                 cs.contact_number,
                 cs.total_slots,
                 sa.status AS approval_status,
-                SUM(CASE WHEN sl.slot_id IS NOT NULL AND active.slot_id IS NULL THEN 1 ELSE 0 END) AS available_slots,
-                SUM(CASE WHEN sl.slot_id IS NOT NULL AND active.slot_id IS NOT NULL THEN 1 ELSE 0 END) AS occupied_slots
+                SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
+                SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
+                SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots
             FROM ChargingStation cs
             LEFT JOIN StationApproval sa ON sa.station_id = cs.station_id
             LEFT JOIN ChargingSlot sl ON sl.station_id = cs.station_id
-            LEFT JOIN (
-                SELECT DISTINCT slot_id
-                FROM Booking
-                WHERE status = 'confirmed'
-                  AND start_time <= NOW()
-                  AND end_time > NOW()
-            ) active ON active.slot_id = sl.slot_id
             WHERE cs.user_id = %s
             GROUP BY cs.station_id, cs.station_name, cs.location, cs.contact_number, cs.total_slots, sa.status
             ORDER BY cs.station_name ASC
@@ -87,6 +83,7 @@ def get_owner_stations(current_user):
                 "approval_status": _to_str(station[5]) or APPROVAL_STATUS_PENDING,
                 "available_slots": int(station[6] or 0),
                 "occupied_slots": int(station[7] or 0),
+                "charging_slots": int(station[8] or 0),
             }
         )
 
@@ -101,6 +98,7 @@ def get_owner_stats(current_user):
     lifecycle_records = []
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
         mysql.connection.commit()
 
@@ -131,7 +129,7 @@ def get_owner_stats(current_user):
                 COUNT(*) AS total_bookings,
                 SUM(
                     CASE
-                        WHEN b.status = 'confirmed'
+                        WHEN b.status = %s
                          AND b.start_time <= NOW()
                          AND b.end_time > NOW()
                         THEN 1 ELSE 0
@@ -142,52 +140,15 @@ def get_owner_stats(current_user):
             JOIN ChargingStation cs ON sl.station_id = cs.station_id
             WHERE cs.user_id = %s
             """,
-            (current_user["user_id"],),
+            (BOOKING_STATUS_CHARGING_STARTED, current_user["user_id"]),
         )
         booking_stats = cursor.fetchone() or (0, 0)
         total_bookings = int(booking_stats[0] or 0)
         active_bookings = int(booking_stats[1] or 0)
 
+        revenue_analytics = _fetch_revenue_analytics(cursor, owner_user_id=current_user["user_id"])
+        estimated_revenue = float(revenue_analytics["summary"]["total_revenue"] or 0.0)
         revenue_estimate_supported = True
-        estimated_revenue = 0.0
-        try:
-            cursor.execute(
-                """
-                SELECT
-                    SUM(
-                        CASE
-                            WHEN b.status IN ('confirmed', 'completed')
-                            THEN
-                                CASE
-                                    WHEN sl.price_per_minute IS NOT NULL AND sl.price_per_minute > 0
-                                    THEN TIMESTAMPDIFF(MINUTE, b.start_time, b.end_time) * sl.price_per_minute
-                                    ELSE
-                                        (
-                                            TIMESTAMPDIFF(MINUTE, b.start_time, b.end_time) / 60.0
-                                        ) * COALESCE(
-                                            sl.power_kw,
-                                            CASE WHEN sl.slot_type = 'fast' THEN 50.0 ELSE 7.0 END
-                                        ) * COALESCE(
-                                            sl.price_per_kwh,
-                                            CASE WHEN sl.slot_type = 'fast' THEN 18.0 ELSE 12.0 END
-                                        )
-                                END
-                            ELSE 0
-                        END
-                    ) AS estimated_revenue
-                FROM Booking b
-                JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
-                JOIN ChargingStation cs ON sl.station_id = cs.station_id
-                WHERE cs.user_id = %s
-                """,
-                (current_user["user_id"],),
-            )
-            estimated_revenue = float((cursor.fetchone() or [0])[0] or 0.0)
-        except OperationalError as error:
-            if not _is_unknown_column_error(error):
-                raise
-            revenue_estimate_supported = False
-            estimated_revenue = 0.0
 
         cursor.execute(
             """
@@ -195,6 +156,8 @@ def get_owner_stats(current_user):
                 sl.slot_id,
                 sl.slot_number,
                 sl.slot_type,
+                sl.charger_name,
+                sl.vehicle_category,
                 cs.station_id,
                 cs.station_name,
                 COUNT(b.booking_id) AS usage_count
@@ -202,7 +165,7 @@ def get_owner_stats(current_user):
             JOIN ChargingStation cs ON sl.station_id = cs.station_id
             LEFT JOIN Booking b ON b.slot_id = sl.slot_id
             WHERE cs.user_id = %s
-            GROUP BY sl.slot_id, sl.slot_number, sl.slot_type, cs.station_id, cs.station_name
+            GROUP BY sl.slot_id, sl.slot_number, sl.slot_type, sl.charger_name, sl.vehicle_category, cs.station_id, cs.station_name
             ORDER BY usage_count DESC, cs.station_name ASC, sl.slot_number ASC
             LIMIT 1
             """,
@@ -210,14 +173,16 @@ def get_owner_stats(current_user):
         )
         most_used_row = cursor.fetchone()
         most_used_slot = None
-        if most_used_row and int(most_used_row[5] or 0) > 0:
+        if most_used_row and int(most_used_row[7] or 0) > 0:
             most_used_slot = {
                 "slot_id": int(most_used_row[0]),
                 "slot_number": int(most_used_row[1] or 0),
                 "slot_type": _to_str(most_used_row[2]),
-                "station_id": int(most_used_row[3]),
-                "station_name": _to_str(most_used_row[4]),
-                "usage_count": int(most_used_row[5] or 0),
+                "charger_name": _to_str(most_used_row[3]),
+                "vehicle_category": _to_str(most_used_row[4]),
+                "station_id": int(most_used_row[5]),
+                "station_name": _to_str(most_used_row[6]),
+                "usage_count": int(most_used_row[7] or 0),
             }
     except Exception:
         mysql.connection.rollback()
@@ -245,6 +210,28 @@ def get_owner_stats(current_user):
     ), 200
 
 
+@owner_bp.route("/revenue-analytics", methods=["GET"])
+@token_required
+@role_required("owner")
+def get_owner_revenue_analytics(current_user):
+    cursor = None
+    try:
+        cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
+        analytics = _fetch_revenue_analytics(cursor, owner_user_id=current_user["user_id"])
+    except Exception:
+        current_app.logger.exception(
+            "Failed to fetch revenue analytics for owner user_id=%s",
+            current_user.get("user_id"),
+        )
+        return jsonify({"error": "Failed to fetch owner revenue analytics"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return jsonify(analytics), 200
+
+
 @owner_bp.route("/stations/<int:station_id>/slots", methods=["GET"])
 @token_required
 @role_required("owner")
@@ -253,6 +240,7 @@ def get_owner_station_slots(current_user, station_id):
 
     try:
         cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
         cursor.execute(
             """
             SELECT station_id
@@ -266,39 +254,27 @@ def get_owner_station_slots(current_user, station_id):
         if not station:
             return jsonify({"error": "Station not found"}), 404
 
-        try:
-            cursor.execute(
-                """
-                SELECT
-                    slot_id,
-                    slot_number,
-                    slot_type,
-                    status,
-                    power_kw,
-                    price_per_kwh,
-                    price_per_minute
-                FROM ChargingSlot
-                WHERE station_id = %s
-                ORDER BY slot_number ASC
-                """,
-                (station_id,),
-            )
-            slots = cursor.fetchall()
-            has_pricing_columns = True
-        except OperationalError as error:
-            if not _is_unknown_column_error(error):
-                raise
-            cursor.execute(
-                """
-                SELECT slot_id, slot_number, slot_type, status
-                FROM ChargingSlot
-                WHERE station_id = %s
-                ORDER BY slot_number ASC
-                """,
-                (station_id,),
-            )
-            slots = cursor.fetchall()
-            has_pricing_columns = False
+        cursor.execute(
+            """
+            SELECT
+                slot_id,
+                slot_number,
+                slot_type,
+                status,
+                power_kw,
+                price_per_kwh,
+                price_per_minute,
+                charger_name,
+                vehicle_category,
+                connector_type
+            FROM ChargingSlot
+            WHERE station_id = %s
+            ORDER BY slot_number ASC
+            """,
+            (station_id,),
+        )
+        slots = cursor.fetchall()
+        has_pricing_columns = True
     except Exception:
         current_app.logger.exception(
             "Failed to fetch slots for station_id=%s owner_user_id=%s",
@@ -317,7 +293,11 @@ def get_owner_station_slots(current_user, station_id):
             "slot_id": row[0],
             "slot_number": int(row[1] or 0),
             "slot_type": slot_type,
+            "charger_type": slot_type,
             "status": _to_str(row[3]),
+            "charger_name": _to_str(row[7]),
+            "vehicle_category": _to_str(row[8]),
+            "connector_type": _to_str(row[9]),
         }
         if has_pricing_columns:
             power_kw = _parse_positive_float(row[4])

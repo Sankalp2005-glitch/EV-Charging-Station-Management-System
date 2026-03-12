@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVgo Browser Check</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 20px;
+        }
+
+        #summary {
+            white-space: pre-wrap;
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 240px;
+        }
+
+        iframe {
+            position: absolute;
+            width: 1440px;
+            height: 1200px;
+            left: -10000px;
+            top: 0;
+            border: 0;
+            background: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>EVgo Browser Check</h1>
+    <pre id="summary">Starting browser validation...</pre>
+    <iframe id="appFrame" title="EVgo browser validation frame"></iframe>
+
+    <script>
+        const frame = document.getElementById("appFrame");
+        const summary = document.getElementById("summary");
+        const REPORT_URL = "http://127.0.0.1:8123/report";
+        const results = [];
+        const runtimeErrors = [];
+        const uiMessages = [];
+        const runId = Date.now();
+        const stationName = `EVgo Test Hub ${runId}`;
+        const updatedChargerName = `EVgo Hyper ${String(runId).slice(-4)}`;
+        const ownerUser = {
+            name: `Owner ${runId}`,
+            email: `owner${runId}@test.com`,
+            phone: `8${String(runId).slice(-9)}`,
+            password: "Owner123!",
+            role: "owner",
+        };
+        const customerUser = {
+            name: `Customer ${runId}`,
+            email: `customer${runId}@test.com`,
+            phone: `9${String(runId).slice(-9)}`,
+            password: "Customer123!",
+            role: "customer",
+        };
+        const adminUser = {
+            email: "browser.admin@test.com",
+            password: "Admin123!",
+            roleLabel: "Admin",
+        };
+
+        function renderSummary(extra = {}) {
+            const snapshot = {
+                status: extra.status || "running",
+                completedSteps: results,
+                uiMessages,
+                runtimeErrors,
+                ...extra,
+            };
+            summary.textContent = JSON.stringify(snapshot, null, 2);
+        }
+
+        function record(step, detail) {
+            results.push({ step, detail });
+            renderSummary();
+        }
+
+        async function sendReport(payload) {
+            try {
+                await fetch(REPORT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+            } catch (reportError) {
+                renderSummary({
+                    status: "failed",
+                    failedStep: "report",
+                    error: reportError instanceof Error ? reportError.message : String(reportError),
+                    originalPayload: payload,
+                });
+            }
+        }
+
+        async function fail(step, error) {
+            const payload = {
+                status: "failed",
+                failedStep: step,
+                error: error instanceof Error ? error.message : String(error),
+                completedSteps: results,
+                uiMessages,
+                runtimeErrors,
+            };
+            renderSummary(payload);
+            await sendReport(payload);
+        }
+
+        async function pass(detail) {
+            const payload = {
+                status: "passed",
+                detail,
+                completedSteps: results,
+                uiMessages,
+                runtimeErrors,
+            };
+            renderSummary(payload);
+            await sendReport(payload);
+        }
+
+        function serializeConsoleArgs(args) {
+            return args.map((value) => {
+                if (value instanceof Error) {
+                    return value.stack || value.message;
+                }
+                if (typeof value === "object") {
+                    try {
+                        return JSON.stringify(value);
+                    } catch (_error) {
+                        return String(value);
+                    }
+                }
+                return String(value);
+            }).join(" ");
+        }
+
+        function patchFrameWindow(win, label) {
+            if (!win || win.__evgoHarnessPatched) {
+                return;
+            }
+
+            win.__evgoHarnessPatched = true;
+            const originalConsoleError = win.console?.error ? win.console.error.bind(win.console) : null;
+
+            win.alert = (message) => {
+                uiMessages.push({ label, type: "alert", message: String(message) });
+                renderSummary();
+            };
+            win.confirm = (message) => {
+                uiMessages.push({ label, type: "confirm", message: String(message) });
+                renderSummary();
+                return true;
+            };
+            if (win.console) {
+                win.console.error = (...args) => {
+                    runtimeErrors.push({ label, type: "console.error", message: serializeConsoleArgs(args) });
+                    renderSummary();
+                    if (originalConsoleError) {
+                        originalConsoleError(...args);
+                    }
+                };
+            }
+            win.addEventListener("error", (event) => {
+                runtimeErrors.push({ label, type: "error", message: event.message || "Script error" });
+                renderSummary();
+            });
+            win.addEventListener("unhandledrejection", (event) => {
+                const reason = event.reason instanceof Error ? event.reason.message : String(event.reason || "Unhandled rejection");
+                runtimeErrors.push({ label, type: "unhandledrejection", message: reason });
+                renderSummary();
+            });
+        }
+
+        function currentContext(label = "current") {
+            const win = frame.contentWindow;
+            const doc = frame.contentDocument;
+            patchFrameWindow(win, label);
+            return { win, doc };
+        }
+
+        function sleep(ms) {
+            return new Promise((resolve) => window.setTimeout(resolve, ms));
+        }
+
+        async function waitFor(check, timeoutMs = 15000, label = "condition") {
+            const start = Date.now();
+            let lastError = null;
+            while (Date.now() - start < timeoutMs) {
+                try {
+                    const result = await check();
+                    if (result) {
+                        return result;
+                    }
+                } catch (error) {
+                    lastError = error;
+                }
+                await sleep(100);
+            }
+            throw new Error(lastError ? `${label}: ${lastError.message}` : `Timed out waiting for ${label}`);
+        }
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message);
+            }
+        }
+
+        function setValue(doc, selector, value) {
+            const element = doc.querySelector(selector);
+            assert(element, `Missing element ${selector}`);
+            element.focus();
+            element.value = value;
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+            element.dispatchEvent(new Event("change", { bubbles: true }));
+            return element;
+        }
+
+        function click(doc, selector) {
+            const element = doc.querySelector(selector);
+            assert(element, `Missing clickable element ${selector}`);
+            element.click();
+            return element;
+        }
+
+        function getText(doc, selector) {
+            return (doc.querySelector(selector)?.textContent || "").trim();
+        }
+
+        async function navigate(path, label) {
+            await new Promise((resolve, reject) => {
+                const timeout = window.setTimeout(() => reject(new Error(`Timed out loading ${path}`)), 15000);
+                frame.onload = () => {
+                    window.clearTimeout(timeout);
+                    try {
+                        const ctx = currentContext(label);
+                        resolve(ctx);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                frame.src = path;
+            });
+            await sleep(200);
+            return currentContext(label);
+        }
+
+        async function waitForPath(suffix, label) {
+            await waitFor(() => {
+                const pathname = frame.contentWindow?.location?.pathname || "";
+                return pathname.endsWith(suffix);
+            }, 20000, `navigation to ${suffix}`);
+            await sleep(300);
+            return currentContext(label);
+        }
+
+        async function waitForText(doc, selector, matcher, label) {
+            await waitFor(() => {
+                const value = getText(doc, selector);
+                if (typeof matcher === "string") {
+                    return value.includes(matcher) ? value : "";
+                }
+                return matcher.test(value) ? value : "";
+            }, 20000, label);
+        }
+
+        function verifyPasswordToggle(doc, inputSelector, toggleSelector) {
+            const input = doc.querySelector(inputSelector);
+            const toggle = doc.querySelector(toggleSelector);
+            assert(input && toggle, "Password field or toggle is missing");
+            assert(input.type === "password", "Password field should start hidden");
+            toggle.click();
+            assert(input.type === "text", "Password field did not switch to visible mode");
+            toggle.click();
+            assert(input.type === "password", "Password field did not switch back to hidden mode");
+        }
+
+        async function registerUser(user, label) {
+            const { doc } = await navigate("index.html", `${label}-register`);
+            assert(getText(doc, ".brand-wordmark") === "EVgo", "Register page branding must be EVgo");
+            verifyPasswordToggle(doc, "#password", "[data-password-toggle]");
+            setValue(doc, "#name", user.name);
+            setValue(doc, "#email", user.email);
+            setValue(doc, "#phone", user.phone);
+            setValue(doc, "#password", user.password);
+            setValue(doc, "#role", user.role);
+            click(doc, "#registerSubmitBtn");
+            await waitForPath("login.html", `${label}-post-register`);
+            record(`register:${label}`, user.email);
+        }
+
+        async function loginUser(email, password, expectedRole, label) {
+            const { doc } = await navigate("login.html", `${label}-login`);
+            assert(getText(doc, ".brand-wordmark") === "EVgo", "Login page branding must be EVgo");
+            verifyPasswordToggle(doc, "#loginPassword", "[data-password-toggle]");
+            setValue(doc, "#loginEmail", email);
+            setValue(doc, "#loginPassword", password);
+            click(doc, "#loginSubmitBtn");
+            const ctx = await waitForPath("dashboard.html", `${label}-dashboard`);
+            await waitForText(ctx.doc, "#roleDisplay", expectedRole, `${label} role display`);
+            assert(!ctx.doc.body.textContent.includes("Network uptime"), "Network uptime card should be removed");
+            assert(getText(ctx.doc, ".page-eyebrow") === "EVgo", "Dashboard header branding must remain EVgo");
+            const headerPanel = ctx.doc.querySelector(".dashboard-header-panel");
+            assert(headerPanel, "Dashboard header panel is missing");
+            assert(getComputedStyle(headerPanel).backgroundImage !== "none", "Dashboard header panel should have a styled background");
+            return ctx;
+        }
+
+        async function logoutUser(doc, label) {
+            click(doc, "#sidebarLogoutBtn");
+            await waitForPath("login.html", `${label}-logout`);
+            record(`logout:${label}`, "ok");
+        }
+
+        async function ensureChart(doc, selector, maxHeight = 420) {
+            const canvas = doc.querySelector(selector);
+            assert(canvas, `Missing chart ${selector}`);
+            await waitFor(() => canvas.clientWidth > 0 && canvas.clientHeight > 0, 15000, `chart size ${selector}`);
+            assert(canvas.clientHeight >= 240, `${selector} should have a controlled visible height`);
+            assert(canvas.clientHeight <= maxHeight, `${selector} should stay inside the card height`);
+            const card = canvas.closest(".analytics-card");
+            assert(card, `${selector} must sit inside an analytics card`);
+            assert(card.scrollWidth <= card.clientWidth + 4, `${selector} card overflows horizontally`);
+        }
+
+        async function openTab(doc, tabName, expectedTitle) {
+            click(doc, `.sidebar-link[data-tab='${tabName}']`);
+            await waitFor(() => getText(doc, "#pageTitle") === expectedTitle, 8000, `page title ${expectedTitle}`);
+        }
+
+        async function run() {
+            const bookingQr = { value: "" };
+
+            await registerUser(ownerUser, "owner");
+            await registerUser(customerUser, "customer");
+
+            let ctx = await loginUser(ownerUser.email, ownerUser.password, "Owner", "owner");
+            await openTab(ctx.doc, "stations", "Stations");
+            assert(!ctx.doc.getElementById("ownerPricePerKwh"), "Station form should not show a top-level price per kWh field");
+            assert(!ctx.doc.getElementById("ownerPricePerMinute"), "Station form should not show a top-level price per minute field");
+            await waitFor(() => ctx.doc.querySelector("#ownerSlotTypeRows .charger-config-card"), 12000, "owner charger card");
+            const optionalLabel = ctx.doc.querySelector(".owner-price-kwh-input + .form-helper-text--optional");
+            assert(optionalLabel, "Optional pricing helper text is missing");
+            const optionalStyles = getComputedStyle(optionalLabel);
+            assert(parseFloat(optionalStyles.fontSize) >= 13, "Optional label font size should be improved");
+            assert(parseInt(optionalStyles.fontWeight, 10) >= 700, "Optional label font weight should be improved");
+            assert(parseFloat(optionalStyles.marginTop) >= 6, "Optional label spacing should be improved");
+            setValue(ctx.doc, "#ownerStationName", stationName);
+            setValue(ctx.doc, "#ownerLocation", "Bhubaneswar");
+            setValue(ctx.doc, "#ownerContact", "9123456789");
+            setValue(ctx.doc, ".owner-charger-name-input", `EVgo Fast ${String(runId).slice(-4)}`);
+            setValue(ctx.doc, ".owner-charger-type-input", "fast");
+            setValue(ctx.doc, ".owner-vehicle-category-input", "car");
+            setValue(ctx.doc, ".owner-charger-power-input", "60");
+            await sleep(150);
+            setValue(ctx.doc, ".owner-connector-type-input", "CCS2");
+            setValue(ctx.doc, ".owner-price-kwh-input", "18.50");
+            click(ctx.doc, "#createStationForm button[type='submit']");
+            await waitFor(() => ctx.doc.getElementById("ownerStationsList")?.textContent.includes(stationName), 20000, "owner station list");
+            click(ctx.doc, ".owner-edit-station-btn");
+            await waitFor(() => ctx.doc.querySelector(".owner-slot-editor .owner-charger-name-input"), 15000, "owner edit form");
+            setValue(ctx.doc, ".owner-slot-editor .owner-charger-name-input", updatedChargerName);
+            click(ctx.doc, ".owner-save-station-btn");
+            await waitFor(() => ctx.doc.getElementById("ownerStationsList")?.textContent.includes(stationName), 20000, "owner station reload");
+            await openTab(ctx.doc, "bookings", "Bookings");
+            assert(ctx.doc.getElementById("ownerScopeStationBtn"), "Owner station bookings toggle missing");
+            assert(ctx.doc.getElementById("ownerScopeMineBtn"), "Owner personal bookings toggle missing");
+            await openTab(ctx.doc, "profile", "Profile");
+            await openTab(ctx.doc, "dashboard", "Dashboard");
+            await ensureChart(ctx.doc, "#ownerRevenueStationChart", 410);
+            await ensureChart(ctx.doc, "#ownerRevenueTrendChart", 360);
+            record("owner-dashboard-ui", "header, tabs, chart shells, and station flows verified");
+            await logoutUser(ctx.doc, "owner");
+
+            ctx = await loginUser(adminUser.email, adminUser.password, adminUser.roleLabel, "admin");
+            await ensureChart(ctx.doc, "#adminRevenueStationChart", 410);
+            await ensureChart(ctx.doc, "#adminRevenueTrendChart", 360);
+            await openTab(ctx.doc, "bookings", "Bookings");
+            await waitFor(() => ctx.doc.querySelector("#adminStationsApprovalList tbody tr"), 20000, "admin approval rows");
+            const findStationApprovalRow = () =>
+                Array.from(ctx.doc.querySelectorAll("#adminStationsApprovalList tbody tr")).find((row) => row.textContent.includes(stationName));
+            const approvalRow = await waitFor(findStationApprovalRow, 20000, "pending station approval row");
+            const approveButton = approvalRow.querySelector(".btn-outline-success");
+            assert(approveButton, "Approve button is missing for admin station approval");
+            approveButton.click();
+            await waitFor(() => !findStationApprovalRow(), 20000, "station approval refresh");
+            record("admin-approval", stationName);
+            await logoutUser(ctx.doc, "admin");
+
+            ctx = await loginUser(customerUser.email, customerUser.password, "Customer", "customer");
+            await openTab(ctx.doc, "stations", "Stations");
+            await waitFor(() => ctx.doc.getElementById("stationsFullList")?.textContent.includes(stationName), 20000, "customer station list");
+            const stationButton = Array.from(ctx.doc.querySelectorAll("[data-station-action='open-slots']")).find(
+                (button) => button.dataset.stationName === stationName
+            );
+            assert(stationButton, "Customer station card button is missing");
+            stationButton.click();
+            await waitFor(() => ctx.doc.getElementById("slotsList")?.querySelector("[data-slot-action='book']"), 20000, "slot booking button");
+            const startInput = ctx.doc.querySelector("[id^='start-']");
+            assert(startInput, "Booking start time input missing");
+            setValue(ctx.doc, `#${startInput.id}`, startInput.min || new Date(Date.now() + 90 * 1000).toISOString().slice(0, 16));
+            const slotId = startInput.id.replace("start-", "");
+            setValue(ctx.doc, `#battery-${slotId}`, "45");
+            setValue(ctx.doc, `#current-${slotId}`, "20");
+            setValue(ctx.doc, `#target-${slotId}`, "25");
+            await waitFor(() => {
+                const estimate = getText(ctx.doc, `#estimate-${slotId}`);
+                return /Hour|Minute/.test(estimate) ? estimate : "";
+            }, 12000, "charging time estimate");
+            click(ctx.doc, `[data-slot-action='book'][data-slot-id='${slotId}']`);
+            await waitFor(() => getText(ctx.doc, "#bookingQrValue").includes("evcs://booking/"), 20000, "booking QR value");
+            bookingQr.value = getText(ctx.doc, "#bookingQrValue");
+            assert(bookingQr.value.includes("evcs://booking/"), "Customer QR payload should be present");
+            await openTab(ctx.doc, "bookings", "Bookings");
+            await waitFor(() => ctx.doc.getElementById("myBookingsList")?.textContent.includes(stationName), 20000, "customer bookings list");
+            record("customer-booking", bookingQr.value.slice(0, 32));
+            await logoutUser(ctx.doc, "customer");
+
+            ctx = await loginUser(ownerUser.email, ownerUser.password, "Owner", "owner-second");
+            await openTab(ctx.doc, "bookings", "Bookings");
+            await waitFor(() => ctx.doc.getElementById("ownerBookingsList")?.textContent.includes(stationName), 20000, "owner station booking row");
+            const ownerBookingRow = await waitFor(
+                () => Array.from(ctx.doc.querySelectorAll("#ownerBookingsList tbody tr")).find((row) => row.textContent.includes(stationName)),
+                20000,
+                "owner booking row"
+            );
+            const verifyButton = ownerBookingRow.querySelector(".owner-verify-qr-btn");
+            assert(verifyButton, "Owner QR verify button is missing");
+            verifyButton.click();
+            await waitFor(() => ctx.doc.getElementById("ownerQrVerificationSection")?.style.display !== "none", 10000, "owner QR panel");
+            setValue(ctx.doc, "#ownerQrTokenInput", bookingQr.value);
+            click(ctx.doc, "#ownerVerifyQrBtn");
+            await waitFor(() => ctx.doc.getElementById("ownerBookingsList")?.textContent.toLowerCase().includes("charging started"), 20000, "charging started status");
+            await sleep(12000);
+            const ownerProgress = getText(ctx.doc, ".charging-progress__percent");
+            assert(ownerProgress !== "0%", "Owner charging progress should move beyond 0%");
+            await openTab(ctx.doc, "dashboard", "Dashboard");
+            await ensureChart(ctx.doc, "#ownerRevenueStationChart", 410);
+            await ensureChart(ctx.doc, "#ownerRevenueTrendChart", 360);
+            record("owner-charging", ownerProgress);
+            await logoutUser(ctx.doc, "owner-second");
+
+            ctx = await loginUser(customerUser.email, customerUser.password, "Customer", "customer-second");
+            await openTab(ctx.doc, "bookings", "Bookings");
+            await waitFor(() => ctx.doc.getElementById("myBookingsList")?.textContent.toLowerCase().includes("charging started"), 20000, "customer charging status");
+            await sleep(12000);
+            const customerProgress = getText(ctx.doc, ".charging-progress__percent");
+            const customerEta = getText(ctx.doc, ".charging-progress__eta");
+            assert(customerProgress !== "0%", "Customer charging progress should move beyond 0%");
+            assert(customerEta.includes("Estimated complete") || customerEta.includes("remaining"), "Customer ETA should be visible");
+            await openTab(ctx.doc, "stations", "Stations");
+            const stationButtonSecondPass = Array.from(ctx.doc.querySelectorAll("[data-station-action='open-slots']")).find(
+                (button) => button.dataset.stationName === stationName
+            );
+            assert(stationButtonSecondPass, "Customer station button is missing on the second pass");
+            stationButtonSecondPass.click();
+            await waitFor(() => ctx.doc.getElementById("slotsList")?.textContent.toLowerCase().includes("charging"), 20000, "charging availability state");
+            record("customer-live-charging", `${customerProgress} | ${customerEta}`);
+            await logoutUser(ctx.doc, "customer-second");
+
+            ctx = await loginUser(adminUser.email, adminUser.password, adminUser.roleLabel, "admin-second");
+            await ensureChart(ctx.doc, "#adminRevenueStationChart", 410);
+            await ensureChart(ctx.doc, "#adminRevenueTrendChart", 360);
+            record("admin-revenue-charts", "rendered after booking activity");
+            await logoutUser(ctx.doc, "admin-second");
+
+            assert(runtimeErrors.length === 0, `Runtime errors detected: ${runtimeErrors.map((item) => item.message).join(" | ")}`);
+            await pass("All EVgo browser checks passed.");
+        }
+
+        run().catch(async (error) => {
+            await fail("browser-check", error);
+        });
+    </script>
+</body>
+</html>

@@ -1,3 +1,70 @@
+let adminRevenueStationChart = null;
+let adminRevenueTrendChart = null;
+
+function destroyAdminChart(chart) {
+    if (chart && typeof chart.destroy === "function") {
+        chart.destroy();
+    }
+    return null;
+}
+
+function formatAdminRevenueAxisLabel(value) {
+    if (typeof window.formatCompactCurrencyTick === "function") {
+        return window.formatCompactCurrencyTick(value);
+    }
+    return formatMoney(Number(value || 0));
+}
+
+function formatAdminRevenueStationLabels(stations) {
+    return stations.map((item) =>
+        typeof window.wrapChartLabel === "function" ? window.wrapChartLabel(item.station_name) : item.station_name
+    );
+}
+
+function renderAdminRevenueBreakdown(stations) {
+    const container = document.getElementById("adminRevenueBreakdown");
+    if (!container) {
+        return;
+    }
+
+    if (!Array.isArray(stations) || stations.length === 0) {
+        container.innerHTML = "<div class='empty-state'>No system revenue data available yet.</div>";
+        return;
+    }
+
+    const rows = stations
+        .map(
+            (station) => `
+                <tr>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(station.station_name)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(station.location || "Location unavailable")}</span>
+                    </td>
+                    <td>${escapeHtml(station.charger_count || 0)}</td>
+                    <td>${escapeHtml(station.paid_bookings || 0)}</td>
+                    <td>${escapeHtml(formatMoney(station.total_revenue || 0))}</td>
+                </tr>
+            `
+        )
+        .join("");
+
+    container.innerHTML = `
+        <div class="table-shell">
+            <table class="table booking-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Station</th>
+                        <th>Chargers</th>
+                        <th>Paid bookings</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
 function setAdminStationStatusButtons(activeStatus) {
     const mapping = {
         pending: "adminPendingStationsBtn",
@@ -5,6 +72,7 @@ function setAdminStationStatusButtons(activeStatus) {
         rejected: "adminRejectedStationsBtn",
         all: "adminAllStationsBtn",
     };
+
     Object.entries(mapping).forEach(([status, buttonId]) => {
         const button = document.getElementById(buttonId);
         if (!button) {
@@ -21,62 +89,211 @@ function renderAdminStats(stats) {
         return;
     }
 
-    const revenueSupported = stats?.revenue_estimate_supported !== false;
-    const revenueText = revenueSupported ? formatMoney(Number(stats?.total_revenue || 0)) : "N/A";
+    const cards = [
+        {
+            tone: "cyan",
+            icon: "bi-people-fill",
+            label: "Users",
+            value: Number(stats?.total_users || 0),
+            meta: "Registered system users",
+        },
+        {
+            tone: "blue",
+            icon: "bi-ev-station-fill",
+            label: "Stations",
+            value: Number(stats?.total_stations || 0),
+            meta: "Tracked network locations",
+        },
+        {
+            tone: "amber",
+            icon: "bi-calendar2-check-fill",
+            label: "Bookings",
+            value: Number(stats?.total_bookings || 0),
+            meta: `${Number(stats?.active_sessions || 0)} active sessions`,
+        },
+        {
+            tone: "emerald",
+            icon: "bi-cash-stack",
+            label: "Revenue",
+            value: formatMoney(Number(stats?.total_revenue || 0)),
+            meta: "Paid booking revenue",
+        },
+    ];
 
-    container.innerHTML = `
-        <div class="col-md-2">
-            <div class="card border-0 bg-body-tertiary h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Users</div>
-                    <div class="fs-5 fw-semibold">${Number(stats?.total_users || 0)}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card border-0 bg-body-tertiary h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Stations</div>
-                    <div class="fs-5 fw-semibold">${Number(stats?.total_stations || 0)}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card border-0 bg-body-tertiary h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Bookings</div>
-                    <div class="fs-5 fw-semibold">${Number(stats?.total_bookings || 0)}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 bg-body-tertiary h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Revenue</div>
-                    <div class="fs-5 fw-semibold">${revenueText}</div>
-                    ${
-                        revenueSupported
-                            ? ""
-                            : '<div class="small text-muted">Estimated with fallback defaults.</div>'
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 bg-body-tertiary h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Active Sessions</div>
-                    <div class="fs-5 fw-semibold">${Number(stats?.active_sessions || 0)}</div>
-                </div>
-            </div>
-        </div>
-    `;
+    container.innerHTML = cards.map(buildMetricCard).join("");
+}
+
+function renderAdminRevenueAnalytics(analytics) {
+    const stationCanvas = document.getElementById("adminRevenueStationChart");
+    const trendCanvas = document.getElementById("adminRevenueTrendChart");
+    if (!stationCanvas || !trendCanvas || typeof window.Chart !== "function") {
+        return;
+    }
+
+    const stationRevenue = Array.isArray(analytics?.station_revenue) ? analytics.station_revenue : [];
+    const monthlyTrend = Array.isArray(analytics?.monthly_trend) ? analytics.monthly_trend : [];
+
+    adminRevenueStationChart = destroyAdminChart(adminRevenueStationChart);
+    adminRevenueTrendChart = destroyAdminChart(adminRevenueTrendChart);
+    if (typeof window.setAnalyticsChartShellHeight === "function") {
+        window.setAnalyticsChartShellHeight(stationCanvas, stationRevenue.length, {
+            minHeight: 300,
+            maxHeight: 400,
+            perItemHeight: 58,
+            fallbackHeight: 320,
+        });
+        window.setAnalyticsChartShellHeight(trendCanvas, monthlyTrend.length, {
+            minHeight: 300,
+            maxHeight: 340,
+            perItemHeight: 42,
+            fallbackHeight: 320,
+        });
+    }
+
+    adminRevenueStationChart = new window.Chart(stationCanvas, {
+        type: "bar",
+        data: {
+            labels: formatAdminRevenueStationLabels(stationRevenue),
+            datasets: [
+                {
+                    label: "Revenue",
+                    data: stationRevenue.map((item) => Number(item.total_revenue || 0)),
+                    backgroundColor: "#0f9f8f",
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    maxBarThickness: 24,
+                },
+            ],
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            resizeDelay: 150,
+            layout: {
+                padding: { top: 8, right: 10, bottom: 0, left: 2 },
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `Revenue: ${formatMoney(Number(context.raw || 0))}`,
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.16)",
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        color: "#64748b",
+                        font: { family: "Manrope", size: 11, weight: "700" },
+                        callback: (value) => formatAdminRevenueAxisLabel(value),
+                    },
+                },
+                y: {
+                    grid: {
+                        display: false,
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        color: "#334155",
+                        font: { family: "Manrope", size: 11, weight: "700" },
+                    },
+                },
+            },
+        },
+    });
+
+    adminRevenueTrendChart = new window.Chart(trendCanvas, {
+        type: "line",
+        data: {
+            labels: monthlyTrend.map((item) => item.label),
+            datasets: [
+                {
+                    label: "Monthly revenue",
+                    data: monthlyTrend.map((item) => Number(item.total_revenue || 0)),
+                    borderColor: "#2563eb",
+                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointHoverRadius: 4,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            resizeDelay: 150,
+            layout: {
+                padding: { top: 8, right: 10, bottom: 0, left: 2 },
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `Revenue: ${formatMoney(Number(context.raw || 0))}`,
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        color: "#64748b",
+                        font: { family: "Manrope", size: 11, weight: "700" },
+                        maxRotation: 0,
+                        minRotation: 0,
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.16)",
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        color: "#64748b",
+                        font: { family: "Manrope", size: 11, weight: "700" },
+                        callback: (value) => formatAdminRevenueAxisLabel(value),
+                    },
+                },
+            },
+        },
+    });
+
+    renderAdminRevenueBreakdown(stationRevenue);
+}
+
+async function loadAdminRevenueAnalytics() {
+    if (getRole() !== "admin") {
+        return;
+    }
+
+    try {
+        const analytics = await apiRequest("/api/admin/revenue-analytics", { method: "GET" }, true);
+        renderAdminRevenueAnalytics(analytics);
+    } catch (error) {
+        const container = document.getElementById("adminRevenueBreakdown");
+        if (container) {
+            container.innerHTML = `<div class="empty-state text-danger">${escapeHtml(error.message)}</div>`;
+        }
+    }
 }
 
 async function loadAdminStats() {
     if (getRole() !== "admin") {
         return;
     }
+
     const container = document.getElementById("adminStatsCards");
     if (!container) {
         return;
@@ -85,8 +302,11 @@ async function loadAdminStats() {
     try {
         const stats = await apiRequest("/api/admin/stats", { method: "GET" }, true);
         renderAdminStats(stats);
+        updateDashboardSummaryState({ adminStats: stats });
     } catch (error) {
-        container.innerHTML = `<p class="text-danger mb-0">${error.message}</p>`;
+        container.innerHTML = `<div class="col-12"><div class="empty-state text-danger">${escapeHtml(
+            error.message
+        )}</div></div>`;
     }
 }
 
@@ -97,39 +317,55 @@ function renderAdminStationApprovals(stations) {
     }
 
     if (!Array.isArray(stations) || stations.length === 0) {
-        container.innerHTML = "<p class='text-muted mb-0'>No stations found for this view.</p>";
+        container.innerHTML = "<div class='empty-state'>No stations found for this view.</div>";
         return;
     }
 
     const rows = stations
         .map((station) => {
             const status = station.approval_status || "pending";
-            const statusBadgeClass =
-                status === "approved"
-                    ? "text-bg-success"
-                    : status === "rejected"
-                    ? "text-bg-danger"
-                    : "text-bg-warning";
-
             const actions = `
-                <button class="btn btn-outline-success btn-sm me-1"
-                    ${status === "approved" ? "disabled" : ""}
-                    onclick="updateAdminStationApproval(${station.station_id}, 'approved')">Approve</button>
-                <button class="btn btn-outline-danger btn-sm"
-                    ${status === "rejected" ? "disabled" : ""}
-                    onclick="updateAdminStationApproval(${station.station_id}, 'rejected')">Reject</button>
+                <div class="booking-table__actions">
+                    <button
+                        class="btn btn-outline-success btn-sm"
+                        type="button"
+                        ${status === "approved" ? "disabled" : ""}
+                        onclick="updateAdminStationApproval(${station.station_id}, 'approved')"
+                    >
+                        Approve
+                    </button>
+                    <button
+                        class="btn btn-outline-danger btn-sm"
+                        type="button"
+                        ${status === "rejected" ? "disabled" : ""}
+                        onclick="updateAdminStationApproval(${station.station_id}, 'rejected')"
+                    >
+                        Reject
+                    </button>
+                </div>
             `;
 
             return `
                 <tr>
-                    <td>${station.station_id}</td>
-                    <td>${station.station_name}</td>
-                    <td>${station.location}</td>
-                    <td>${station.owner_name}<br><span class="text-muted small">${station.owner_email}</span></td>
-                    <td>${station.total_slots} (F:${station.fast_slots} / N:${station.normal_slots})</td>
-                    <td><span class="badge ${statusBadgeClass}">${status}</span></td>
-                    <td>${station.reviewed_by_name || "-"}</td>
-                    <td>${station.reviewed_at || "-"}</td>
+                    <td>
+                        <span class="booking-table__primary">#${escapeHtml(station.station_id)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(station.location)}</span>
+                    </td>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(station.station_name)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(
+                            `${station.total_slots} chargers (F:${station.fast_slots} / N:${station.normal_slots})`
+                        )}</span>
+                    </td>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(station.owner_name)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(station.owner_email)}</span>
+                    </td>
+                    <td>${buildStatusBadge(status)}</td>
+                    <td>
+                        <span class="booking-table__primary">${escapeHtml(station.reviewed_by_name || "-")}</span>
+                        <span class="booking-table__secondary">${escapeHtml(station.reviewed_at || "Pending review")}</span>
+                    </td>
                     <td>${actions}</td>
                 </tr>
             `;
@@ -137,22 +373,21 @@ function renderAdminStationApprovals(stations) {
         .join("");
 
     container.innerHTML = `
-        <table class="table table-striped table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Station</th>
-                    <th>Location</th>
-                    <th>Owner</th>
-                    <th>Slots</th>
-                    <th>Status</th>
-                    <th>Reviewed By</th>
-                    <th>Reviewed At</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>
+        <div class="table-shell">
+            <table class="table booking-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Station ID</th>
+                        <th>Station</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Review</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
     `;
 }
 
@@ -160,6 +395,7 @@ async function loadAdminStationApprovals(status = adminViewState.stationStatus) 
     if (getRole() !== "admin") {
         return;
     }
+
     const container = document.getElementById("adminStationsApprovalList");
     if (!container) {
         return;
@@ -176,7 +412,7 @@ async function loadAdminStationApprovals(status = adminViewState.stationStatus) 
         );
         renderAdminStationApprovals(stations);
     } catch (error) {
-        container.innerHTML = `<p class="text-danger mb-0">${error.message}</p>`;
+        container.innerHTML = `<div class="empty-state text-danger">${escapeHtml(error.message)}</div>`;
     }
 }
 
@@ -199,6 +435,7 @@ async function updateAdminStationApproval(stationId, status) {
         );
         alert(result.message || "Station approval updated.");
         await loadAdminStats();
+        await loadAdminRevenueAnalytics();
         await loadAdminStationApprovals(adminViewState.stationStatus);
         await loadStations();
         await loadOwnerStations();
@@ -208,3 +445,4 @@ async function updateAdminStationApproval(stationId, status) {
 }
 
 window.updateAdminStationApproval = updateAdminStationApproval;
+window.loadAdminRevenueAnalytics = loadAdminRevenueAnalytics;
