@@ -26,7 +26,7 @@ function formatRevenueAxisLabel(value) {
 
 function formatRevenueStationLabels(stations) {
     return stations.map((item) =>
-        typeof window.wrapChartLabel === "function" ? window.wrapChartLabel(item.station_name) : item.station_name
+        typeof window.truncateChartLabel === "function" ? window.truncateChartLabel(item.station_name, 16) : item.station_name
     );
 }
 
@@ -49,9 +49,9 @@ function renderRevenueBreakdownTable(containerId, stations, emptyMessage) {
                         <span class="booking-table__primary">${escapeHtml(station.station_name)}</span>
                         <span class="booking-table__secondary">${escapeHtml(station.location || "Location unavailable")}</span>
                     </td>
-                    <td>${escapeHtml(station.charger_count || 0)}</td>
-                    <td>${escapeHtml(station.paid_bookings || 0)}</td>
-                    <td>${escapeHtml(formatMoney(station.total_revenue || 0))}</td>
+                    <td class="cell-number">${escapeHtml(station.charger_count || 0)}</td>
+                    <td class="cell-number">${escapeHtml(station.paid_bookings || 0)}</td>
+                    <td class="cell-currency">${escapeHtml(formatMoney(station.total_revenue || 0))}</td>
                 </tr>
             `
         )
@@ -59,13 +59,13 @@ function renderRevenueBreakdownTable(containerId, stations, emptyMessage) {
 
     container.innerHTML = `
         <div class="table-shell">
-            <table class="table booking-table align-middle">
+            <table class="table booking-table booking-table--revenue align-middle">
                 <thead>
                     <tr>
                         <th>Station</th>
-                        <th>Chargers</th>
-                        <th>Paid bookings</th>
-                        <th>Revenue</th>
+                        <th class="cell-number">Chargers</th>
+                        <th class="cell-number">Paid bookings</th>
+                        <th class="cell-currency">Revenue</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -117,6 +117,10 @@ function renderOwnerStations(stations) {
     container.innerHTML = stations
         .map((station) => {
             const approvalStatus = station.approval_status || "pending";
+            const contactDisplay =
+                typeof window.formatPhoneDisplay === "function"
+                    ? window.formatPhoneDisplay(station.contact_number || "")
+                    : station.contact_number || "-";
 
             return `
                 <div class="col-12 col-lg-6 col-xxl-4">
@@ -157,7 +161,7 @@ function renderOwnerStations(stations) {
 
                         <div>
                             <span class="station-card__price-label">Contact</span>
-                            <div class="station-card__price-value">${escapeHtml(station.contact_number || "-")}</div>
+                            <div class="station-card__price-value">${escapeHtml(contactDisplay)}</div>
                         </div>
 
                         <div class="station-action-group">
@@ -332,6 +336,12 @@ function renderOwnerRevenueAnalytics(analytics) {
                     ticks: {
                         color: "#334155",
                         font: { family: "Manrope", size: 11, weight: "700" },
+                        callback: function (value) {
+                            const label = this.getLabelForValue(value);
+                            return typeof window.truncateChartLabel === "function"
+                                ? window.truncateChartLabel(label, 16)
+                                : label;
+                        },
                     },
                 },
             },

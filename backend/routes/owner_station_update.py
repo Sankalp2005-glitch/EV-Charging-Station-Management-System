@@ -3,7 +3,7 @@ from MySQLdb import OperationalError
 
 from extensions import mysql
 from routes.owner_bp import owner_bp
-from routes.owner_common import PHONE_PATTERN, clean_text, is_close
+from routes.owner_common import build_contact_number, clean_text, is_close
 from services.booking_config import (
     DEFAULT_POWER_KW_BY_SLOT_TYPE,
     DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE,
@@ -29,13 +29,15 @@ def update_owner_station(current_user, station_id):
 
     station_name = clean_text(payload.get("station_name"))
     location = clean_text(payload.get("location"))
-    contact_number = clean_text(payload.get("contact_number"))
+    contact_number_raw = payload.get("contact_number")
+    contact_country_code = payload.get("contact_country_code")
     raw_slots = payload.get("slots")
 
     if not station_name or not location:
         return jsonify({"error": "station_name and location are required"}), 400
-    if contact_number and not PHONE_PATTERN.match(contact_number):
-        return jsonify({"error": "contact_number must be 10 to 13 digits"}), 400
+    contact_number, contact_error = build_contact_number(contact_number_raw, contact_country_code)
+    if contact_error:
+        return jsonify({"error": contact_error}), 400
     if not isinstance(raw_slots, list) or not raw_slots:
         return jsonify({"error": "slots must be a non-empty list"}), 400
 

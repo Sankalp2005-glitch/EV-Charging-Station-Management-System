@@ -24,15 +24,15 @@
                 </div>
                 <div>
                     <p class="sidebar-brand__eyebrow">Charge network</p>
-                    <h1 class="sidebar-brand__title">EVgo</h1>
+                    <h1 class="sidebar-brand__title evgo-wordmark">EV<span class="evgo-wordmark__go">go</span></h1>
                 </div>
             </div>
 
-            <nav class="sidebar-nav" aria-label="Dashboard navigation">
-                <button type="button" class="sidebar-link active" data-tab="dashboard">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span>Dashboard</span>
-                </button>
+                <nav class="sidebar-nav" aria-label="Dashboard navigation">
+                    <button type="button" class="sidebar-link active" data-tab="dashboard">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>Dashboard</span>
+                    </button>
                 <button type="button" class="sidebar-link" data-tab="stations">
                     <i class="bi bi-ev-station-fill"></i>
                     <span>Stations</span>
@@ -41,15 +41,32 @@
                     <i class="bi bi-calendar2-check-fill"></i>
                     <span>Bookings</span>
                 </button>
-                <button type="button" class="sidebar-link" data-tab="profile">
-                    <i class="bi bi-person-badge-fill"></i>
-                    <span>Profile</span>
-                </button>
-                <button type="button" class="sidebar-link sidebar-link--danger" id="sidebarLogoutBtn">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                </button>
-            </nav>
+                    <button type="button" class="sidebar-link" data-tab="profile">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Profile</span>
+                    </button>
+                    <div class="sidebar-divider admin-only">Admin</div>
+                    <button type="button" class="sidebar-link admin-only" data-tab="admin-users">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Users</span>
+                    </button>
+                    <button type="button" class="sidebar-link admin-only" data-tab="admin-stations">
+                        <i class="bi bi-ev-station-fill"></i>
+                        <span>Stations</span>
+                    </button>
+                    <button type="button" class="sidebar-link admin-only" data-tab="admin-bookings">
+                        <i class="bi bi-calendar2-week-fill"></i>
+                        <span>Bookings</span>
+                    </button>
+                    <button type="button" class="sidebar-link admin-only" data-tab="admin-revenue">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                        <span>Revenue</span>
+                    </button>
+                    <button type="button" class="sidebar-link sidebar-link--danger" id="sidebarLogoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </button>
+                </nav>
 
             <div class="sidebar-note">
                 <span class="sidebar-note__label">Live operations</span>
@@ -69,7 +86,7 @@
                                 <i class="bi bi-lightning-charge-fill"></i>
                             </span>
                             <div>
-                                <p class="page-eyebrow mb-1">EVgo</p>
+                                <p class="page-eyebrow mb-1">Control center</p>
                                 <h2 class="page-title mb-1" id="pageTitle">Dashboard</h2>
                                 <p class="page-subtitle mb-0" id="roleDisplay"></p>
                             </div>
@@ -97,7 +114,7 @@
                 <section id="dashboardTab" class="dashboard-tab tab-content active">
                     <div class="hero-banner">
                         <div class="hero-banner__copy">
-                            <span class="hero-banner__eyebrow">EVgo platform</span>
+                            <span class="hero-banner__eyebrow">Operations overview</span>
                             <h3 class="hero-banner__title">Run your EV charging network with clearer operations data.</h3>
                             <p class="hero-banner__text">
                                 Review charger availability, monitor bookings, and track EV charging performance from a single responsive dashboard.
@@ -117,7 +134,7 @@
                             <div class="hero-stat">
                                 <span class="hero-stat__label" id="heroPrimaryLabel">Active charging sessions</span>
                                 <strong class="hero-stat__value" id="heroPrimaryValue">0</strong>
-                                <span class="hero-stat__meta" id="heroPrimaryMeta">Live across EVgo</span>
+                                <span class="hero-stat__meta" id="heroPrimaryMeta">Live across the network</span>
                             </div>
                             <div class="hero-stat">
                                 <span class="hero-stat__label" id="heroSecondaryLabel">Available chargers</span>
@@ -357,7 +374,10 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Contact number</label>
-                                    <input id="ownerContact" class="form-control" type="text" placeholder="Contact number (optional)">
+                                    <div class="phone-input-group">
+                                        <input id="ownerContactCode" class="form-control phone-code" type="tel" inputmode="numeric" placeholder="+91" value="+91" maxlength="4">
+                                        <input id="ownerContactNumber" class="form-control phone-number" type="tel" inputmode="numeric" pattern="[0-9]{10}" placeholder="Enter your 10 digit phone number" maxlength="10">
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Total chargers</label>
@@ -558,6 +578,219 @@
                     </div>
                 </section>
 
+                <section id="admin-usersTab" class="dashboard-tab tab-content admin-only" style="display:none;">
+                    <div class="surface-card surface-card--padded">
+                        <div class="section-heading">
+                            <div>
+                                <span class="section-heading__eyebrow">Admin</span>
+                                <h4 class="section-heading__title mb-1">User management</h4>
+                                <p class="section-heading__text mb-0">Search, filter, and manage platform accounts with real-time controls.</p>
+                            </div>
+                            <div class="dashboard-filter-bar">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input id="adminUserSearch" class="form-control" type="search" placeholder="Search users">
+                                </div>
+                                <select id="adminUserRoleFilter" class="form-select form-select-sm">
+                                    <option value="all">All roles</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="owner">Station Owner</option>
+                                    <option value="customer">Customer</option>
+                                </select>
+                                <select id="adminUserStatusFilter" class="form-select form-select-sm">
+                                    <option value="all">All statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="suspended">Suspended</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                                <button id="adminUserRefreshBtn" class="btn btn-outline-secondary btn-sm" type="button">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="adminUsersTable" class="table-responsive"></div>
+                        <div id="adminUserDetails" class="details-panel" style="display:none;"></div>
+                    </div>
+                </section>
+
+                <section id="admin-stationsTab" class="dashboard-tab tab-content admin-only" style="display:none;">
+                    <div class="surface-card surface-card--padded">
+                        <div class="section-heading">
+                            <div>
+                                <span class="section-heading__eyebrow">Admin</span>
+                                <h4 class="section-heading__title mb-1">Station management</h4>
+                                <p class="section-heading__text mb-0">Review approvals, edit station details, and drill into charger inventory.</p>
+                            </div>
+                            <div class="dashboard-filter-bar">
+                                <select id="adminStationStatusFilter" class="form-select form-select-sm">
+                                    <option value="all">All stations</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                                <button id="adminStationsRefreshBtn" class="btn btn-outline-secondary btn-sm" type="button">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="adminStationsTable" class="table-responsive"></div>
+                        <div id="adminStationDetails" class="details-panel" style="display:none;"></div>
+                    </div>
+                </section>
+
+                <section id="admin-bookingsTab" class="dashboard-tab tab-content admin-only" style="display:none;">
+                    <div class="surface-card surface-card--padded">
+                        <div class="section-heading">
+                            <div>
+                                <span class="section-heading__eyebrow">Admin</span>
+                                <h4 class="section-heading__title mb-1">Booking administration</h4>
+                                <p class="section-heading__text mb-0">Filter, monitor, and manage charging reservations across the network.</p>
+                            </div>
+                            <div class="dashboard-filter-bar">
+                                <select id="adminBookingStatusFilter" class="form-select form-select-sm">
+                                    <option value="all">All statuses</option>
+                                    <option value="waiting_to_start">Waiting</option>
+                                    <option value="charging_started">Charging</option>
+                                    <option value="charging_completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="completed">Completed (legacy)</option>
+                                </select>
+                                <select id="adminBookingStationFilter" class="form-select form-select-sm">
+                                    <option value="all">All stations</option>
+                                </select>
+                                <input id="adminBookingLocationFilter" class="form-control form-control-sm" type="text" placeholder="Location" aria-label="Location">
+                                <div class="filter-field">
+                                    <label class="filter-field__label" for="adminBookingStartTime">Start Date</label>
+                                    <input id="adminBookingStartTime" class="form-control form-control-sm" type="date" aria-label="Start date">
+                                </div>
+                                <div class="filter-field">
+                                    <label class="filter-field__label" for="adminBookingEndTime">End Date</label>
+                                    <input id="adminBookingEndTime" class="form-control form-control-sm" type="date" aria-label="End date">
+                                </div>
+                                <select id="adminBookingSort" class="form-select form-select-sm">
+                                    <option value="date_desc">Date: Newest</option>
+                                    <option value="date_asc">Date: Oldest</option>
+                                    <option value="station_asc">Station: A-Z</option>
+                                </select>
+                                <button id="adminBookingApplyFilters" class="btn btn-outline-primary btn-sm" type="button">Apply</button>
+                                <button id="adminBookingResetFilters" class="btn btn-outline-secondary btn-sm" type="button">Reset</button>
+                            </div>
+                        </div>
+                        <div id="adminBookingsTable" class="table-responsive"></div>
+                        <div id="adminBookingDetails" class="details-panel" style="display:none;"></div>
+                    </div>
+                </section>
+
+                <section id="admin-revenueTab" class="dashboard-tab tab-content admin-only" style="display:none;">
+                    <div class="surface-card surface-card--padded">
+                        <div class="section-heading">
+                            <div>
+                                <span class="section-heading__eyebrow">Admin</span>
+                                <h4 class="section-heading__title mb-1">Revenue analytics</h4>
+                                <p class="section-heading__text mb-0">Track total revenue, station performance, and charging session distribution.</p>
+                            </div>
+                            <button id="adminRevenueRefreshBtn" class="btn btn-outline-secondary btn-sm" type="button">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Refresh
+                            </button>
+                        </div>
+
+                        <div id="adminRevenueSummaryCards" class="row g-4 mb-4"></div>
+
+                        <div class="row g-4">
+                            <div class="col-12 col-xl-7">
+                                <div class="surface-card surface-card--padded analytics-card h-100">
+                                    <div class="section-heading section-heading--compact">
+                                        <div>
+                                            <span class="section-heading__eyebrow">Station revenue</span>
+                                            <h4 class="section-heading__title mb-1">Revenue per station</h4>
+                                            <p class="section-heading__text mb-0">Station-level revenue contribution across the network.</p>
+                                        </div>
+                                    </div>
+                                    <div class="analytics-chart-shell analytics-chart-shell--station">
+                                        <canvas id="adminRevenuePageStationChart" class="analytics-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-5">
+                                <div class="surface-card surface-card--padded analytics-card h-100">
+                                    <div class="section-heading section-heading--compact">
+                                        <div>
+                                            <span class="section-heading__eyebrow">Monthly</span>
+                                            <h4 class="section-heading__title mb-1">Monthly revenue</h4>
+                                            <p class="section-heading__text mb-0">Paid booking revenue trend.</p>
+                                        </div>
+                                    </div>
+                                    <div class="analytics-chart-shell analytics-chart-shell--trend">
+                                        <canvas id="adminRevenuePageMonthlyChart" class="analytics-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mt-1">
+                            <div class="col-12 col-xl-6">
+                                <div class="surface-card surface-card--padded analytics-card h-100">
+                                    <div class="section-heading section-heading--compact">
+                                        <div>
+                                            <span class="section-heading__eyebrow">Daily</span>
+                                            <h4 class="section-heading__title mb-1">Daily revenue</h4>
+                                            <p class="section-heading__text mb-0">Last two weeks of paid revenue.</p>
+                                        </div>
+                                    </div>
+                                    <div class="analytics-chart-shell analytics-chart-shell--trend">
+                                        <canvas id="adminRevenueDailyChart" class="analytics-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-6">
+                                <div class="surface-card surface-card--padded analytics-card h-100">
+                                    <div class="section-heading section-heading--compact">
+                                        <div>
+                                            <span class="section-heading__eyebrow">Sessions</span>
+                                            <h4 class="section-heading__title mb-1">Charging session distribution</h4>
+                                            <p class="section-heading__text mb-0">Active and completed session mix.</p>
+                                        </div>
+                                    </div>
+                                    <div class="analytics-chart-shell analytics-chart-shell--trend">
+                                        <canvas id="adminSessionDistributionChart" class="analytics-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mt-1">
+                            <div class="col-12 col-xl-6">
+                                <div class="surface-card surface-card--padded h-100">
+                                    <div class="section-heading section-heading--compact">
+                                        <div>
+                                            <span class="section-heading__eyebrow">Breakdown</span>
+                                            <h4 class="section-heading__title mb-1">Station revenue detail</h4>
+                                            <p class="section-heading__text mb-0">Paid bookings and revenue by location.</p>
+                                        </div>
+                                    </div>
+                                    <div id="adminRevenueStationTable"></div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-6">
+                                <div class="surface-card surface-card--padded h-100">
+                                    <div class="section-heading section-heading--compact">
+                                        <div>
+                                            <span class="section-heading__eyebrow">Chargers</span>
+                                            <h4 class="section-heading__title mb-1">Revenue per charger</h4>
+                                            <p class="section-heading__text mb-0">Top chargers by paid revenue.</p>
+                                        </div>
+                                    </div>
+                                    <div id="adminRevenueChargerTable"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="profileTab" class="dashboard-tab tab-content" style="display:none;">
                     <div id="profileSection" class="surface-card surface-card--padded">
                         <div class="section-heading">
@@ -591,7 +824,10 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Phone</label>
-                                <input id="profilePhone" class="form-control" type="text" placeholder="Phone (10-13 digits)" required>
+                                <div class="phone-input-group">
+                                    <input id="profileCountryCode" class="form-control phone-code" type="tel" inputmode="numeric" placeholder="+91" value="+91" maxlength="4" required>
+                                    <input id="profilePhone" class="form-control phone-number" type="tel" inputmode="numeric" pattern="[0-9]{10}" placeholder="Enter your 10 digit phone number" maxlength="10" required>
+                                </div>
                             </div>
                             <div class="col-12 border-top profile-divider pt-3">
                                 <h5 class="mb-1">Change password</h5>
@@ -615,6 +851,21 @@
                     </div>
                 </section>
             </main>
+
+            <div id="adminBookingModal" class="modal-overlay" aria-hidden="true">
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="adminBookingModalTitle">
+                    <div class="modal-header">
+                        <div>
+                            <span class="section-heading__eyebrow">Booking details</span>
+                            <h4 class="modal-title mb-0" id="adminBookingModalTitle">Booking</h4>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm modal-close" type="button" data-modal-close="adminBookingModal">
+                            Close
+                        </button>
+                    </div>
+                    <div id="adminBookingModalBody" class="modal-body"></div>
+                </div>
+            </div>
         </div>
     </div>
 

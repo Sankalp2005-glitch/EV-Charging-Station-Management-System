@@ -1,4 +1,17 @@
 const API_BASE = "http://127.0.0.1:5000";
+const MIN_PASSWORD_LENGTH = 8;
+
+function normalizeDigits(value) {
+    return String(value || "").replace(/\D/g, "");
+}
+
+function isValidLocalPhone(value) {
+    return /^[0-9]{10}$/.test(value);
+}
+
+function isValidCountryCode(value) {
+    return /^[1-9][0-9]{0,2}$/.test(value);
+}
 
 async function parseJsonSafe(response) {
     try {
@@ -77,14 +90,192 @@ function bindPasswordToggles() {
     });
 }
 
+function bindPhoneInputGuards() {
+    document.addEventListener("input", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+        if (target.classList.contains("phone-code")) {
+            const digits = normalizeDigits(target.value).slice(0, 3);
+            target.value = digits ? `+${digits}` : "";
+        }
+        if (target.classList.contains("phone-number")) {
+            target.value = normalizeDigits(target.value).slice(0, 10);
+        }
+    });
+}
+
+function getStoredToken() {
+    const token = localStorage.getItem("token");
+    return token ? token : null;
+}
+
+function isAuthEntryPage() {
+    return Boolean(document.getElementById("loginForm") || document.getElementById("registerForm"));
+}
+
+async function redirectIfAuthenticated() {
+    if (!isAuthEntryPage()) {
+        return;
+    }
+    const token = getStoredToken();
+    if (!token) {
+        return;
+    }
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (response.ok) {
+            const payload = await parseJsonSafe(response);
+            if (payload?.role) {
+                localStorage.setItem("role", payload.role);
+            }
+            if (payload?.user_id) {
+                localStorage.setItem("user_id", String(payload.user_id));
+            }
+            window.location.replace("dashboard.html");
+            return;
+        }
+    } catch (_error) {
+        // Best-effort check before forcing a redirect.
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("user_id");
+}
+
+function setRecoveryStep(identifyVisible) {
+    const identifyForm = document.getElementById("recoveryIdentifyForm");
+    const resetForm = document.getElementById("recoveryResetForm");
+    if (!identifyForm || !resetForm) {
+        return;
+    }
+    identifyForm.style.display = identifyVisible ? "flex" : "none";
+    resetForm.style.display = identifyVisible ? "none" : "flex";
+}
+
+function updateRecoveryVerificationCopy(details = {}) {
+    const note = document.getElementById("recoveryVerificationNote");
+    const label = document.getElementById("recoveryVerificationLabel");
+    if (!note || !label) {
+        return;
+    }
+    const typeLabel = details.type === "email" ? "email address" : "phone number";
+    const masked = details.masked ? ` (${details.masked})` : "";
+    note.textContent = `Confirm your registered ${typeLabel}${masked} to continue.`;
+    label.textContent = `Registered ${typeLabel}`;
+}
+
+async function handleRecoveryIdentify(event) {
+    event.preventDefault();
+    setAuthFeedback("");
+
+    const identifierInput = document.getElementById("recoveryIdentifier");
+    const identifier = identifierInput?.value.trim() || "";
+    if (!identifier) {
+        setAuthFeedback("Please enter your registered email or phone number.", "danger");
+        return;
+    }
+
+    try {
+        setSubmitState("recoveryIdentifyBtn", true, "Checking account...");
+        const result = await apiRequest("/api/auth/password-reset/identify", {
+            method: "POST",
+            body: JSON.stringify({ identifier }),
+            headers: { "Content-Type": "application/json" },
+        });
+        const resetForm = document.getElementById("recoveryResetForm");
+        if (resetForm) {
+            resetForm.dataset.identifier = identifier;
+            resetForm.dataset.verificationType = result?.verification?.type || "";
+        }
+        updateRecoveryVerificationCopy(result?.verification || {});
+        setRecoveryStep(false);
+        setAuthFeedback(result.message || "Account verified. Continue to reset your password.", "success");
+    } catch (error) {
+        setAuthFeedback(error.message, "danger");
+    } finally {
+        setSubmitState("recoveryIdentifyBtn", false, "Checking account...");
+    }
+}
+
+async function handleRecoveryReset(event) {
+    event.preventDefault();
+    setAuthFeedback("");
+
+    const resetForm = document.getElementById("recoveryResetForm");
+    const identifier = resetForm?.dataset.identifier || "";
+    const verification = document.getElementById("recoveryVerification")?.value.trim() || "";
+    const newPassword = document.getElementById("recoveryNewPassword")?.value || "";
+    const confirmPassword = document.getElementById("recoveryConfirmPassword")?.value || "";
+
+    if (!identifier) {
+        setAuthFeedback("Start with your registered email or phone number first.", "danger");
+        setRecoveryStep(true);
+        return;
+    }
+    if (!verification) {
+        setAuthFeedback("Please provide the requested verification detail.", "danger");
+        return;
+    }
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+        setAuthFeedback(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`, "danger");
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        setAuthFeedback("Passwords do not match. Please re-enter them.", "danger");
+        return;
+    }
+
+    try {
+        setSubmitState("recoveryResetBtn", true, "Updating password...");
+        const result = await apiRequest("/api/auth/password-reset/complete", {
+            method: "POST",
+            body: JSON.stringify({
+                identifier,
+                verification,
+                new_password: newPassword,
+            }),
+            headers: { "Content-Type": "application/json" },
+        });
+        setAuthFeedback(result.message || "Password updated. Redirecting to sign in...", "success");
+        window.setTimeout(() => {
+            window.location.href = "login.html";
+        }, 800);
+    } catch (error) {
+        setAuthFeedback(error.message, "danger");
+    } finally {
+        setSubmitState("recoveryResetBtn", false, "Updating password...");
+    }
+}
+
 async function handleRegister(event) {
     event.preventDefault();
     setAuthFeedback("");
 
+    const countryCodeRaw = document.getElementById("countryCode")?.value.trim() || "";
+    const phoneRaw = document.getElementById("phone")?.value.trim() || "";
+    const countryCode = normalizeDigits(countryCodeRaw);
+    const phone = normalizeDigits(phoneRaw);
+
+    if (!isValidCountryCode(countryCode)) {
+        setAuthFeedback("Country code must be 1 to 3 digits.", "danger");
+        return;
+    }
+    if (!isValidLocalPhone(phone)) {
+        setAuthFeedback("Phone number must be exactly 10 digits.", "danger");
+        return;
+    }
+
     const payload = {
         name: document.getElementById("name").value.trim(),
         email: document.getElementById("email").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
+        phone,
+        country_code: `+${countryCode}`,
         password: document.getElementById("password").value,
         role: document.getElementById("role").value,
     };
@@ -132,7 +323,7 @@ async function handleLogin(event) {
 
         setAuthFeedback(result.message || "Login successful. Opening EVgo...", "success");
         window.setTimeout(() => {
-            window.location.href = "dashboard.html";
+            window.location.replace("dashboard.html");
         }, 300);
     } catch (error) {
         setAuthFeedback(error.message, "danger");
@@ -145,6 +336,16 @@ function bindAuthForms() {
     bindPasswordToggles();
     document.getElementById("registerForm")?.addEventListener("submit", handleRegister);
     document.getElementById("loginForm")?.addEventListener("submit", handleLogin);
+    document.getElementById("recoveryIdentifyForm")?.addEventListener("submit", handleRecoveryIdentify);
+    document.getElementById("recoveryResetForm")?.addEventListener("submit", handleRecoveryReset);
 }
 
-document.addEventListener("DOMContentLoaded", bindAuthForms);
+document.addEventListener("DOMContentLoaded", () => {
+    redirectIfAuthenticated();
+    bindAuthForms();
+    bindPhoneInputGuards();
+});
+
+window.addEventListener("pageshow", () => {
+    redirectIfAuthenticated();
+});

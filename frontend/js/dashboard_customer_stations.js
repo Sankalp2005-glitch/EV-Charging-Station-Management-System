@@ -196,6 +196,109 @@ function buildSlotBookingForm(slot, minDatetime) {
 
 let slotAutoRefreshInFlight = false;
 
+function captureSlotBookingFormState(container) {
+    if (!container) {
+        return null;
+    }
+
+    const state = {};
+    const elements = container.querySelectorAll(
+        "input[id^='start-'], input[id^='battery-'], input[id^='current-'], input[id^='target-'], input[id^='vehicle-category-'], select[id^='payment-method-'], input[id^='payment-ok-']"
+    );
+
+    elements.forEach((element) => {
+        const match = element.id.match(/^(start|battery|current|target|vehicle-category|payment-method|payment-ok)-(\d+)$/);
+        if (!match) {
+            return;
+        }
+        const field = match[1];
+        const slotId = match[2];
+        if (!state[slotId]) {
+            state[slotId] = {};
+        }
+        state[slotId][field] = element.type === "checkbox" ? element.checked : element.value;
+    });
+
+    const active = document.activeElement;
+    if (active && active.id) {
+        const match = active.id.match(/^(start|battery|current|target|vehicle-category|payment-method|payment-ok)-(\d+)$/);
+        if (match) {
+            state.__active = {
+                slotId: match[2],
+                field: match[1],
+            };
+            if (typeof active.selectionStart === "number" && typeof active.selectionEnd === "number") {
+                state.__active.selection = [active.selectionStart, active.selectionEnd];
+            }
+        }
+    }
+
+    return state;
+}
+
+function restoreSlotBookingFormState(container, state) {
+    if (!container || !state) {
+        return;
+    }
+
+    Object.keys(state).forEach((slotId) => {
+        if (slotId === "__active") {
+            return;
+        }
+        const values = state[slotId];
+        if (!values) {
+            return;
+        }
+
+        const startField = container.querySelector(`#start-${slotId}`);
+        if (startField && "start" in values) {
+            startField.value = values.start ?? "";
+        }
+        const batteryField = container.querySelector(`#battery-${slotId}`);
+        if (batteryField && "battery" in values) {
+            batteryField.value = values.battery ?? "";
+        }
+        const currentField = container.querySelector(`#current-${slotId}`);
+        if (currentField && "current" in values) {
+            currentField.value = values.current ?? "";
+        }
+        const targetField = container.querySelector(`#target-${slotId}`);
+        if (targetField && "target" in values) {
+            targetField.value = values.target ?? "";
+        }
+        const vehicleField = container.querySelector(`#vehicle-category-${slotId}`);
+        if (vehicleField && "vehicle-category" in values) {
+            vehicleField.value = values["vehicle-category"] ?? vehicleField.value;
+        }
+        const paymentField = container.querySelector(`#payment-method-${slotId}`);
+        if (paymentField && "payment-method" in values) {
+            paymentField.value = values["payment-method"] ?? paymentField.value;
+        }
+        const paymentOkField = container.querySelector(`#payment-ok-${slotId}`);
+        if (paymentOkField && "payment-ok" in values) {
+            paymentOkField.checked = Boolean(values["payment-ok"]);
+        }
+
+        ["battery", "current", "target"].forEach((field) => {
+            const input = container.querySelector(`#${field}-${slotId}`);
+            if (input) {
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        });
+    });
+
+    if (state.__active) {
+        const { slotId, field, selection } = state.__active;
+        const target = container.querySelector(`#${field}-${slotId}`);
+        if (target) {
+            target.focus();
+            if (selection && typeof target.setSelectionRange === "function") {
+                target.setSelectionRange(selection[0], selection[1]);
+            }
+        }
+    }
+}
+
 function renderSlots(slots, stationName, options = {}) {
     const slotsSection = document.getElementById("slotsSection");
     const slotsDiv = document.getElementById("slotsList");
@@ -258,7 +361,7 @@ function renderSlots(slots, stationName, options = {}) {
                   )
                 : currentStatus === "occupied" && slot.active_booking
                 ? `<div class="slot-session-note">Reserved until ${escapeHtml(slot.active_booking.end_time)}</div>`
-                : `<div class="slot-session-note">Ready for the next EVgo session.</div>`;
+                : `<div class="slot-session-note">Ready for the next <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span> session.</div>`;
 
             return `
                 <div class="col-12 col-lg-6 col-xxl-4">
@@ -338,6 +441,9 @@ function renderSlots(slots, stationName, options = {}) {
 
     slotsSection.style.display = "block";
     refreshChargingProgressWidgets(slotsDiv);
+    if (options.preserveFormState) {
+        restoreSlotBookingFormState(slotsDiv, options.preserveFormState);
+    }
     if (!options.skipScroll) {
         window.scrollTo({ top: slotsSection.offsetTop - 90, behavior: "smooth" });
     }
@@ -360,10 +466,14 @@ async function toggleSlots(stationId, stationName, forceOpen = false) {
     }
 
     try {
+        const preserveFormState =
+            slotsSection.style.display === "block" && dashboardState.openStationId === stationId
+                ? captureSlotBookingFormState(slotsDiv)
+                : null;
         const slots = await apiRequest(`/api/bookings/stations/${stationId}/slots`, { method: "GET" }, true);
         dashboardState.openStationId = stationId;
         dashboardState.openStationName = stationName || `Station ${stationId}`;
-        renderSlots(slots, dashboardState.openStationName);
+        renderSlots(slots, dashboardState.openStationName, { preserveFormState });
     } catch (error) {
         alert(error.message);
     }
@@ -371,15 +481,18 @@ async function toggleSlots(stationId, stationName, forceOpen = false) {
 
 async function refreshOpenStationSlotsIfVisible() {
     const slotsSection = document.getElementById("slotsSection");
+    const slotsDiv = document.getElementById("slotsList");
     if (
         slotAutoRefreshInFlight ||
         !dashboardState.openStationId ||
         !slotsSection ||
+        !slotsDiv ||
         slotsSection.style.display !== "block"
     ) {
         return;
     }
 
+    const preserveFormState = captureSlotBookingFormState(slotsDiv);
     slotAutoRefreshInFlight = true;
     try {
         const slots = await apiRequest(
@@ -387,7 +500,10 @@ async function refreshOpenStationSlotsIfVisible() {
             { method: "GET" },
             true
         );
-        renderSlots(slots, dashboardState.openStationName, { skipScroll: true });
+        renderSlots(slots, dashboardState.openStationName, {
+            skipScroll: true,
+            preserveFormState,
+        });
     } catch (_error) {
         // Keep auto-refresh silent to avoid repeated alerts while the panel is open.
     } finally {

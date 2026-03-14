@@ -24,36 +24,36 @@
                         </div>
                         <div>
                             <p class="auth-brand__eyebrow">Charge network</p>
-                            <h1 class="brand-wordmark">EV<span class="brand-wordmark__accent">go</span></h1>
+                            <h1 class="brand-wordmark evgo-wordmark">EV<span class="brand-wordmark__accent evgo-wordmark__go">go</span></h1>
                         </div>
                     </div>
 
                     <span class="auth-hero__eyebrow">Account setup</span>
-                    <h2 class="auth-hero__title">Create your EVgo workspace.</h2>
+                    <h2 class="auth-hero__title">Create your <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span> workspace.</h2>
                     <p class="auth-hero__text">
-                        Register once to manage chargers, bookings, and live charging activity from the same EVgo platform experience used inside the dashboard.
+                        Register once to manage chargers, bookings, and live charging activity from a single operations workspace.
                     </p>
 
                     <div class="auth-feature-list">
                         <div class="auth-feature">
-                            <i class="bi bi-person-check-fill"></i>
-                            <div>
-                                <strong>Role-aware onboarding</strong>
-                                <span>Register as a customer or station owner with the same EVgo account flow.</span>
-                            </div>
-                        </div>
-                        <div class="auth-feature">
                             <i class="bi bi-ev-station-fill"></i>
                             <div>
-                                <strong>Real charging operations</strong>
-                                <span>Move from station discovery to active charging sessions without switching products.</span>
+                                <strong>Smart charging network</strong>
+                                <span>Manage EV charging stations, monitor bookings, and analyze energy usage through one unified platform.</span>
                             </div>
                         </div>
                         <div class="auth-feature">
-                            <i class="bi bi-shield-lock-fill"></i>
+                            <i class="bi bi-bar-chart-line-fill"></i>
                             <div>
-                                <strong>Secure credentials</strong>
-                                <span>Your password stays local to the form until it is submitted to the existing auth API.</span>
+                                <strong>Real-time insights</strong>
+                                <span>Track live charging sessions, revenue analytics, and charger availability in real time.</span>
+                            </div>
+                        </div>
+                        <div class="auth-feature">
+                            <i class="bi bi-shield-check"></i>
+                            <div>
+                                <strong>Reliable infrastructure</strong>
+                                <span>Built for operators and station owners to manage EV charging networks efficiently.</span>
                             </div>
                         </div>
                     </div>
@@ -63,8 +63,8 @@
             <section class="surface-card surface-card--padded auth-card">
                 <div class="auth-card__header">
                     <span class="section-heading__eyebrow">Register</span>
-                    <h2 class="auth-card__title">Join EVgo</h2>
-                    <p class="auth-card__text">Set up your profile to access the EVgo dashboard, stations, and bookings.</p>
+                    <h2 class="auth-card__title">Create your account</h2>
+                    <p class="auth-card__text">Set up your profile to access stations, bookings, and analytics.</p>
                 </div>
 
                 <div id="authFeedback" class="auth-feedback" role="status" aria-live="polite"></div>
@@ -80,7 +80,10 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="phone">Phone</label>
-                        <input type="text" id="phone" class="form-control" placeholder="10 to 13 digit phone number" required>
+                        <div class="phone-input-group">
+                            <input type="tel" id="countryCode" class="form-control phone-code" inputmode="numeric" placeholder="+91" value="+91" maxlength="4" required>
+                            <input type="tel" id="phone" class="form-control phone-number" inputmode="numeric" pattern="[0-9]{10}" placeholder="Enter your 10 digit phone number" maxlength="10" required>
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="password">Password</label>
@@ -101,13 +104,13 @@
                     <div class="col-12 auth-form__actions">
                         <button id="registerSubmitBtn" type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-person-plus-fill"></i>
-                            Create EVgo account
+                            Create account
                         </button>
                     </div>
                 </form>
 
                 <p class="auth-switch">
-                    Already on EVgo?
+                    Already have an account?
                     <a href="login.html">Sign in</a>
                 </p>
             </section>

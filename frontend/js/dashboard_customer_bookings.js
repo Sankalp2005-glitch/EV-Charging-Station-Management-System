@@ -45,7 +45,7 @@ function buildBookingChargingCell(booking) {
                   estimated_completion_time: booking.estimated_completion_time,
                   remaining_minutes: booking.remaining_minutes,
               },
-              { title: "EVgo session" }
+              { title: "Charging session" }
           )
         : "";
 
@@ -131,7 +131,7 @@ function buildUserBookingsTable(bookings, options = {}) {
 
     return `
         <div class="table-shell">
-            <table class="table booking-table align-middle">
+            <table class="table booking-table booking-table--sessions align-middle">
                 <thead>
                     <tr>
                         <th>Booking</th>

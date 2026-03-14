@@ -12,7 +12,7 @@ function setRoleDisplay() {
 function setProfileEditMode(enabled) {
     profileEditMode = Boolean(enabled);
 
-    const editableFields = ["profileName", "profileEmail", "profilePhone"];
+    const editableFields = ["profileName", "profileEmail", "profileCountryCode", "profilePhone"];
     editableFields.forEach((fieldId) => {
         const field = document.getElementById(fieldId);
         if (!field) {
@@ -75,7 +75,18 @@ async function loadMyProfile() {
         const profile = await apiRequest("/api/auth/me", { method: "GET" }, true);
         document.getElementById("profileName").value = profile.name || "";
         document.getElementById("profileEmail").value = profile.email || "";
-        document.getElementById("profilePhone").value = profile.phone || "";
+        const phoneParts = typeof window.splitPhoneNumber === "function" ? window.splitPhoneNumber(profile.phone || "") : null;
+        const countryField = document.getElementById("profileCountryCode");
+        const phoneField = document.getElementById("profilePhone");
+        if (countryField && phoneParts) {
+            const code = phoneParts.countryCode ? `+${phoneParts.countryCode}` : "+91";
+            countryField.value = code;
+        } else if (countryField) {
+            countryField.value = "+91";
+        }
+        if (phoneField) {
+            phoneField.value = phoneParts ? phoneParts.localNumber : profile.phone || "";
+        }
         if (!profileEditMode) {
             setProfileEditMode(false);
         }
@@ -89,6 +100,7 @@ async function handleProfileUpdate(event) {
 
     const name = document.getElementById("profileName").value.trim();
     const email = document.getElementById("profileEmail").value.trim().toLowerCase();
+    const countryCodeRaw = document.getElementById("profileCountryCode").value.trim();
     const phone = document.getElementById("profilePhone").value.trim();
     const currentPassword = document.getElementById("profileCurrentPassword").value;
     const newPassword = document.getElementById("profileNewPassword").value;
@@ -101,8 +113,16 @@ async function handleProfileUpdate(event) {
         alert("Email is required.");
         return;
     }
+    const normalizedCountryCode =
+        typeof window.normalizeDigits === "function" ? window.normalizeDigits(countryCodeRaw) : countryCodeRaw.replace(/\D/g, "");
+    const countryCodeValid =
+        typeof window.isValidCountryCode === "function" ? window.isValidCountryCode(normalizedCountryCode) : /^[1-9][0-9]{0,2}$/.test(normalizedCountryCode);
+    if (!countryCodeValid) {
+        alert("Country code must be 1 to 3 digits.");
+        return;
+    }
     if (!phone || !isValidPhone(phone)) {
-        alert("Phone must be 10 to 13 digits.");
+        alert("Phone number must be exactly 10 digits.");
         return;
     }
     if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
@@ -114,7 +134,7 @@ async function handleProfileUpdate(event) {
         return;
     }
 
-    const payload = { name, email, phone };
+    const payload = { name, email, phone, country_code: `+${normalizedCountryCode}` };
     if (currentPassword && newPassword) {
         payload.current_password = currentPassword;
         payload.new_password = newPassword;

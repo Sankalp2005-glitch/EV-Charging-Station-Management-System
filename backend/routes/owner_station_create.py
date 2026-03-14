@@ -2,7 +2,7 @@ from flask import current_app, jsonify, request
 
 from extensions import mysql
 from routes.owner_bp import owner_bp
-from routes.owner_common import PHONE_PATTERN, clean_text, resolve_slot_types
+from routes.owner_common import build_contact_number, clean_text, resolve_slot_types
 from services.booking_config import DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
 from services.charging_profiles import (
@@ -29,7 +29,8 @@ def create_station(current_user):
 
     station_name = clean_text(data.get("station_name"))
     location = clean_text(data.get("location"))
-    contact_number = clean_text(data.get("contact_number"))
+    contact_number_raw = data.get("contact_number")
+    contact_country_code = data.get("contact_country_code")
     total_slots = data.get("total_slots")
     slot_type = clean_text(data.get("slot_type")).lower()
     slot_types = data.get("slot_types")
@@ -40,8 +41,9 @@ def create_station(current_user):
 
     if not station_name or not location or not total_slots:
         return jsonify({"error": "Missing required fields"}), 400
-    if contact_number and not PHONE_PATTERN.match(contact_number):
-        return jsonify({"error": "contact_number must be 10 to 13 digits"}), 400
+    contact_number, contact_error = build_contact_number(contact_number_raw, contact_country_code)
+    if contact_error:
+        return jsonify({"error": contact_error}), 400
 
     try:
         total_slots = int(total_slots)

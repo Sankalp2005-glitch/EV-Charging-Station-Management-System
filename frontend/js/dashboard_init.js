@@ -34,6 +34,10 @@ function setupDashboardRoleSections() {
     if (ownerStationsSection) {
         ownerStationsSection.style.display = role === OWNER_ROLE ? "block" : "none";
     }
+
+    document.querySelectorAll(".admin-only").forEach((element) => {
+        element.style.display = role === "admin" ? "" : "none";
+    });
 }
 
 async function initDashboard() {
@@ -153,6 +157,9 @@ async function initDashboard() {
         await loadAdminStats();
         await loadAdminRevenueAnalytics();
         await loadAdminStationApprovals(adminViewState.stationStatus);
+        if (typeof window.initAdminManagement === "function") {
+            window.initAdminManagement();
+        }
     }
 }
 

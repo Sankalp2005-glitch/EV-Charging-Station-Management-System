@@ -3,13 +3,23 @@ const DASHBOARD_TITLES = {
     stations: "Stations",
     bookings: "Bookings",
     profile: "Profile",
+    "admin-users": "User Management",
+    "admin-stations": "Station Management",
+    "admin-bookings": "Booking Administration",
+    "admin-revenue": "Revenue Analytics",
 };
+
+const EVGO_WORDMARK_HTML =
+    '<span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span>';
+const DASHBOARD_ACTIVE_TAB_KEY = "evgo.activeTab";
+let activeDashboardTab = null;
 
 const dashboardSummaryState = {
     stations: [],
     customerBookings: [],
     ownerStations: [],
     ownerBookings: [],
+    adminBookings: [],
     ownerStats: null,
     adminStats: null,
 };
@@ -35,6 +45,18 @@ function toFiniteNumber(value) {
 
 function formatCount(value) {
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(toFiniteNumber(value));
+}
+
+function countActiveBookings(bookings) {
+    if (!Array.isArray(bookings)) {
+        return 0;
+    }
+    const activeStatuses = new Set(["charging_started", "charging"]);
+    return bookings.filter((booking) => activeStatuses.has(String(booking.status || "").toLowerCase())).length;
+}
+
+function applyEvgoWordmark(text) {
+    return String(text || "").replace(/EVgo/g, EVGO_WORDMARK_HTML);
 }
 
 function normalizePriceInfo(priceInfo) {
@@ -81,6 +103,12 @@ function getStatusBadgeClass(status) {
     if (["pending", "busy", "occupied", "waiting_to_start"].includes(normalized)) {
         return "status-badge status-badge--warning";
     }
+    if (["suspended"].includes(normalized)) {
+        return "status-badge status-badge--warning";
+    }
+    if (["disabled"].includes(normalized)) {
+        return "status-badge status-badge--danger";
+    }
     if (["completed", "charging_completed"].includes(normalized)) {
         return "status-badge status-badge--info";
     }
@@ -100,10 +128,18 @@ function buildMetricCard(metric) {
             ? formatCount(metric.value)
             : escapeHtml(metric.value === undefined || metric.value === null ? "N/A" : metric.value);
     const metaHtml = metric.meta ? `<p class="metric-card__meta">${escapeHtml(metric.meta)}</p>` : "";
+    const tabTarget = metric.tabTarget ? escapeHtml(metric.tabTarget) : "";
+    const isInteractive = Boolean(tabTarget);
+    const wrapperTag = isInteractive ? "button" : "div";
+    const interactiveAttrs = isInteractive
+        ? `type="button" class="metric-card metric-card--${escapeHtml(
+              metric.tone || "blue"
+          )} metric-card--interactive metric-card--button" data-tab-target="${tabTarget}"`
+        : `class="metric-card metric-card--${escapeHtml(metric.tone || "blue")}"`;
 
     return `
         <div class="col-12 col-md-6 col-xl-3">
-            <div class="metric-card metric-card--${escapeHtml(metric.tone || "blue")}">
+            <${wrapperTag} ${interactiveAttrs}>
                 <div class="metric-card__icon">
                     <i class="bi ${escapeHtml(metric.icon || "bi-activity")}"></i>
                 </div>
@@ -112,7 +148,7 @@ function buildMetricCard(metric) {
                     <div class="metric-card__value">${valueText}</div>
                     ${metaHtml}
                 </div>
-            </div>
+            </${wrapperTag}>
         </div>
     `;
 }
@@ -183,6 +219,20 @@ function wrapChartLabel(label, maxCharsPerLine = 14) {
     return lines.length > 1 ? lines : lines[0];
 }
 
+function truncateChartLabel(label, maxChars = 18) {
+    const text = String(label || "").trim();
+    if (!text) {
+        return "Unknown";
+    }
+    if (text.length <= maxChars) {
+        return text;
+    }
+    if (maxChars <= 3) {
+        return text.slice(0, maxChars);
+    }
+    return `${text.slice(0, maxChars - 3)}...`;
+}
+
 function setAnalyticsChartShellHeight(canvas, itemCount, options = {}) {
     const shell = canvas?.closest(".analytics-chart-shell");
     if (!shell) {
@@ -203,7 +253,7 @@ function setAnalyticsChartShellHeight(canvas, itemCount, options = {}) {
     shell.style.height = `${calculatedHeight}px`;
 }
 
-function renderDashboardHeroMetrics(role, stations, customerBookings, ownerStations, ownerStats, adminStats) {
+function renderDashboardHeroMetrics(role, stations, customerBookings, ownerStations, ownerStats, adminStats, adminBookings) {
     const primaryLabel = document.getElementById("heroPrimaryLabel");
     const primaryValue = document.getElementById("heroPrimaryValue");
     const primaryMeta = document.getElementById("heroPrimaryMeta");
@@ -219,11 +269,15 @@ function renderDashboardHeroMetrics(role, stations, customerBookings, ownerStati
 
     if (role === "admin") {
         const availableChargers = stations.reduce((sum, station) => sum + toFiniteNumber(station.available_slots), 0);
+        const activeSessionCount =
+            Array.isArray(adminBookings) && adminBookings.length > 0
+                ? countActiveBookings(adminBookings)
+                : toFiniteNumber(adminStats.active_sessions);
         heroMetrics = {
             primary: {
                 label: "Chargers in use",
-                value: formatCount(adminStats.active_sessions),
-                meta: `${formatCount(availableChargers)} chargers currently available on EVgo`,
+                value: formatCount(activeSessionCount),
+                meta: `${formatCount(availableChargers)} chargers currently available across the network`,
             },
             secondary: {
                 label: "Tracked stations",
@@ -243,7 +297,7 @@ function renderDashboardHeroMetrics(role, stations, customerBookings, ownerStati
             secondary: {
                 label: "Available chargers",
                 value: formatCount(availableChargers),
-                meta: `${formatCount(ownerStations.length)} stations in your EVgo portfolio`,
+                meta: `${formatCount(ownerStations.length)} stations in your portfolio`,
             },
         };
     } else {
@@ -253,7 +307,7 @@ function renderDashboardHeroMetrics(role, stations, customerBookings, ownerStati
             primary: {
                 label: "Chargers charging now",
                 value: formatCount(chargingChargers),
-                meta: `${formatCount(stations.length)} visible stations across EVgo`,
+                meta: `${formatCount(stations.length)} visible stations across the network`,
             },
             secondary: {
                 label: "Available chargers",
@@ -291,12 +345,15 @@ function renderDashboardSummary() {
     const ownerStations = Array.isArray(dashboardSummaryState.ownerStations) ? dashboardSummaryState.ownerStations : [];
     const ownerStats = dashboardSummaryState.ownerStats || {};
     const adminStats = dashboardSummaryState.adminStats || {};
+    const adminBookings = Array.isArray(dashboardSummaryState.adminBookings) ? dashboardSummaryState.adminBookings : [];
 
     let cards = [];
     let insights = [];
 
     if (role === "admin") {
         const approvedStations = stations.length;
+        const activeSessionCount =
+            adminBookings.length > 0 ? countActiveBookings(adminBookings) : toFiniteNumber(adminStats.active_sessions);
         cards = [
             {
                 tone: "cyan",
@@ -304,6 +361,7 @@ function renderDashboardSummary() {
                 label: "Users",
                 value: toFiniteNumber(adminStats.total_users),
                 meta: "Registered platform accounts",
+                tabTarget: "admin-users",
             },
             {
                 tone: "blue",
@@ -311,13 +369,15 @@ function renderDashboardSummary() {
                 label: "Stations",
                 value: toFiniteNumber(adminStats.total_stations),
                 meta: `${approvedStations} approved and visible`,
+                tabTarget: "admin-stations",
             },
             {
                 tone: "amber",
                 icon: "bi-calendar2-check-fill",
                 label: "Bookings",
                 value: toFiniteNumber(adminStats.total_bookings),
-                meta: `${toFiniteNumber(adminStats.active_sessions)} active sessions`,
+                meta: `${formatCount(activeSessionCount)} active sessions`,
+                tabTarget: "admin-bookings",
             },
             {
                 tone: "emerald",
@@ -331,6 +391,7 @@ function renderDashboardSummary() {
                     adminStats.revenue_estimate_supported === false
                         ? "Revenue estimate unavailable"
                         : "System-wide revenue",
+                tabTarget: "admin-revenue",
             },
         ];
 
@@ -343,7 +404,7 @@ function renderDashboardSummary() {
             {
                 icon: "bi-activity",
                 label: "Active sessions",
-                value: `${toFiniteNumber(adminStats.active_sessions)} chargers in use`,
+                value: `${formatCount(activeSessionCount)} chargers in use`,
             },
             {
                 icon: "bi-graph-up-arrow",
@@ -479,7 +540,7 @@ function renderDashboardSummary() {
         ];
     }
 
-    renderDashboardHeroMetrics(role, stations, customerBookings, ownerStations, ownerStats, adminStats);
+    renderDashboardHeroMetrics(role, stations, customerBookings, ownerStations, ownerStats, adminStats, adminBookings);
     cardsContainer.innerHTML = cards.map(buildMetricCard).join("");
     insightsContainer.innerHTML = insights.map(buildInsightItem).join("");
 }
@@ -492,8 +553,30 @@ function closeDashboardSidebar() {
     document.body.classList.remove("sidebar-open");
 }
 
+function resolveInitialTab(savedTab) {
+    const candidate = savedTab && savedTab in DASHBOARD_TITLES ? savedTab : "dashboard";
+    const tabSection = document.getElementById(`${candidate}Tab`);
+    if (!tabSection) {
+        return "dashboard";
+    }
+    const role = typeof getRole === "function" ? getRole() : null;
+    if (tabSection.classList.contains("admin-only") && role !== "admin") {
+        return "dashboard";
+    }
+    return candidate;
+}
+
 function switchTab(tabName) {
-    const selectedTab = tabName in DASHBOARD_TITLES ? tabName : "dashboard";
+    const selectedTab = resolveInitialTab(tabName);
+    if (selectedTab === activeDashboardTab) {
+        return;
+    }
+    activeDashboardTab = selectedTab;
+    try {
+        localStorage.setItem(DASHBOARD_ACTIVE_TAB_KEY, selectedTab);
+    } catch (_error) {
+        // Non-blocking if storage is unavailable.
+    }
     const tabs = document.querySelectorAll(".dashboard-tab");
     tabs.forEach((tab) => {
         const isActive = tab.id === `${selectedTab}Tab`;
@@ -510,16 +593,25 @@ function switchTab(tabName) {
         pageTitle.textContent = DASHBOARD_TITLES[selectedTab] || DASHBOARD_TITLES.dashboard;
     }
 
+    if (typeof window.handleDashboardTabChange === "function") {
+        window.handleDashboardTabChange(selectedTab);
+    }
+
     closeDashboardSidebar();
 }
 
 function bindDashboardUi() {
-    document.querySelectorAll(".sidebar-link[data-tab]").forEach((link) => {
-        link.addEventListener("click", () => switchTab(link.dataset.tab));
-    });
-
-    document.querySelectorAll("[data-tab-trigger]").forEach((trigger) => {
-        trigger.addEventListener("click", () => switchTab(trigger.dataset.tabTrigger));
+    document.addEventListener("click", (event) => {
+        const trigger = event.target.closest("[data-tab], [data-tab-trigger], [data-tab-target]");
+        if (!trigger) {
+            return;
+        }
+        const nextTab = trigger.dataset.tab || trigger.dataset.tabTrigger || trigger.dataset.tabTarget;
+        if (!nextTab) {
+            return;
+        }
+        event.preventDefault();
+        switchTab(nextTab);
     });
 
     const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
@@ -539,10 +631,88 @@ function bindDashboardUi() {
     });
 }
 
+function updateTopNavbarHeight() {
+    const topNavbar = document.querySelector(".top-navbar");
+    if (!topNavbar) {
+        return;
+    }
+    const height = topNavbar.getBoundingClientRect().height;
+    document.documentElement.style.setProperty("--top-navbar-height", `${height}px`);
+}
+
+function setupTopNavbarScrollBehavior() {
+    const topNavbar = document.querySelector(".top-navbar");
+    if (!topNavbar) {
+        return;
+    }
+
+    let lastScrollY = window.scrollY || 0;
+    let isHidden = false;
+    let ticking = false;
+    const deltaThreshold = 8;
+    const hideOffset = 120;
+
+    const setHidden = (nextHidden) => {
+        if (nextHidden === isHidden) {
+            return;
+        }
+        isHidden = nextHidden;
+        topNavbar.classList.toggle("is-hidden", isHidden);
+        document.body.classList.toggle("navbar-hidden", isHidden);
+    };
+
+    const handleScroll = () => {
+        const currentY = window.scrollY || 0;
+        const delta = currentY - lastScrollY;
+
+        if (Math.abs(delta) >= deltaThreshold) {
+            if (currentY <= 10) {
+                setHidden(false);
+            } else if (delta > 0 && currentY > hideOffset) {
+                setHidden(true);
+            } else if (delta < 0) {
+                setHidden(false);
+            }
+            lastScrollY = currentY;
+        }
+    };
+
+    window.addEventListener(
+        "scroll",
+        () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        },
+        { passive: true }
+    );
+
+    window.addEventListener("resize", updateTopNavbarHeight);
+    if (window.ResizeObserver) {
+        const observer = new ResizeObserver(() => {
+            updateTopNavbarHeight();
+        });
+        observer.observe(topNavbar);
+    }
+    updateTopNavbarHeight();
+    setHidden(false);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     bindDashboardUi();
-    switchTab("dashboard");
+    let initialTab = "dashboard";
+    try {
+        initialTab = resolveInitialTab(localStorage.getItem(DASHBOARD_ACTIVE_TAB_KEY));
+    } catch (_error) {
+        initialTab = "dashboard";
+    }
+    switchTab(initialTab);
     renderDashboardSummary();
+    setupTopNavbarScrollBehavior();
 });
 
 window.escapeHtml = escapeHtml;
@@ -555,6 +725,7 @@ window.buildMetricCard = buildMetricCard;
 window.updateDashboardSummaryState = updateDashboardSummaryState;
 window.formatCompactCurrencyTick = formatCompactCurrencyTick;
 window.wrapChartLabel = wrapChartLabel;
+window.truncateChartLabel = truncateChartLabel;
 window.setAnalyticsChartShellHeight = setAnalyticsChartShellHeight;
 window.switchTab = switchTab;
 window.closeDashboardSidebar = closeDashboardSidebar;

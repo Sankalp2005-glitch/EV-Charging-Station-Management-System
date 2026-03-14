@@ -1,6 +1,32 @@
 import re
 
-PHONE_PATTERN = re.compile(r"^[0-9]{10,13}$")
+LOCAL_PHONE_PATTERN = re.compile(r"^[0-9]{10}$")
+COUNTRY_CODE_PATTERN = re.compile(r"^[1-9][0-9]{0,2}$")
+PHONE_PATTERN = LOCAL_PHONE_PATTERN
+
+
+def normalize_digits(value):
+    return re.sub(r"\D", "", value) if isinstance(value, str) else ""
+
+
+def build_contact_number(contact_raw, country_code_raw):
+    local_number = normalize_digits(contact_raw)
+    country_code = normalize_digits(country_code_raw)
+
+    if not local_number and not country_code:
+        return "", None
+
+    if country_code:
+        if not COUNTRY_CODE_PATTERN.match(country_code):
+            return None, "contact_country_code must be 1 to 3 digits"
+        if not LOCAL_PHONE_PATTERN.match(local_number):
+            return None, "contact_number must be 10 digits"
+        return f"{country_code}{local_number}", None
+
+    if LOCAL_PHONE_PATTERN.match(local_number):
+        return local_number, None
+
+    return None, "contact_number must be 10 digits"
 
 
 def clean_text(value):

@@ -103,7 +103,7 @@ function parseOptionalNumber(rawValue) {
 }
 
 function formatMoney(value) {
-    return `\u20B9 ${Number(value).toFixed(2)}`;
+    return `\u20B9\u00A0${Number(value).toFixed(2)}`;
 }
 
 function normalizeVehicleCategory(value) {
@@ -169,8 +169,65 @@ function classifyChargingSpeed(powerKw, vehicleCategory) {
     return "Slow";
 }
 
+function normalizeDigits(value) {
+    return String(value || "").replace(/\D/g, "");
+}
+
 function isValidPhone(phone) {
-    return /^[0-9]{10,13}$/.test(phone);
+    return /^[0-9]{10}$/.test(phone);
+}
+
+function isValidCountryCode(code) {
+    return /^[1-9][0-9]{0,2}$/.test(code);
+}
+
+function splitPhoneNumber(value, defaultCountryCode = "91") {
+    const digits = normalizeDigits(value);
+    if (digits.length > 10) {
+        return {
+            countryCode: digits.slice(0, digits.length - 10),
+            localNumber: digits.slice(-10),
+        };
+    }
+    return {
+        countryCode: defaultCountryCode,
+        localNumber: digits,
+    };
+}
+
+function formatPhoneDisplay(value, defaultCountryCode = "91") {
+    const digits = normalizeDigits(value);
+    if (!digits) {
+        return "-";
+    }
+    if (digits.length > 10) {
+        const country = digits.slice(0, digits.length - 10);
+        const local = digits.slice(-10);
+        return `+${country} ${local}`;
+    }
+    if (digits.length === 10 && defaultCountryCode) {
+        return `+${defaultCountryCode} ${digits}`;
+    }
+    return digits;
+}
+
+function bindPhoneInputGuards(root = document) {
+    if (!root || typeof root.addEventListener !== "function") {
+        return;
+    }
+    root.addEventListener("input", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+        if (target.classList.contains("phone-code")) {
+            const digits = normalizeDigits(target.value).slice(0, 3);
+            target.value = digits ? `+${digits}` : "";
+        }
+        if (target.classList.contains("phone-number")) {
+            target.value = normalizeDigits(target.value).slice(0, 10);
+        }
+    });
 }
 
 function calculateChargingEstimate({
@@ -677,6 +734,10 @@ async function apiRequest(path, options = {}, useAuth = false) {
     return payload;
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    bindPhoneInputGuards();
+});
+
 window.DEFAULT_BATTERY_BY_CATEGORY = DEFAULT_BATTERY_BY_CATEGORY;
 window.BATTERY_LIMITS_BY_CATEGORY = BATTERY_LIMITS_BY_CATEGORY;
 window.normalizeVehicleCategory = normalizeVehicleCategory;
@@ -689,3 +750,8 @@ window.getLiveChargingProgressSnapshot = getLiveChargingProgressSnapshot;
 window.buildChargingProgressWidget = buildChargingProgressWidget;
 window.refreshChargingProgressWidgets = refreshChargingProgressWidgets;
 window.startChargingProgressTicker = startChargingProgressTicker;
+window.normalizeDigits = normalizeDigits;
+window.isValidCountryCode = isValidCountryCode;
+window.splitPhoneNumber = splitPhoneNumber;
+window.formatPhoneDisplay = formatPhoneDisplay;
+window.bindPhoneInputGuards = bindPhoneInputGuards;

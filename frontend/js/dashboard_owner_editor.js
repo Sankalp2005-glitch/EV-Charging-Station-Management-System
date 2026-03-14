@@ -201,6 +201,11 @@ function collectChargerPayload(rootSelector) {
 }
 
 function buildOwnerStationEditorHtml(station, slots) {
+    const phoneParts = typeof window.splitPhoneNumber === "function"
+        ? window.splitPhoneNumber(station.contact_number || "")
+        : { countryCode: "91", localNumber: station.contact_number || "" };
+    const contactCodeValue = phoneParts?.countryCode ? `+${phoneParts.countryCode}` : "+91";
+    const contactLocalValue = phoneParts?.localNumber || "";
     const rows = slots
         .map((slot) => buildOwnerChargerCardHtml(slot.slot_number, slot, true))
         .join("");
@@ -221,9 +226,14 @@ function buildOwnerStationEditorHtml(station, slots) {
                     )}" placeholder="Location">
                 </div>
                 <div class="col-md-4">
-                    <input type="text" class="form-control form-control-sm owner-station-contact-edit" value="${escapeHtml(
-                        station.contact_number || ""
-                    )}" placeholder="Contact number (optional)">
+                    <div class="phone-input-group">
+                        <input type="tel" class="form-control form-control-sm phone-code owner-station-contact-code" inputmode="numeric" maxlength="4" value="${escapeHtml(
+                            contactCodeValue
+                        )}" placeholder="+91">
+                        <input type="tel" class="form-control form-control-sm phone-number owner-station-contact-number" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" value="${escapeHtml(
+                            contactLocalValue
+                        )}" placeholder="Enter your 10 digit phone number">
+                    </div>
                 </div>
             </div>
             <div class="row g-3 owner-edit-charger-grid">${rows}</div>
@@ -271,15 +281,34 @@ async function toggleOwnerStationEditor(station, stationCard) {
         saveButton?.addEventListener("click", async () => {
             const stationName = String(editor.querySelector(".owner-station-name-edit")?.value || "").trim();
             const stationLocation = String(editor.querySelector(".owner-station-location-edit")?.value || "").trim();
-            const stationContact = String(editor.querySelector(".owner-station-contact-edit")?.value || "").trim();
+            const contactRaw = String(editor.querySelector(".owner-station-contact-number")?.value || "").trim();
+            const contactCodeRaw = String(editor.querySelector(".owner-station-contact-code")?.value || "").trim();
+            const contactNumber =
+                typeof window.normalizeDigits === "function"
+                    ? window.normalizeDigits(contactRaw)
+                    : contactRaw.replace(/\D/g, "");
+            const contactCode =
+                typeof window.normalizeDigits === "function"
+                    ? window.normalizeDigits(contactCodeRaw)
+                    : contactCodeRaw.replace(/\D/g, "");
 
             if (!stationName || !stationLocation) {
                 alert("Station name and location are required.");
                 return;
             }
-            if (stationContact && !isValidPhone(stationContact)) {
-                alert("Contact number must be 10 to 13 digits.");
-                return;
+            if (contactNumber) {
+                const isCodeValid =
+                    typeof window.isValidCountryCode === "function"
+                        ? window.isValidCountryCode(contactCode)
+                        : /^[1-9][0-9]{0,2}$/.test(contactCode);
+                if (!isCodeValid) {
+                    alert("Country code must be 1 to 3 digits.");
+                    return;
+                }
+                if (typeof window.isValidPhone === "function" ? !window.isValidPhone(contactNumber) : !/^[0-9]{10}$/.test(contactNumber)) {
+                    alert("Contact number must be 10 digits.");
+                    return;
+                }
             }
 
             const slotPayload = collectChargerPayload(".owner-edit-charger-grid .charger-config-card");
@@ -296,7 +325,8 @@ async function toggleOwnerStationEditor(station, stationCard) {
                         body: JSON.stringify({
                             station_name: stationName,
                             location: stationLocation,
-                            contact_number: stationContact,
+                            contact_number: contactNumber,
+                            contact_country_code: contactNumber && contactCode ? `+${contactCode}` : "",
                             slots: slotPayload,
                         }),
                     },
@@ -369,10 +399,40 @@ async function handleCreateStation(event) {
     const payload = {
         station_name: document.getElementById("ownerStationName").value.trim(),
         location: document.getElementById("ownerLocation").value.trim(),
-        contact_number: document.getElementById("ownerContact").value.trim(),
+        contact_number:
+            typeof window.normalizeDigits === "function"
+                ? window.normalizeDigits(document.getElementById("ownerContactNumber").value.trim())
+                : document.getElementById("ownerContactNumber").value.trim().replace(/\D/g, ""),
+        contact_country_code:
+            typeof window.normalizeDigits === "function"
+                ? window.normalizeDigits(document.getElementById("ownerContactCode").value.trim())
+                : document.getElementById("ownerContactCode").value.trim().replace(/\D/g, ""),
         total_slots: totalSlots,
         chargers,
     };
+
+    if (payload.contact_number) {
+        const isCodeValid =
+            typeof window.isValidCountryCode === "function"
+                ? window.isValidCountryCode(payload.contact_country_code)
+                : /^[1-9][0-9]{0,2}$/.test(payload.contact_country_code);
+        if (!isCodeValid) {
+            alert("Country code must be 1 to 3 digits.");
+            return;
+        }
+        if (typeof window.isValidPhone === "function" ? !window.isValidPhone(payload.contact_number) : !/^[0-9]{10}$/.test(payload.contact_number)) {
+            alert("Contact number must be 10 digits.");
+            return;
+        }
+    } else {
+        payload.contact_country_code = "";
+    }
+
+    if (payload.contact_country_code) {
+        payload.contact_country_code = `+${payload.contact_country_code}`;
+    } else {
+        delete payload.contact_country_code;
+    }
 
     try {
         const result = await apiRequest(
