@@ -1,6 +1,15 @@
 let currentQrToken = null;
 let currentQrBookingId = null;
 
+function setNearbyBookingsMeta(message, isError = false) {
+    const meta = document.getElementById("nearbyBookingsMeta");
+    if (!meta) {
+        return;
+    }
+    meta.textContent = message || "";
+    meta.classList.toggle("text-danger", Boolean(message) && isError);
+}
+
 function resolveBookingChargingLabel(booking) {
     const normalizedStatus = String(booking.status || "").toLowerCase();
     if (booking.charging_completed_at) {
@@ -82,6 +91,7 @@ function buildUserBookingsTable(bookings, options = {}) {
             const paymentLabel = booking.payment_status
                 ? `${normalizeStatusLabel(booking.payment_status)}${booking.payment_method ? ` (${booking.payment_method})` : ""}`
                 : "Pending";
+            const distanceLabel = formatDistanceKm(booking.distance_km);
             const durationLabel = booking.duration_display || formatDurationHuman(booking.duration_minutes || 0);
             const durationNote =
                 normalizedStatus === "cancelled"
@@ -100,7 +110,7 @@ function buildUserBookingsTable(bookings, options = {}) {
                 <tr>
                     <td>
                         <span class="booking-table__primary">#${escapeHtml(booking.booking_id)}</span>
-                        <span class="booking-table__secondary">${escapeHtml(booking.location || "Location unavailable")}</span>
+                        <span class="booking-table__secondary">${escapeHtml(booking.location || "Location unavailable")}${distanceLabel ? ` | ${escapeHtml(distanceLabel)}` : ""}</span>
                     </td>
                     <td>
                         <span class="booking-table__primary">${escapeHtml(booking.station_name)}</span>
@@ -116,7 +126,7 @@ function buildUserBookingsTable(bookings, options = {}) {
                         <span class="booking-table__primary">${escapeHtml(durationLabel)}</span>
                         <span class="booking-table__secondary">${escapeHtml(durationNote)}</span>
                     </td>
-                    <td>${buildStatusBadge(booking.status)}</td>
+                    <td>${buildChargerStatusBadge(booking.status)}</td>
                     <td>${buildStatusBadge(booking.payment_status || "pending", paymentLabel)}</td>
                     <td>${buildBookingChargingCell(booking)}</td>
                     <td>
@@ -182,9 +192,27 @@ async function loadMyBookings(view = bookingViewState.customer) {
     bookingViewState.customer = view;
     setBookingViewButtons("customer", bookingViewState.customer);
 
+    const query = new URLSearchParams();
+    query.set("view", bookingViewState.customer);
+
+    if (dashboardState.bookingNearbyOnly && dashboardState.nearbyOrigin && Number(dashboardState.nearbyRadiusKm) > 0) {
+        query.set("latitude", dashboardState.nearbyOrigin.latitude);
+        query.set("longitude", dashboardState.nearbyOrigin.longitude);
+        query.set("radius", dashboardState.nearbyRadiusKm);
+        setNearbyBookingsMeta(
+            `Nearby bookings filter active for ${dashboardState.nearbyLabel || "your search"} within ${dashboardState.nearbyRadiusKm} km.`
+        );
+    } else if (dashboardState.bookingNearbyOnly && dashboardState.nearbyOrigin) {
+        setNearbyBookingsMeta("Enter a radius greater than 0 km on the stations tab before filtering bookings nearby.", true);
+    } else if (dashboardState.bookingNearbyOnly) {
+        setNearbyBookingsMeta("Search for a place or use your location on the stations tab before filtering bookings nearby.", true);
+    } else {
+        setNearbyBookingsMeta("Uses the active map search or current location from the stations tab.");
+    }
+
     try {
         const bookings = await apiRequest(
-            `/api/bookings/my-bookings?view=${encodeURIComponent(bookingViewState.customer)}`,
+            `/api/bookings/my-bookings?${query.toString()}`,
             { method: "GET" },
             true
         );

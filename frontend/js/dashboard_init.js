@@ -54,10 +54,51 @@ async function initDashboard() {
     startChargingProgressTicker();
     setupDashboardRoleSections();
 
-    document.getElementById("applyStationFilters")?.addEventListener("click", loadStations);
+    document.getElementById("applyStationFilters")?.addEventListener("click", async () => {
+        await loadStations();
+        const stationsResultsSection = document.getElementById("stationsResultsSection");
+        stationsResultsSection?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    });
     document.getElementById("refreshStationsBtn")?.addEventListener("click", loadStations);
+    document.getElementById("stationNearbySearchBtn")?.addEventListener("click", handleStationNearbySearch);
+    document.getElementById("stationUseLocationBtn")?.addEventListener("click", handleStationUseMyLocation);
+    document.getElementById("stationClearNearbyBtn")?.addEventListener("click", handleStationClearNearby);
+    document.getElementById("stationNearbySearch")?.addEventListener("keydown", (event) => {
+        if (typeof handleStationSearchKeydown === "function") {
+            handleStationSearchKeydown(event);
+            return;
+        }
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleStationNearbySearch();
+        }
+    });
+    document.getElementById("stationRadiusFilter")?.addEventListener("change", () => {
+        const parsedRadius = Number(document.getElementById("stationRadiusFilter")?.value);
+        dashboardState.nearbyRadiusKm = Number.isFinite(parsedRadius) && parsedRadius >= 0 ? parsedRadius : 0;
+        if (dashboardState.stationNearbyOnly && dashboardState.nearbyOrigin) {
+            loadStations();
+        }
+        if (dashboardState.bookingNearbyOnly && dashboardState.nearbyOrigin) {
+            loadMyBookings(bookingViewState.customer);
+        }
+        if (dashboardState.ownerNearbyOnly && typeof window.applyOwnerNearbyStationFilter === "function") {
+            window.applyOwnerNearbyStationFilter();
+        }
+    });
+    document.getElementById("nearbyStationsToggle")?.addEventListener("change", (event) => {
+        dashboardState.stationNearbyOnly = Boolean(event.target.checked);
+        loadStations();
+    });
     document.getElementById("customerUpcomingBtn")?.addEventListener("click", () => loadMyBookings("upcoming"));
     document.getElementById("customerPastBtn")?.addEventListener("click", () => loadMyBookings("past"));
+    document.getElementById("nearbyBookingsToggle")?.addEventListener("change", (event) => {
+        dashboardState.bookingNearbyOnly = Boolean(event.target.checked);
+        loadMyBookings(bookingViewState.customer);
+    });
     document.getElementById("refreshMyBookings")?.addEventListener("click", () =>
         loadMyBookings(bookingViewState.customer)
     );
@@ -98,6 +139,12 @@ async function initDashboard() {
     document.getElementById("ownerStationScheduleFilter")?.addEventListener("change", (event) => {
         ownerStationScheduleState.stationId = Number(event.target.value || 0) || null;
         loadOwnerStationSchedule(ownerStationScheduleState.view);
+    });
+    document.getElementById("ownerNearbyStationsToggle")?.addEventListener("change", (event) => {
+        dashboardState.ownerNearbyOnly = Boolean(event.target.checked);
+        if (typeof window.applyOwnerNearbyStationFilter === "function") {
+            window.applyOwnerNearbyStationFilter();
+        }
     });
     document.getElementById("adminPendingStationsBtn")?.addEventListener("click", () =>
         loadAdminStationApprovals("pending")

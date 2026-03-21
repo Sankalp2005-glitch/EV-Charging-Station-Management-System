@@ -55,6 +55,7 @@ def get_owner_station_bookings(current_user, station_id):
                 sl.slot_number,
                 sl.slot_type,
                 CASE
+                    WHEN sl.status = 'out_of_service' THEN 'out_of_service'
                     WHEN EXISTS (
                         SELECT 1
                         FROM Booking b2

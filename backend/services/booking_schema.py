@@ -23,11 +23,12 @@ def _ensure_charging_slot_schema(cursor):
     status_column = cursor.fetchone()
     if status_column:
         status_type = str(status_column[1] or "").lower()
-        if "charging" not in status_type:
+        required_statuses = ["available", "occupied", "charging", "out_of_service"]
+        if any(status not in status_type for status in required_statuses):
             cursor.execute(
                 """
                 ALTER TABLE ChargingSlot
-                MODIFY COLUMN status ENUM('available', 'occupied', 'charging') DEFAULT 'available'
+                MODIFY COLUMN status ENUM('available', 'occupied', 'charging', 'out_of_service') DEFAULT 'available'
                 """
             )
 

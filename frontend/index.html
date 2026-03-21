@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVgo | Create Account</title>
+    <link rel="icon" type="image/svg+xml" href="assets/evgo-icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,23 +14,74 @@
     <link href="css/style.css" rel="stylesheet">
 </head>
 
-<body class="dashboard-body auth-body">
-    <main class="auth-shell">
-        <div class="auth-layout">
+<body class="dashboard-body auth-body auth-body--immersive">
+    <main class="auth-shell auth-shell--integrated">
+        <div class="auth-layout auth-layout--integrated">
             <section class="auth-hero">
                 <div class="auth-hero__content">
-                    <div class="auth-brand">
-                        <div class="brand-mark">
-                            <i class="bi bi-lightning-charge-fill"></i>
-                        </div>
-                        <div>
-                            <p class="auth-brand__eyebrow">Charge network</p>
-                            <h1 class="brand-wordmark evgo-wordmark">EV<span class="brand-wordmark__accent evgo-wordmark__go">go</span></h1>
-                        </div>
+                    <div class="auth-brand auth-brand--logo">
+                        <img src="assets/Hori_Logo.jpg.jpeg" alt="EVgo logo" class="auth-brand__logo" loading="eager" decoding="async">
                     </div>
 
-                    <span class="auth-hero__eyebrow">Account setup</span>
-                    <h2 class="auth-hero__title">Create your <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span> workspace.</h2>
+                    <section class="surface-card surface-card--padded auth-card">
+                        <div class="auth-card__header">
+                            <span class="section-heading__eyebrow">Register</span>
+                            <h2 class="auth-card__title">Create your account</h2>
+                            <p class="auth-card__text">Set up your profile to access stations, bookings, and analytics.</p>
+                        </div>
+
+                        <div id="authFeedback" class="auth-feedback" role="status" aria-live="polite"></div>
+
+                        <form id="registerForm" class="row g-3 auth-form">
+                            <div class="col-12">
+                                <label class="form-label" for="name">Full name</label>
+                                <input type="text" id="name" class="form-control" placeholder="Full name" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="email">Email</label>
+                                <input type="email" id="email" class="form-control" placeholder="you@example.com" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="phone">Phone</label>
+                                <div class="phone-input-group">
+                                    <input type="tel" id="countryCode" class="form-control phone-code" inputmode="numeric" placeholder="+91" value="+91" maxlength="4" required>
+                                    <input type="tel" id="phone" class="form-control phone-number" inputmode="numeric" pattern="[0-9]{10}" placeholder="Enter your 10 digit phone number" maxlength="10" required>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="password">Password</label>
+                                <div class="password-field">
+                                    <input type="password" id="password" class="form-control" placeholder="Minimum 8 characters" required>
+                                    <button type="button" class="password-toggle" data-password-toggle data-target="password" aria-label="Show password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="role">Account type</label>
+                                <select id="role" class="form-select">
+                                    <option value="customer">Customer</option>
+                                    <option value="owner">Station Owner</option>
+                                </select>
+                            </div>
+                            <div class="col-12 auth-form__actions">
+                                <button id="registerSubmitBtn" type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    Create account
+                                </button>
+                            </div>
+                        </form>
+
+                        <p class="auth-switch">
+                            Already have an account?
+                            <a href="login.html">Sign in</a>
+                        </p>
+                    </section>
+
+                    <h2 class="auth-hero__title auth-hero__title--stacked">
+                        <span class="auth-hero__title-line">Create your <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span></span>
+                        <span class="auth-hero__title-line">workspace.</span>
+                    </h2>
                     <p class="auth-hero__text">
                         Register once to manage chargers, bookings, and live charging activity from a single operations workspace.
                     </p>
@@ -58,61 +110,6 @@
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <section class="surface-card surface-card--padded auth-card">
-                <div class="auth-card__header">
-                    <span class="section-heading__eyebrow">Register</span>
-                    <h2 class="auth-card__title">Create your account</h2>
-                    <p class="auth-card__text">Set up your profile to access stations, bookings, and analytics.</p>
-                </div>
-
-                <div id="authFeedback" class="auth-feedback" role="status" aria-live="polite"></div>
-
-                <form id="registerForm" class="row g-3 auth-form">
-                    <div class="col-12">
-                        <label class="form-label" for="name">Full name</label>
-                        <input type="text" id="name" class="form-control" placeholder="Full name" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="email">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="you@example.com" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="phone">Phone</label>
-                        <div class="phone-input-group">
-                            <input type="tel" id="countryCode" class="form-control phone-code" inputmode="numeric" placeholder="+91" value="+91" maxlength="4" required>
-                            <input type="tel" id="phone" class="form-control phone-number" inputmode="numeric" pattern="[0-9]{10}" placeholder="Enter your 10 digit phone number" maxlength="10" required>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="password">Password</label>
-                        <div class="password-field">
-                            <input type="password" id="password" class="form-control" placeholder="Minimum 8 characters" required>
-                            <button type="button" class="password-toggle" data-password-toggle data-target="password" aria-label="Show password">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="role">Account type</label>
-                        <select id="role" class="form-select">
-                            <option value="customer">Customer</option>
-                            <option value="owner">Station Owner</option>
-                        </select>
-                    </div>
-                    <div class="col-12 auth-form__actions">
-                        <button id="registerSubmitBtn" type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-person-plus-fill"></i>
-                            Create account
-                        </button>
-                    </div>
-                </form>
-
-                <p class="auth-switch">
-                    Already have an account?
-                    <a href="login.html">Sign in</a>
-                </p>
             </section>
         </div>
     </main>

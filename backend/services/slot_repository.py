@@ -18,6 +18,7 @@ def fetch_slot_with_pricing(cursor, slot_id):
                 slot_id,
                 station_id,
                 slot_type,
+                status,
                 power_kw,
                 price_per_kwh,
                 price_per_minute,
@@ -32,18 +33,19 @@ def fetch_slot_with_pricing(cursor, slot_id):
         row = cursor.fetchone()
         if not row:
             return None
-        vehicle_category = normalize_vehicle_category(row[7]) or VEHICLE_CATEGORY_CAR
-        power_kw = parse_positive_float(row[3])
+        vehicle_category = normalize_vehicle_category(row[8]) or VEHICLE_CATEGORY_CAR
+        power_kw = parse_positive_float(row[4])
         return {
             "slot_id": row[0],
             "station_id": row[1],
             "slot_type": to_str(row[2]),
+            "status": to_str(row[3]),
             "power_kw": power_kw,
-            "price_per_kwh": parse_positive_float(row[4]),
-            "price_per_minute": parse_positive_float(row[5]),
-            "charger_name": to_str(row[6]) or f"Charger {row[0]}",
+            "price_per_kwh": parse_positive_float(row[5]),
+            "price_per_minute": parse_positive_float(row[6]),
+            "charger_name": to_str(row[7]) or f"Charger {row[0]}",
             "vehicle_category": vehicle_category,
-            "connector_type": to_str(row[8]) or default_connector_type(vehicle_category, to_str(row[2])),
+            "connector_type": to_str(row[9]) or default_connector_type(vehicle_category, to_str(row[2])),
             "charging_speed": classify_charging_speed(power_kw or 0, vehicle_category),
         }
     except OperationalError as error:
@@ -52,7 +54,7 @@ def fetch_slot_with_pricing(cursor, slot_id):
 
         cursor.execute(
             """
-            SELECT slot_id, station_id, slot_type, power_kw, price_per_kwh, price_per_minute
+            SELECT slot_id, station_id, slot_type, status, power_kw, price_per_kwh, price_per_minute
             FROM ChargingSlot
             WHERE slot_id = %s
             """,
@@ -62,14 +64,15 @@ def fetch_slot_with_pricing(cursor, slot_id):
         if not row:
             return None
         slot_type = to_str(row[2])
-        power_kw = parse_positive_float(row[3])
+        power_kw = parse_positive_float(row[4])
         return {
             "slot_id": row[0],
             "station_id": row[1],
             "slot_type": slot_type,
+            "status": to_str(row[3]),
             "power_kw": power_kw,
-            "price_per_kwh": parse_positive_float(row[4]),
-            "price_per_minute": parse_positive_float(row[5]),
+            "price_per_kwh": parse_positive_float(row[5]),
+            "price_per_minute": parse_positive_float(row[6]),
             "charger_name": f"Charger {row[0]}",
             "vehicle_category": VEHICLE_CATEGORY_CAR,
             "connector_type": default_connector_type(VEHICLE_CATEGORY_CAR, slot_type),

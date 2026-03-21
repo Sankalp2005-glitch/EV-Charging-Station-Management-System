@@ -150,8 +150,8 @@ function renderOwnerStations(stations) {
                                 <strong>${escapeHtml(station.available_slots)}</strong>
                             </div>
                             <div class="owner-station-card__stat">
-                                <span>Occupied</span>
-                                <strong>${escapeHtml(station.occupied_slots)}</strong>
+                            <span>Reserved</span>
+                            <strong>${escapeHtml(station.occupied_slots)}</strong>
                             </div>
                             <div class="owner-station-card__stat">
                                 <span>Charging</span>
@@ -244,6 +244,13 @@ function renderOwnerStats(stats) {
             label: "Charging Started",
             value: Number(stats?.active_bookings || 0),
             meta: "Sessions currently in progress",
+        },
+        {
+            tone: "rose",
+            icon: "bi-lightning-charge",
+            label: "Energy delivered today",
+            value: formatEnergyKwh(stats?.energy_delivered_kwh || 0),
+            meta: "Active + completed charging sessions",
         },
         {
             tone: "cyan",
@@ -471,7 +478,7 @@ function populateOwnerStationScheduleOptions(stations) {
             (station) =>
                 `<option value="${station.station_id}">${escapeHtml(station.station_name)} (${escapeHtml(
                     station.location
-                )})</option>`
+                )})${Number.isFinite(Number(station.distance_km)) ? ` - ${escapeHtml(formatDistanceKm(station.distance_km))}` : ""}</option>`
         )
         .join("");
     select.innerHTML = options;
@@ -479,6 +486,54 @@ function populateOwnerStationScheduleOptions(stations) {
     const hasPrevious = stationList.some((station) => String(station.station_id) === String(previousValue));
     select.value = hasPrevious ? String(previousValue) : String(stationList[0].station_id);
     ownerStationScheduleState.stationId = Number(select.value);
+}
+
+function applyOwnerNearbyStationFilter() {
+    const origin = dashboardState.nearbyOrigin;
+    const meta = document.getElementById("ownerNearbyStationsMeta");
+    const scheduleList = document.getElementById("ownerStationScheduleList");
+    const useNearby = Boolean(document.getElementById("ownerNearbyStationsToggle")?.checked);
+    const stations = Array.isArray(dashboardState.ownerStationsCache) ? dashboardState.ownerStationsCache : [];
+
+    if (useNearby && !origin) {
+        if (meta) {
+            meta.textContent = "Search for a place or use your location on the stations tab before filtering owner stations nearby.";
+            meta.classList.add("text-danger");
+        }
+        populateOwnerStationScheduleOptions([]);
+        if (scheduleList) {
+            scheduleList.innerHTML = "<div class='empty-state'>No nearby owner stations available for the current search.</div>";
+        }
+        return;
+    }
+
+    const filteredStations = useNearby
+        ? stations
+              .map((station) => {
+                  const distanceKm = haversineDistanceKm(
+                      origin.latitude,
+                      origin.longitude,
+                      station.latitude,
+                      station.longitude
+                  );
+                  return Number.isFinite(distanceKm)
+                      ? { ...station, distance_km: Number(distanceKm.toFixed(2)) }
+                      : null;
+              })
+              .filter((station) => station && Number(dashboardState.nearbyRadiusKm) > 0 && station.distance_km <= Number(dashboardState.nearbyRadiusKm))
+        : stations;
+
+    if (meta) {
+        meta.textContent = useNearby
+            ? Number(dashboardState.nearbyRadiusKm) > 0
+                ? `Showing owner stations within ${dashboardState.nearbyRadiusKm} km of ${dashboardState.nearbyLabel || "your search"}.`
+                : "Enter a radius greater than 0 km on the stations tab before filtering owner stations nearby."
+            : "Uses the same nearby search currently active on the stations map.";
+        meta.classList.toggle("text-danger", useNearby && Number(dashboardState.nearbyRadiusKm) <= 0);
+    }
+
+    populateOwnerStationScheduleOptions(filteredStations);
+    loadOwnerStationSchedule(ownerStationScheduleState.view);
 }
 
 function renderOwnerStationSchedule(data) {
@@ -503,7 +558,7 @@ function renderOwnerStationSchedule(data) {
                           .map(
                               (booking) => `
                                   <li>
-                                      ${buildStatusBadge(booking.status)}
+                                      ${buildChargerStatusBadge(booking.status)}
                                       <span>${escapeHtml(booking.start_time)} - ${escapeHtml(booking.end_time)}</span>
                                       <span class="text-muted">(${escapeHtml(booking.customer_name)})</span>
                                   </li>
@@ -520,7 +575,7 @@ function renderOwnerStationSchedule(data) {
                         <div class="schedule-card__meta">
                             Current status:
                             <span class="${getAvailabilityBadgeClass(slot.current_status)}">${escapeHtml(
-                                normalizeStatusLabel(slot.current_status)
+                                normalizeChargerStatusLabel(slot.current_status)
                             )}</span>
                         </div>
                         <ul class="schedule-card__list">${bookingItems}</ul>
@@ -575,9 +630,9 @@ async function loadOwnerStations() {
     try {
         const stations = await apiRequest("/api/owner/stations", { method: "GET" }, true);
         renderOwnerStations(stations);
-        populateOwnerStationScheduleOptions(stations);
+        dashboardState.ownerStationsCache = Array.isArray(stations) ? stations : [];
+        applyOwnerNearbyStationFilter();
         updateDashboardSummaryState({ ownerStations: stations });
-        await loadOwnerStationSchedule(ownerStationScheduleState.view);
     } catch (error) {
         const container = document.getElementById("ownerStationsList");
         if (container) {
@@ -729,7 +784,7 @@ function renderOwnerBookings(bookings) {
                         <span class="booking-table__primary">${escapeHtml(booking.start_time)}</span>
                         <span class="booking-table__secondary">${escapeHtml(booking.duration_display || formatDurationHuman(booking.duration_minutes || 0))}</span>
                     </td>
-                    <td>${buildStatusBadge(booking.status)}</td>
+                    <td>${buildChargerStatusBadge(booking.status)}</td>
                     <td>${buildStatusBadge(booking.payment_status || "pending")}</td>
                     <td>
                         <div class="charging-cell">

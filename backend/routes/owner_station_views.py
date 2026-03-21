@@ -3,7 +3,12 @@ from flask import current_app, jsonify
 from extensions import mysql
 from routes.owner_bp import owner_bp
 from routes.owner_common import clean_text
-from services.booking_config import BOOKING_STATUS_CHARGING_STARTED
+from services.booking_config import (
+    BOOKING_STATUS_CHARGING_COMPLETED,
+    BOOKING_STATUS_CHARGING_STARTED,
+    LEGACY_BOOKING_STATUS_COMPLETED,
+    LEGACY_BOOKING_STATUS_CONFIRMED,
+)
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
@@ -11,6 +16,8 @@ from services.booking_lifecycle import (
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
 from services.revenue_analytics import fetch_revenue_analytics as _fetch_revenue_analytics
 from services.value_utils import (
+    ensure_station_geo_columns,
+    normalize_coordinate_pair,
     parse_positive_float as _parse_positive_float,
     to_str as _to_str,
 )
@@ -33,6 +40,7 @@ def get_owner_stations(current_user):
     try:
         cursor = mysql.connection.cursor()
         _ensure_phase5_tables(cursor)
+        ensure_station_geo_columns(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor, default_status=APPROVAL_STATUS_APPROVED)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
@@ -45,15 +53,18 @@ def get_owner_stations(current_user):
                 cs.location,
                 cs.contact_number,
                 cs.total_slots,
+                cs.latitude,
+                cs.longitude,
                 sa.status AS approval_status,
                 SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
                 SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
-                SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots
+                SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                SUM(CASE WHEN sl.status = 'out_of_service' THEN 1 ELSE 0 END) AS out_of_service_slots
             FROM ChargingStation cs
             LEFT JOIN StationApproval sa ON sa.station_id = cs.station_id
             LEFT JOIN ChargingSlot sl ON sl.station_id = cs.station_id
             WHERE cs.user_id = %s
-            GROUP BY cs.station_id, cs.station_name, cs.location, cs.contact_number, cs.total_slots, sa.status
+            GROUP BY cs.station_id, cs.station_name, cs.location, cs.contact_number, cs.total_slots, cs.latitude, cs.longitude, sa.status
             ORDER BY cs.station_name ASC
             """,
             (current_user["user_id"],),
@@ -73,6 +84,7 @@ def get_owner_stations(current_user):
 
     result = []
     for station in stations:
+        latitude, longitude = normalize_coordinate_pair(station[5], station[6])
         result.append(
             {
                 "station_id": station[0],
@@ -80,10 +92,13 @@ def get_owner_stations(current_user):
                 "location": station[2],
                 "contact_number": station[3],
                 "total_slots": int(station[4] or 0),
-                "approval_status": _to_str(station[5]) or APPROVAL_STATUS_PENDING,
-                "available_slots": int(station[6] or 0),
-                "occupied_slots": int(station[7] or 0),
-                "charging_slots": int(station[8] or 0),
+                "latitude": latitude,
+                "longitude": longitude,
+                "approval_status": _to_str(station[7]) or APPROVAL_STATUS_PENDING,
+                "available_slots": int(station[8] or 0),
+                "occupied_slots": int(station[9] or 0),
+                "charging_slots": int(station[10] or 0),
+                "out_of_service_slots": int(station[11] or 0),
             }
         )
 
@@ -153,6 +168,45 @@ def get_owner_stats(current_user):
         cursor.execute(
             """
             SELECT
+                SUM(
+                    COALESCE(sl.power_kw, 0) * (
+                        GREATEST(
+                            TIMESTAMPDIFF(
+                                MINUTE,
+                                sess.start_time,
+                                CASE
+                                    WHEN b.status IN (%s, %s) THEN COALESCE(sess.end_time, b.end_time)
+                                    ELSE NOW()
+                                END
+                            ),
+                            0
+                        ) / 60
+                    )
+                ) AS energy_kwh
+            FROM Booking b
+            JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
+            JOIN ChargingStation cs ON sl.station_id = cs.station_id
+            JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+            WHERE cs.user_id = %s
+              AND sess.start_time IS NOT NULL
+              AND DATE(sess.start_time) = CURDATE()
+              AND b.status IN (%s, %s, %s, %s)
+            """,
+            (
+                BOOKING_STATUS_CHARGING_COMPLETED,
+                LEGACY_BOOKING_STATUS_COMPLETED,
+                current_user["user_id"],
+                BOOKING_STATUS_CHARGING_STARTED,
+                BOOKING_STATUS_CHARGING_COMPLETED,
+                LEGACY_BOOKING_STATUS_CONFIRMED,
+                LEGACY_BOOKING_STATUS_COMPLETED,
+            ),
+        )
+        energy_delivered_kwh = float((cursor.fetchone() or [0])[0] or 0.0)
+
+        cursor.execute(
+            """
+            SELECT
                 sl.slot_id,
                 sl.slot_number,
                 sl.slot_type,
@@ -206,6 +260,7 @@ def get_owner_stats(current_user):
             "total_revenue": round(estimated_revenue, 2),
             "revenue_estimate_supported": revenue_estimate_supported,
             "most_used_slot": most_used_slot,
+            "energy_delivered_kwh": round(energy_delivered_kwh, 3),
         }
     ), 200
 

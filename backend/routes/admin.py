@@ -5,8 +5,10 @@ from flask import Blueprint, current_app, jsonify, request
 from extensions import mysql
 from services.booking_config import (
     BOOKING_STATUS_CANCELLED,
+    BOOKING_STATUS_CHARGING_COMPLETED,
     BOOKING_STATUS_CHARGING_STARTED,
     BOOKING_STATUS_WAITING_TO_START,
+    LEGACY_BOOKING_STATUS_COMPLETED,
     LEGACY_BOOKING_STATUS_CONFIRMED,
 )
 from services.booking_lifecycle import (
@@ -71,6 +73,42 @@ def get_admin_stats(_current_user):
         revenue_analytics = _fetch_revenue_analytics(cursor)
         revenue = float(revenue_analytics["summary"]["total_revenue"] or 0.0)
         revenue_supported = True
+
+        cursor.execute(
+            """
+            SELECT
+                SUM(
+                    COALESCE(sl.power_kw, 0) * (
+                        GREATEST(
+                            TIMESTAMPDIFF(
+                                MINUTE,
+                                sess.start_time,
+                                CASE
+                                    WHEN b.status IN (%s, %s) THEN COALESCE(sess.end_time, b.end_time)
+                                    ELSE NOW()
+                                END
+                            ),
+                            0
+                        ) / 60
+                    )
+                ) AS energy_kwh
+            FROM Booking b
+            JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
+            JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+            WHERE sess.start_time IS NOT NULL
+              AND DATE(sess.start_time) = CURDATE()
+              AND b.status IN (%s, %s, %s, %s)
+            """,
+            (
+                BOOKING_STATUS_CHARGING_COMPLETED,
+                LEGACY_BOOKING_STATUS_COMPLETED,
+                BOOKING_STATUS_CHARGING_STARTED,
+                BOOKING_STATUS_CHARGING_COMPLETED,
+                LEGACY_BOOKING_STATUS_CONFIRMED,
+                LEGACY_BOOKING_STATUS_COMPLETED,
+            ),
+        )
+        energy_delivered_kwh = float((cursor.fetchone() or [0])[0] or 0.0)
     except Exception:
         mysql.connection.rollback()
         current_app.logger.exception("Failed to fetch admin stats")
@@ -89,6 +127,7 @@ def get_admin_stats(_current_user):
             "total_revenue": round(revenue, 2),
             "revenue_estimate_supported": revenue_supported,
             "active_sessions": get_active_session_count(),
+            "energy_delivered_kwh": round(energy_delivered_kwh, 3),
         }
     ), 200
 
@@ -541,6 +580,44 @@ def get_admin_station_chargers(_current_user, station_id):
         )
 
     return jsonify(result), 200
+
+
+@admin_bp.route("/chargers/<int:slot_id>/status", methods=["PUT"])
+@token_required
+@role_required("admin")
+def update_admin_charger_status(_current_user, slot_id):
+    payload = request.get_json(silent=True) or {}
+    status = (payload.get("status") or "").strip().lower()
+    if status not in {"available", "out_of_service"}:
+        return jsonify({"error": "status must be available or out_of_service"}), 400
+
+    cursor = None
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            """
+            UPDATE ChargingSlot
+            SET status = %s
+            WHERE slot_id = %s
+            """,
+            (status, slot_id),
+        )
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Charger not found"}), 404
+
+        if status == "available":
+            _refresh_single_slot_status(cursor, slot_id)
+
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        current_app.logger.exception("Failed to update charger status slot_id=%s", slot_id)
+        return jsonify({"error": "Failed to update charger status"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+
+    return jsonify({"message": "Charger status updated", "slot_id": slot_id, "status": status}), 200
 
 
 @admin_bp.route("/bookings", methods=["GET"])

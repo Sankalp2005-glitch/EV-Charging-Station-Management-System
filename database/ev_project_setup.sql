@@ -53,7 +53,7 @@ CREATE TABLE ChargingSlot (
     connector_type VARCHAR(50) NOT NULL,
     price_per_kwh DECIMAL(8,2),
     price_per_minute DECIMAL(8,2),
-    status ENUM('available', 'occupied', 'charging') DEFAULT 'available',
+    status ENUM('available', 'occupied', 'charging', 'out_of_service') DEFAULT 'available',
     FOREIGN KEY (station_id) REFERENCES ChargingStation(station_id) ON DELETE CASCADE,
     UNIQUE (station_id, slot_number)
 );

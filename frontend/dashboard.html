@@ -5,11 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVgo | Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="assets/evgo-icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
 
@@ -20,7 +22,7 @@
         <aside class="dashboard-sidebar" id="dashboardSidebar">
             <div class="sidebar-brand">
                 <div class="sidebar-brand__icon">
-                    <i class="bi bi-lightning-charge-fill"></i>
+                    <img src="assets/1-1_logo.png" alt="EVgo logo" width="64" height="64" loading="eager" decoding="async">
                 </div>
                 <div>
                     <p class="sidebar-brand__eyebrow">Charge network</p>
@@ -80,10 +82,16 @@
                     <button id="sidebarToggleBtn" class="btn btn-outline-secondary sidebar-toggle" type="button" aria-label="Open navigation">
                         <i class="bi bi-list"></i>
                     </button>
+                    <a class="top-navbar__brand" href="dashboard.html" aria-label="EVgo home">
+                        <span class="top-navbar__brand-logo">
+                            <img src="assets/1-1_logo.png" alt="EVgo logo" width="40" height="40" loading="eager" decoding="async">
+                        </span>
+                        <span class="evgo-wordmark top-navbar__brand-wordmark">EV<span class="evgo-wordmark__go">go</span></span>
+                    </a>
                     <div class="dashboard-header-panel">
                         <div class="dashboard-header-panel__brand">
                             <span class="dashboard-header-panel__icon" aria-hidden="true">
-                                <i class="bi bi-lightning-charge-fill"></i>
+                                <img src="assets/1-1_logo.png" alt="EVgo logo" width="48" height="48" loading="eager" decoding="async">
                             </span>
                             <div>
                                 <p class="page-eyebrow mb-1">Control center</p>
@@ -92,6 +100,10 @@
                             </div>
                         </div>
                         <div class="dashboard-header-panel__meta">
+                            <button id="dashboardBackBtn" class="btn btn-outline-secondary btn-sm page-back-button page-back-button--dashboard" type="button" hidden>
+                                <i class="bi bi-arrow-left"></i>
+                                Back to dashboard
+                            </button>
                             <span class="dashboard-header-panel__meta-label">Control center</span>
                             <strong class="dashboard-header-panel__meta-value">Live EV operations</strong>
                         </div>
@@ -144,7 +156,7 @@
                         </div>
                     </div>
 
-                    <div id="dashboardStatsCards" class="row g-4 mb-4"></div>
+                    <div id="dashboardStatsCards" class="stats-grid"></div>
 
                     <div id="customerDashboardSection">
                         <div class="row g-4">
@@ -179,7 +191,7 @@
                     </div>
 
                     <div id="ownerDashboardSection" style="display:none;">
-                        <div class="surface-card surface-card--padded mt-4">
+                        <div class="surface-card surface-card--padded">
                             <div class="section-heading section-heading--compact">
                                 <div>
                                     <span class="section-heading__eyebrow">Owner view</span>
@@ -187,7 +199,7 @@
                                     <p class="section-heading__text mb-0">Track bookings, usage, and commercial performance across your stations.</p>
                                 </div>
                             </div>
-                            <div id="ownerStatsCards" class="row g-4"></div>
+                            <div id="ownerStatsCards" class="stats-grid"></div>
                             <div class="row g-4 mt-1">
                                 <div class="col-12 col-xl-7">
                                     <div class="surface-card surface-card--padded analytics-card h-100">
@@ -233,7 +245,7 @@
                     </div>
 
                     <div id="adminDashboardSection" style="display:none;">
-                        <div class="surface-card surface-card--padded mt-4">
+                        <div class="surface-card surface-card--padded">
                             <div class="section-heading section-heading--compact">
                                 <div>
                                     <span class="section-heading__eyebrow">Admin view</span>
@@ -241,7 +253,7 @@
                                     <p class="section-heading__text mb-0">Review platform growth, revenue, and approval activity in one place.</p>
                                 </div>
                             </div>
-                            <div id="adminStatsCards" class="row g-4"></div>
+                            <div id="adminStatsCards" class="stats-grid"></div>
                             <div class="row g-4 mt-1">
                                 <div class="col-12 col-xl-7">
                                     <div class="surface-card surface-card--padded analytics-card h-100">
@@ -322,6 +334,15 @@
                                     <option value="car">Car</option>
                                 </select>
                             </div>
+                            <div class="col-12">
+                                <div class="station-nearby-toggle">
+                                    <div class="form-check form-switch m-0">
+                                        <input id="nearbyStationsToggle" class="form-check-input" type="checkbox" role="switch" checked>
+                                        <label class="form-check-label" for="nearbyStationsToggle">Nearby stations</label>
+                                    </div>
+                                    <p class="form-helper-text mb-0">Use the active map search or current location to filter stations within the selected radius.</p>
+                                </div>
+                            </div>
                             <div class="col-12 col-lg-12">
                                 <button id="applyStationFilters" class="btn btn-primary w-100" type="button">
                                     <i class="bi bi-funnel"></i>
@@ -332,6 +353,62 @@
                     </div>
 
                     <div class="surface-card surface-card--padded mb-4">
+                        <div class="section-heading section-heading--compact">
+                            <div>
+                                <span class="section-heading__eyebrow">Map</span>
+                                <h4 class="section-heading__title mb-1">Station coverage</h4>
+                                <p class="section-heading__text mb-0">Search a place or use live geolocation to find stations within your preferred radius.</p>
+                            </div>
+                        </div>
+                        <div class="station-map-toolbar">
+                            <div class="station-map-toolbar__search station-search-shell">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input
+                                        id="stationNearbySearch"
+                                        class="form-control"
+                                        type="search"
+                                        placeholder="Search stations or enter location"
+                                        aria-label="Search stations or enter location"
+                                        autocomplete="off"
+                                    >
+                                </div>
+                                <div
+                                    id="stationNearbySuggestions"
+                                    class="station-search-suggestions"
+                                    role="listbox"
+                                    aria-label="Location suggestions"
+                                    hidden
+                                ></div>
+                            </div>
+                            <input
+                                id="stationRadiusFilter"
+                                class="form-control station-map-toolbar__radius"
+                                type="number"
+                                min="0"
+                                step="1"
+                                placeholder="Radius in km"
+                                aria-label="Nearby radius in kilometers"
+                            >
+                            <button id="stationNearbySearchBtn" class="btn btn-primary" type="button">
+                                <i class="bi bi-search"></i>
+                                Search
+                            </button>
+                            <button id="stationUseLocationBtn" class="btn btn-outline-secondary" type="button">
+                                <i class="bi bi-crosshair"></i>
+                                Use my location
+                            </button>
+                            <button id="stationClearNearbyBtn" class="btn btn-outline-secondary" type="button">
+                                <i class="bi bi-x-circle"></i>
+                                Clear
+                            </button>
+                        </div>
+                        <p id="stationMapSearchMeta" class="station-map__meta" style="display:none;"></p>
+                        <div id="stationMap" class="station-map"></div>
+                        <p id="stationMapMessage" class="station-map__message" style="display:none;"></p>
+                    </div>
+
+                    <div id="stationsResultsSection" class="surface-card surface-card--padded mb-4">
                         <div class="section-heading section-heading--compact">
                             <div>
                                 <span class="section-heading__eyebrow">Stations</span>
@@ -431,6 +508,13 @@
                                     </button>
                                 </div>
                             </div>
+                            <div class="booking-nearby-toolbar">
+                                <div class="form-check form-switch m-0">
+                                    <input id="nearbyBookingsToggle" class="form-check-input" type="checkbox" role="switch">
+                                    <label class="form-check-label" for="nearbyBookingsToggle">Nearby stations</label>
+                                </div>
+                                <p id="nearbyBookingsMeta" class="form-helper-text mb-0">Uses the active map search or current location from the stations tab.</p>
+                            </div>
                             <div id="myBookingsList" class="table-responsive"></div>
                         </div>
                     </div>
@@ -471,6 +555,16 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Station</label>
                                     <select id="ownerStationScheduleFilter" class="form-select form-select-sm"></select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label d-block">&nbsp;</label>
+                                    <div class="station-nearby-toggle station-nearby-toggle--compact">
+                                        <div class="form-check form-switch m-0">
+                                            <input id="ownerNearbyStationsToggle" class="form-check-input" type="checkbox" role="switch">
+                                            <label class="form-check-label" for="ownerNearbyStationsToggle">Nearby stations</label>
+                                        </div>
+                                        <p id="ownerNearbyStationsMeta" class="form-helper-text mb-0">Uses the same nearby search currently active on the stations map.</p>
+                                    </div>
                                 </div>
                             </div>
                             <div id="ownerStationScheduleList"></div>
@@ -698,7 +792,7 @@
                             </button>
                         </div>
 
-                        <div id="adminRevenueSummaryCards" class="row g-4 mb-4"></div>
+                        <div id="adminRevenueSummaryCards" class="stats-grid mb-4"></div>
 
                         <div class="row g-4">
                             <div class="col-12 col-xl-7">
@@ -872,6 +966,7 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/api.js"></script>
     <script src="js/dashboard_profile.js"></script>
     <script src="js/dashboard_customer_stations.js"></script>

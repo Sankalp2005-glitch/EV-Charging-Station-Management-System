@@ -21,6 +21,7 @@ def auto_release_no_show_bookings(cursor):
             JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
             LEFT JOIN ChargingSession cs ON cs.booking_id = b.booking_id
             WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
               AND b.start_time <= DATE_SUB(NOW(), INTERVAL %s MINUTE)
               AND cs.start_time IS NULL
             """,
@@ -41,6 +42,7 @@ def auto_release_no_show_bookings(cursor):
         LEFT JOIN ChargingSession cs ON cs.booking_id = b.booking_id
         SET b.status = %s
         WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
           AND b.start_time <= DATE_SUB(NOW(), INTERVAL %s MINUTE)
           AND cs.start_time IS NULL
         """,
@@ -72,6 +74,7 @@ def mark_expired_bookings(cursor):
         JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
         LEFT JOIN ChargingSession cs ON cs.booking_id = b.booking_id
         WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
           AND cs.start_time IS NOT NULL
           AND b.end_time <= NOW()
         """,
@@ -91,6 +94,7 @@ def mark_expired_bookings(cursor):
             cs.units_consumed = COALESCE(cs.units_consumed, b.energy_required_kwh),
             cs.total_cost = COALESCE(cs.total_cost, p.amount)
         WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
           AND cs.start_time IS NOT NULL
           AND b.end_time <= NOW()
         """,
@@ -128,7 +132,7 @@ def mark_expired_bookings(cursor):
 
 
 def sync_slot_statuses(cursor):
-    cursor.execute("UPDATE ChargingSlot SET status = 'available'")
+    cursor.execute("UPDATE ChargingSlot SET status = 'available' WHERE status <> 'out_of_service'")
     cursor.execute(
         """
         UPDATE ChargingSlot sl
@@ -136,6 +140,7 @@ def sync_slot_statuses(cursor):
         JOIN ChargingSession cs ON cs.booking_id = b.booking_id
         SET sl.status = 'charging'
         WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
           AND cs.start_time IS NOT NULL
           AND b.start_time <= NOW()
           AND b.end_time > NOW()
@@ -152,6 +157,7 @@ def sync_slot_statuses(cursor):
         LEFT JOIN ChargingSession cs ON cs.booking_id = b.booking_id
         SET sl.status = 'occupied'
         WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
           AND cs.start_time IS NULL
           AND b.start_time <= NOW()
           AND b.end_time > NOW()
@@ -164,6 +170,11 @@ def sync_slot_statuses(cursor):
 
 
 def refresh_single_slot_status(cursor, slot_id):
+    cursor.execute("SELECT status FROM ChargingSlot WHERE slot_id = %s", (slot_id,))
+    row = cursor.fetchone()
+    if row and str(row[0] or '').lower() == 'out_of_service':
+        return
+
     cursor.execute(
         """
         SELECT 1

@@ -11,7 +11,6 @@ const DASHBOARD_TITLES = {
 
 const EVGO_WORDMARK_HTML =
     '<span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span>';
-const DASHBOARD_ACTIVE_TAB_KEY = "evgo.activeTab";
 let activeDashboardTab = null;
 
 const dashboardSummaryState = {
@@ -38,6 +37,23 @@ function normalizeStatusLabel(value) {
     return text ? text.charAt(0).toUpperCase() + text.slice(1) : "Unknown";
 }
 
+function normalizeChargerStatusLabel(value) {
+    const normalized = String(value || "").toLowerCase();
+    if (["occupied", "waiting_to_start", "reserved", "confirmed"].includes(normalized)) {
+        return "Reserved";
+    }
+    if (["charging", "charging_started"].includes(normalized)) {
+        return "Charging";
+    }
+    if (["out_of_service", "disabled"].includes(normalized)) {
+        return "Out of service";
+    }
+    if (normalized === "available") {
+        return "Available";
+    }
+    return normalizeStatusLabel(value);
+}
+
 function toFiniteNumber(value) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -45,6 +61,14 @@ function toFiniteNumber(value) {
 
 function formatCount(value) {
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(toFiniteNumber(value));
+}
+
+function formatEnergyKwh(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+        return "0 kWh";
+    }
+    return `${parsed.toFixed(1)} kWh`;
 }
 
 function countActiveBookings(bookings) {
@@ -77,42 +101,36 @@ function normalizePriceInfo(priceInfo) {
 
 function getAvailabilityBadgeClass(status) {
     const normalized = String(status || "").toLowerCase();
-    if (normalized === "available" || normalized === "approved" || normalized === "charging") {
-        return "availability-badge availability-badge--success";
-    }
-    if (normalized === "busy" || normalized === "pending" || normalized === "occupied" || normalized === "waiting_to_start") {
-        return "availability-badge availability-badge--warning";
-    }
-    if (normalized === "rejected" || normalized === "cancelled") {
+    if (["out_of_service", "disabled", "rejected", "cancelled"].includes(normalized)) {
         return "availability-badge availability-badge--danger";
     }
-    if (normalized === "completed" || normalized === "confirmed" || normalized === "charging_completed") {
+    if (["charging", "charging_started"].includes(normalized)) {
         return "availability-badge availability-badge--info";
     }
-    if (normalized === "charging_started") {
+    if (normalized === "available" || normalized === "approved") {
         return "availability-badge availability-badge--success";
+    }
+    if (["busy", "pending", "occupied", "waiting_to_start", "reserved", "confirmed"].includes(normalized)) {
+        return "availability-badge availability-badge--warning";
+    }
+    if (["completed", "charging_completed"].includes(normalized)) {
+        return "availability-badge availability-badge--info";
     }
     return "availability-badge availability-badge--muted";
 }
 
 function getStatusBadgeClass(status) {
     const normalized = String(status || "").toLowerCase();
-    if (["confirmed", "approved", "paid", "active", "available", "charging_started", "charging"].includes(normalized)) {
-        return "status-badge status-badge--success";
-    }
-    if (["pending", "busy", "occupied", "waiting_to_start"].includes(normalized)) {
-        return "status-badge status-badge--warning";
-    }
-    if (["suspended"].includes(normalized)) {
-        return "status-badge status-badge--warning";
-    }
-    if (["disabled"].includes(normalized)) {
-        return "status-badge status-badge--danger";
-    }
-    if (["completed", "charging_completed"].includes(normalized)) {
+    if (["charging", "charging_started", "completed", "charging_completed"].includes(normalized)) {
         return "status-badge status-badge--info";
     }
-    if (["cancelled", "rejected", "failed"].includes(normalized)) {
+    if (["available", "approved", "paid", "active"].includes(normalized)) {
+        return "status-badge status-badge--success";
+    }
+    if (["pending", "busy", "occupied", "waiting_to_start", "reserved", "confirmed", "suspended"].includes(normalized)) {
+        return "status-badge status-badge--warning";
+    }
+    if (["out_of_service", "disabled", "cancelled", "rejected", "failed"].includes(normalized)) {
         return "status-badge status-badge--danger";
     }
     return "status-badge status-badge--muted";
@@ -122,11 +140,19 @@ function buildStatusBadge(status, label) {
     return `<span class="${getStatusBadgeClass(status)}">${escapeHtml(label || normalizeStatusLabel(status))}</span>`;
 }
 
+function buildChargerStatusBadge(status) {
+    return buildStatusBadge(status, normalizeChargerStatusLabel(status));
+}
+
 function buildMetricCard(metric) {
-    const valueText =
+    const valueLabel =
         typeof metric.value === "number"
             ? formatCount(metric.value)
-            : escapeHtml(metric.value === undefined || metric.value === null ? "N/A" : metric.value);
+            : String(metric.value === undefined || metric.value === null ? "N/A" : metric.value);
+    const valueText = escapeHtml(valueLabel);
+    const isCompactValue = valueLabel.length >= 8;
+    const isCurrencyValue = /[\u20B9$€£]|(?:rs\.?\s*)?\d[\d,.]*\.\d{2}/i.test(valueLabel);
+    const valueClass = `${isCompactValue ? " metric-card__value--compact" : ""}${isCurrencyValue ? " metric-card__value--currency" : ""}`;
     const metaHtml = metric.meta ? `<p class="metric-card__meta">${escapeHtml(metric.meta)}</p>` : "";
     const tabTarget = metric.tabTarget ? escapeHtml(metric.tabTarget) : "";
     const isInteractive = Boolean(tabTarget);
@@ -138,14 +164,14 @@ function buildMetricCard(metric) {
         : `class="metric-card metric-card--${escapeHtml(metric.tone || "blue")}"`;
 
     return `
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="metric-card-shell">
             <${wrapperTag} ${interactiveAttrs}>
                 <div class="metric-card__icon">
                     <i class="bi ${escapeHtml(metric.icon || "bi-activity")}"></i>
                 </div>
                 <div class="metric-card__body">
                     <span class="metric-card__label">${escapeHtml(metric.label || "Metric")}</span>
-                    <div class="metric-card__value">${valueText}</div>
+                    <div class="metric-card__value${valueClass}">${valueText}</div>
                     ${metaHtml}
                 </div>
             </${wrapperTag}>
@@ -566,17 +592,53 @@ function resolveInitialTab(savedTab) {
     return candidate;
 }
 
-function switchTab(tabName) {
+function buildDashboardUrl(tabName) {
     const selectedTab = resolveInitialTab(tabName);
-    if (selectedTab === activeDashboardTab) {
+    const hash = selectedTab === "dashboard" ? "" : `#${selectedTab}`;
+    return `${window.location.pathname}${window.location.search}${hash}`;
+}
+
+function readDashboardTabFromLocation() {
+    return resolveInitialTab(String(window.location.hash || "").replace(/^#/, "").trim() || "dashboard");
+}
+
+function writeDashboardHistoryState(tabName, replace = false) {
+    const selectedTab = resolveInitialTab(tabName);
+    const method = replace ? "replaceState" : "pushState";
+    window.history[method]({ dashboardTab: selectedTab }, "", buildDashboardUrl(selectedTab));
+}
+
+function syncDashboardBackButton(selectedTab) {
+    const backButton = document.getElementById("dashboardBackBtn");
+    if (!backButton) {
         return;
     }
-    activeDashboardTab = selectedTab;
-    try {
-        localStorage.setItem(DASHBOARD_ACTIVE_TAB_KEY, selectedTab);
-    } catch (_error) {
-        // Non-blocking if storage is unavailable.
+    const isDashboardHome = selectedTab === "dashboard";
+    backButton.hidden = isDashboardHome;
+    backButton.disabled = isDashboardHome;
+}
+
+function navigateToDashboardHome() {
+    if (activeDashboardTab === "dashboard") {
+        return;
     }
+    const currentStateTab = resolveInitialTab(window.history.state?.dashboardTab || readDashboardTabFromLocation());
+    if (currentStateTab !== "dashboard") {
+        window.history.back();
+        return;
+    }
+    switchTab("dashboard", { historyMode: "replace" });
+}
+
+function switchTab(tabName, options = {}) {
+    const historyMode = options.historyMode || "auto";
+    const selectedTab = resolveInitialTab(tabName);
+    if (selectedTab === activeDashboardTab) {
+        syncDashboardBackButton(selectedTab);
+        return;
+    }
+    const previousTab = activeDashboardTab;
+    activeDashboardTab = selectedTab;
     const tabs = document.querySelectorAll(".dashboard-tab");
     tabs.forEach((tab) => {
         const isActive = tab.id === `${selectedTab}Tab`;
@@ -591,6 +653,13 @@ function switchTab(tabName) {
     const pageTitle = document.getElementById("pageTitle");
     if (pageTitle) {
         pageTitle.textContent = DASHBOARD_TITLES[selectedTab] || DASHBOARD_TITLES.dashboard;
+    }
+
+    syncDashboardBackButton(selectedTab);
+
+    if (historyMode !== "none") {
+        const shouldReplace = historyMode === "replace" || (historyMode === "auto" && previousTab && previousTab !== "dashboard");
+        writeDashboardHistoryState(selectedTab, shouldReplace);
     }
 
     if (typeof window.handleDashboardTabChange === "function") {
@@ -611,6 +680,10 @@ function bindDashboardUi() {
             return;
         }
         event.preventDefault();
+        if (nextTab === "dashboard" && activeDashboardTab && activeDashboardTab !== "dashboard") {
+            navigateToDashboardHome();
+            return;
+        }
         switchTab(nextTab);
     });
 
@@ -623,11 +696,17 @@ function bindDashboardUi() {
     });
     sidebarBackdrop?.addEventListener("click", closeDashboardSidebar);
     logoutBtn?.addEventListener("click", logout);
+    document.getElementById("dashboardBackBtn")?.addEventListener("click", navigateToDashboardHome);
 
     window.addEventListener("resize", () => {
         if (window.innerWidth >= 992) {
             closeDashboardSidebar();
         }
+    });
+
+    window.addEventListener("popstate", (event) => {
+        const requestedTab = resolveInitialTab(event.state?.dashboardTab || readDashboardTabFromLocation());
+        switchTab(requestedTab, { historyMode: "none" });
     });
 }
 
@@ -704,25 +783,27 @@ function setupTopNavbarScrollBehavior() {
 
 document.addEventListener("DOMContentLoaded", () => {
     bindDashboardUi();
-    let initialTab = "dashboard";
-    try {
-        initialTab = resolveInitialTab(localStorage.getItem(DASHBOARD_ACTIVE_TAB_KEY));
-    } catch (_error) {
-        initialTab = "dashboard";
+    const initialTab = readDashboardTabFromLocation();
+    writeDashboardHistoryState("dashboard", true);
+    if (initialTab !== "dashboard") {
+        writeDashboardHistoryState(initialTab, false);
     }
-    switchTab(initialTab);
+    switchTab(initialTab, { historyMode: "none" });
     renderDashboardSummary();
     setupTopNavbarScrollBehavior();
 });
 
 window.escapeHtml = escapeHtml;
 window.normalizeStatusLabel = normalizeStatusLabel;
+window.normalizeChargerStatusLabel = normalizeChargerStatusLabel;
+window.buildChargerStatusBadge = buildChargerStatusBadge;
 window.normalizePriceInfo = normalizePriceInfo;
 window.getAvailabilityBadgeClass = getAvailabilityBadgeClass;
 window.getStatusBadgeClass = getStatusBadgeClass;
 window.buildStatusBadge = buildStatusBadge;
 window.buildMetricCard = buildMetricCard;
 window.updateDashboardSummaryState = updateDashboardSummaryState;
+window.formatEnergyKwh = formatEnergyKwh;
 window.formatCompactCurrencyTick = formatCompactCurrencyTick;
 window.wrapChartLabel = wrapChartLabel;
 window.truncateChartLabel = truncateChartLabel;

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVgo | Sign In</title>
+    <link rel="icon" type="image/svg+xml" href="assets/evgo-icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,23 +14,59 @@
     <link href="css/style.css" rel="stylesheet">
 </head>
 
-<body class="dashboard-body auth-body">
-    <main class="auth-shell">
-        <div class="auth-layout">
+<body class="dashboard-body auth-body auth-body--immersive">
+    <main class="auth-shell auth-shell--integrated">
+        <div class="auth-layout auth-layout--integrated">
             <section class="auth-hero">
                 <div class="auth-hero__content">
-                    <div class="auth-brand">
-                        <div class="brand-mark">
-                            <i class="bi bi-lightning-charge-fill"></i>
-                        </div>
-                        <div>
-                            <p class="auth-brand__eyebrow">Charge network</p>
-                            <h1 class="brand-wordmark evgo-wordmark">EV<span class="brand-wordmark__accent evgo-wordmark__go">go</span></h1>
-                        </div>
+                    <div class="auth-brand auth-brand--logo">
+                        <img src="assets/Hori_Logo.jpg.jpeg" alt="EVgo logo" class="auth-brand__logo" loading="eager" decoding="async">
                     </div>
 
-                    <span class="auth-hero__eyebrow">Sign in</span>
-                    <h2 class="auth-hero__title">Access live <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span> operations.</h2>
+                    <section class="surface-card surface-card--padded auth-card">
+                        <div class="auth-card__header">
+                            <span class="section-heading__eyebrow">Welcome back</span>
+                            <h2 class="auth-card__title">Sign in to your account</h2>
+                            <p class="auth-card__text">Use your existing credentials to continue.</p>
+                        </div>
+
+                        <div id="authFeedback" class="auth-feedback" role="status" aria-live="polite"></div>
+
+                        <form id="loginForm" class="row g-3 auth-form">
+                            <div class="col-12">
+                                <label class="form-label" for="loginEmail">Email</label>
+                                <input type="email" id="loginEmail" class="form-control" placeholder="you@example.com" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="loginPassword">Password</label>
+                                <div class="password-field">
+                                    <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
+                                    <button type="button" class="password-toggle" data-password-toggle data-target="loginPassword" aria-label="Show password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12 auth-form__link">
+                                <a href="password_recovery.html">Forgot Password?</a>
+                            </div>
+                            <div class="col-12 auth-form__actions">
+                                <button id="loginSubmitBtn" type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-box-arrow-in-right"></i>
+                                    Sign in
+                                </button>
+                            </div>
+                        </form>
+
+                        <p class="auth-switch">
+                            New here?
+                            <a href="index.html">Create an account</a>
+                        </p>
+                    </section>
+
+                    <h2 class="auth-hero__title auth-hero__title--stacked">
+                        <span class="auth-hero__title-line">Access live <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span></span>
+                        <span class="auth-hero__title-line">operations.</span>
+                    </h2>
                     <p class="auth-hero__text">
                         Monitor chargers, manage bookings, and track charging progress in a unified operations dashboard.
                     </p>
@@ -58,46 +95,6 @@
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <section class="surface-card surface-card--padded auth-card">
-                <div class="auth-card__header">
-                    <span class="section-heading__eyebrow">Welcome back</span>
-                    <h2 class="auth-card__title">Sign in to your account</h2>
-                    <p class="auth-card__text">Use your existing credentials to continue.</p>
-                </div>
-
-                <div id="authFeedback" class="auth-feedback" role="status" aria-live="polite"></div>
-
-                <form id="loginForm" class="row g-3 auth-form">
-                    <div class="col-12">
-                        <label class="form-label" for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" class="form-control" placeholder="you@example.com" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="loginPassword">Password</label>
-                        <div class="password-field">
-                            <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
-                            <button type="button" class="password-toggle" data-password-toggle data-target="loginPassword" aria-label="Show password">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-12 auth-form__link">
-                        <a href="password_recovery.html">Forgot Password?</a>
-                    </div>
-                    <div class="col-12 auth-form__actions">
-                        <button id="loginSubmitBtn" type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-box-arrow-in-right"></i>
-                            Sign in
-                        </button>
-                    </div>
-                </form>
-
-                <p class="auth-switch">
-                    New here?
-                    <a href="index.html">Create an account</a>
-                </p>
             </section>
         </div>
     </main>

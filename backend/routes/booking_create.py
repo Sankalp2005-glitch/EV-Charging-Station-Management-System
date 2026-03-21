@@ -110,6 +110,10 @@ def book_slot(current_user):
         if not slot:
             return jsonify({"error": "Slot not found"}), 404
 
+        slot_status = str(slot.get("status") or "").lower()
+        if slot_status == "out_of_service":
+            return jsonify({"error": "Charger is currently out of service"}), 409
+
         slot_type = slot["slot_type"]
         slot_vehicle_category = slot.get("vehicle_category")
         if slot_vehicle_category and slot_vehicle_category != vehicle_category:

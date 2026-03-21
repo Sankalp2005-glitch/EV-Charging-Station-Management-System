@@ -111,6 +111,16 @@ function getStoredToken() {
     return token ? token : null;
 }
 
+function navigateBackWithFallback(fallbackPath) {
+    const referrer = document.referrer ? new URL(document.referrer, window.location.href) : null;
+    const hasInAppHistory = Boolean(referrer && referrer.origin === window.location.origin && window.history.length > 1);
+    if (hasInAppHistory) {
+        window.history.back();
+        return;
+    }
+    window.location.href = fallbackPath || "login.html";
+}
+
 function isAuthEntryPage() {
     return Boolean(document.getElementById("loginForm") || document.getElementById("registerForm"));
 }
@@ -340,10 +350,30 @@ function bindAuthForms() {
     document.getElementById("recoveryResetForm")?.addEventListener("submit", handleRecoveryReset);
 }
 
+function bindBackButtons() {
+    document.querySelectorAll("[data-back-fallback]").forEach((button) => {
+        button.addEventListener("click", () => {
+            navigateBackWithFallback(button.dataset.backFallback);
+        });
+    });
+}
+
+function syncIntegratedAuthCardState() {
+    const card = document.querySelector(".auth-layout--integrated .auth-card");
+    if (!card) {
+        return;
+    }
+
+    card.classList.toggle("auth-card--mobile-inline", window.matchMedia("(max-width: 767.98px)").matches);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     redirectIfAuthenticated();
     bindAuthForms();
     bindPhoneInputGuards();
+    bindBackButtons();
+    syncIntegratedAuthCardState();
+    window.matchMedia("(max-width: 767.98px)").addEventListener("change", syncIntegratedAuthCardState);
 });
 
 window.addEventListener("pageshow", () => {

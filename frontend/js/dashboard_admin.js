@@ -133,6 +133,13 @@ function renderAdminStats(stats) {
             tabTarget: "admin-bookings",
         },
         {
+            tone: "rose",
+            icon: "bi-lightning-charge",
+            label: "Energy delivered today",
+            value: formatEnergyKwh(stats?.energy_delivered_kwh || 0),
+            meta: "Active + completed charging sessions",
+        },
+        {
             tone: "emerald",
             icon: "bi-cash-stack",
             label: "Revenue",
@@ -922,8 +929,13 @@ function renderAdminStationDetails(station, chargers = null, mode = "view") {
             bodyContent += "<p class='text-muted mt-3 mb-0'>No chargers found for this station.</p>";
         } else {
             const chargerRows = chargers
-                .map(
-                    (charger) => `
+                .map((charger) => {
+                    const normalizedStatus = String(charger.status || "").toLowerCase();
+                    const isOutOfService = normalizedStatus === "out_of_service";
+                    const actionLabel = isOutOfService ? "Enable" : "Disable";
+                    const actionTone = isOutOfService ? "btn-outline-success" : "btn-outline-danger";
+                    const nextStatus = isOutOfService ? "available" : "out_of_service";
+                    return `
                         <tr>
                             <td>
                                 <span class="booking-table__primary">Slot ${escapeHtml(charger.slot_number)}</span>
@@ -932,10 +944,15 @@ function renderAdminStationDetails(station, chargers = null, mode = "view") {
                             <td>${escapeHtml(normalizeStatusLabel(charger.slot_type))}</td>
                             <td>${escapeHtml(charger.vehicle_category || "-")}</td>
                             <td>${escapeHtml(charger.power_kw ?? "-")}</td>
-                            <td>${buildStatusBadge(charger.status)}</td>
+                            <td>${buildChargerStatusBadge(charger.status)}</td>
+                            <td>
+                                <button class="btn btn-sm ${actionTone} admin-charger-toggle" type="button" data-slot-id="${charger.slot_id}" data-next-status="${nextStatus}">
+                                    ${actionLabel}
+                                </button>
+                            </td>
                         </tr>
-                    `
-                )
+                    `;
+                })
                 .join("");
             bodyContent += `
                 <div class="mt-4">
@@ -948,6 +965,7 @@ function renderAdminStationDetails(station, chargers = null, mode = "view") {
                                     <th>Vehicle</th>
                                     <th>Power (kW)</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>${chargerRows}</tbody>
@@ -968,6 +986,7 @@ function renderAdminStationDetails(station, chargers = null, mode = "view") {
         </div>
         ${bodyContent}
     `;
+    panel.dataset.stationId = station.station_id;
     panel.style.display = "block";
 }
 
@@ -1005,6 +1024,35 @@ async function loadAdminStationChargers(stationId) {
     } catch (error) {
         alert(error.message);
         return [];
+    }
+}
+
+async function updateAdminChargerStatus(slotId, status) {
+    const normalizedStatus = String(status || "").toLowerCase();
+    if (!["available", "out_of_service"].includes(normalizedStatus)) {
+        return;
+    }
+    const actionLabel = normalizedStatus === "out_of_service" ? "mark this charger as out of service" : "enable this charger";
+    if (!window.confirm(`Do you want to ${actionLabel}?`)) {
+        return;
+    }
+    try {
+        await apiRequest(
+            `/api/admin/chargers/${slotId}/status`,
+            { method: "PUT", body: JSON.stringify({ status: normalizedStatus }) },
+            true
+        );
+        const detailsPanel = document.getElementById("adminStationDetails");
+        const stationId = Number(detailsPanel?.dataset.stationId || 0) || null;
+        const station = stationId
+            ? adminManagementState.stations.find((item) => Number(item.station_id) === Number(stationId))
+            : null;
+        if (stationId && station) {
+            const chargers = await loadAdminStationChargers(stationId);
+            renderAdminStationDetails(station, chargers, "view");
+        }
+    } catch (error) {
+        alert(error.message);
     }
 }
 
@@ -1093,7 +1141,8 @@ function renderAdminBookingsTable(bookings) {
                     <td>${escapeHtml(formatDateTimeShort(booking.start_time))}</td>
                     <td>${escapeHtml(formatDateTimeShort(booking.end_time))}</td>
                     <td class="cell-currency">${booking.price !== null && booking.price !== undefined ? escapeHtml(formatMoney(booking.price)) : "-"}</td>
-                    <td>${buildStatusBadge(booking.status)}</td>
+                    <td>${buildChargerStatusBadge(booking.status)}</td>
+                    <td>${typeof buildBookingChargingCell === "function" ? buildBookingChargingCell(booking) : "-"}</td>
                     <td>
                         <div class="booking-table__actions">${actions.join("")}</div>
                     </td>
@@ -1116,6 +1165,7 @@ function renderAdminBookingsTable(bookings) {
                         <th>End time</th>
                         <th>Price</th>
                         <th>Status</th>
+                        <th>Charging</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -1123,6 +1173,7 @@ function renderAdminBookingsTable(bookings) {
             </table>
         </div>
     `;
+    refreshChargingProgressWidgets(container);
 }
 
 function openAdminBookingModal() {
@@ -1192,7 +1243,7 @@ function renderAdminBookingDetails(booking) {
             </div>
             <div>
                 <span class="details-item__label">Status</span>
-                <span class="details-item__value">${escapeHtml(normalizeStatusLabel(booking.status))}</span>
+                <span class="details-item__value">${escapeHtml(normalizeChargerStatusLabel(booking.status))}</span>
             </div>
             <div>
                 <span class="details-item__label">Start</span>
@@ -1215,6 +1266,7 @@ function renderAdminBookingDetails(booking) {
         </div>
         <div class="mt-4">${progressWidget}</div>
     `;
+    refreshChargingProgressWidgets(modalBody);
     openAdminBookingModal();
     startChargingProgressTicker();
 }
@@ -1695,6 +1747,13 @@ function handleAdminManagementClick(event) {
         if (panel) {
             panel.style.display = "none";
         }
+        return;
+    }
+
+    const slotId = target.closest("[data-slot-id]")?.dataset.slotId;
+    if (slotId && target.closest(".admin-charger-toggle")) {
+        const nextStatus = target.closest(".admin-charger-toggle")?.dataset.nextStatus || "";
+        updateAdminChargerStatus(Number(slotId), nextStatus);
         return;
     }
 

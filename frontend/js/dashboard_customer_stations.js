@@ -6,6 +6,7 @@ function buildStationCard(station, preview = false) {
     const pricing = normalizePriceInfo(station.price_info);
     const availabilityStatus = station.availability_status || "unknown";
     const badgeClass = getAvailabilityBadgeClass(availabilityStatus);
+    const distanceLabel = formatDistanceKm(station.distance_km);
 
     return `
         <div class="col-12 ${preview ? "col-xl-6" : "col-md-6 col-xxl-4"}">
@@ -20,7 +21,7 @@ function buildStationCard(station, preview = false) {
 
                 <p class="station-card__location">
                     <i class="bi bi-geo-alt-fill"></i>
-                    <span>${escapeHtml(station.location || "Location unavailable")}</span>
+                    <span>${escapeHtml(station.location || "Location unavailable")}${distanceLabel ? ` | ${escapeHtml(distanceLabel)}` : ""}</span>
                 </p>
 
                 <div class="station-metric-grid">
@@ -33,7 +34,7 @@ function buildStationCard(station, preview = false) {
                         <span class="station-metric__value">${availableChargers}</span>
                     </div>
                     <div class="station-metric">
-                        <span class="station-metric__label">Occupied</span>
+                        <span class="station-metric__label">Reserved</span>
                         <span class="station-metric__value">${occupiedChargers}</span>
                     </div>
                     <div class="station-metric">
@@ -99,12 +100,886 @@ function renderStations(stations) {
     });
 }
 
+const STATION_MAP_DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
+const STATION_MAP_DEFAULT_ZOOM = 5;
+const STATION_MAP_NEARBY_ZOOM = 12;
+const STATION_MAP_SUGGESTION_LIMIT = 5;
+const STATION_MAP_MIN_SEARCH_LENGTH = 2;
+const STATION_MAP_AUTO_NEARBY_RADIUS_KM = 50;
+
+const stationMapState = {
+    map: null,
+    markers: [],
+    pendingStations: [],
+    pendingMapStations: [],
+    searchMarker: null,
+    searchCircle: null,
+    syncingStationIds: new Set(),
+    geocodeCache: new Map(),
+    searchQueryCache: new Map(),
+    reverseGeocodeCache: new Map(),
+    searchSuggestions: [],
+    highlightedSuggestionIndex: -1,
+    suggestionAbortController: null,
+    suggestionDebounceTimer: null,
+    searchUiBound: false,
+    stationsTabClickBound: false,
+    searchBusy: false,
+};
+
+function getStationMapContainer() {
+    return document.getElementById("stationMap");
+}
+
+function getStationMapMessage() {
+    return document.getElementById("stationMapMessage");
+}
+
+function getStationMapSearchInput() {
+    return document.getElementById("stationNearbySearch");
+}
+
+function getStationMapSearchMeta() {
+    return document.getElementById("stationMapSearchMeta");
+}
+
+function getStationSearchSuggestionsContainer() {
+    return document.getElementById("stationNearbySuggestions");
+}
+
+function getStationRadiusFilter() {
+    return document.getElementById("stationRadiusFilter");
+}
+
+function getStationSearchButton() {
+    return document.getElementById("stationNearbySearchBtn");
+}
+
+function getStationUseLocationButton() {
+    return document.getElementById("stationUseLocationBtn");
+}
+
+function getStationClearNearbyButton() {
+    return document.getElementById("stationClearNearbyBtn");
+}
+
+function getNearbyStationsToggle() {
+    return document.getElementById("nearbyStationsToggle");
+}
+
+function formatDistanceKm(distanceKm) {
+    const parsed = Number(distanceKm);
+    return Number.isFinite(parsed) ? `${parsed.toFixed(parsed >= 10 ? 0 : 1)} km away` : "";
+}
+
+function haversineDistanceKm(latitudeA, longitudeA, latitudeB, longitudeB) {
+    const lat1 = Number(latitudeA);
+    const lon1 = Number(longitudeA);
+    const lat2 = Number(latitudeB);
+    const lon2 = Number(longitudeB);
+    if (![lat1, lon1, lat2, lon2].every((value) => Number.isFinite(value))) {
+        return null;
+    }
+
+    const toRadians = (value) => (value * Math.PI) / 180;
+    const deltaLat = toRadians(lat2 - lat1);
+    const deltaLon = toRadians(lon2 - lon1);
+    const originLat = toRadians(lat1);
+    const targetLat = toRadians(lat2);
+    const haversine =
+        Math.sin(deltaLat / 2) ** 2 +
+        Math.cos(originLat) * Math.cos(targetLat) * Math.sin(deltaLon / 2) ** 2;
+
+    return 6371 * 2 * Math.asin(Math.sqrt(haversine));
+}
+
+function setStationMapSearchMeta(message, isError = false) {
+    const metaEl = getStationMapSearchMeta();
+    if (!metaEl) {
+        return;
+    }
+    metaEl.style.display = message ? "block" : "none";
+    metaEl.textContent = message || "";
+    metaEl.classList.toggle("is-error", Boolean(message) && isError);
+}
+
+function setStationMapMessage(message, isError = false) {
+    const messageEl = getStationMapMessage();
+    if (!messageEl) {
+        return;
+    }
+    messageEl.style.display = message ? "block" : "none";
+    messageEl.textContent = message || "";
+    messageEl.classList.toggle("is-error", Boolean(message) && isError);
+}
+
+function getNearbyOrigin() {
+    const origin = dashboardState.nearbyOrigin;
+    if (!origin) {
+        return null;
+    }
+    const latitude = Number(origin.latitude);
+    const longitude = Number(origin.longitude);
+    return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+function getStationRadiusKm() {
+    const rawValue = getStationRadiusFilter()?.value;
+    const parsed = rawValue !== undefined && rawValue !== null && rawValue !== ""
+        ? Number(rawValue)
+        : Number(dashboardState.nearbyRadiusKm);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function shouldUseNearbyStations() {
+    return Boolean(getNearbyStationsToggle()?.checked);
+}
+
+function syncNearbyUiState() {
+    const radiusFilter = getStationRadiusFilter();
+    const nearbyToggle = getNearbyStationsToggle();
+    const searchInput = getStationMapSearchInput();
+
+    if (radiusFilter) {
+        const radiusValue = Number(dashboardState.nearbyRadiusKm);
+        radiusFilter.value = Number.isFinite(radiusValue) && radiusValue > 0 ? String(radiusValue) : "";
+    }
+    if (nearbyToggle) {
+        nearbyToggle.checked = Boolean(dashboardState.stationNearbyOnly);
+    }
+    if (searchInput && dashboardState.nearbyLabel && !searchInput.value.trim()) {
+        searchInput.value = dashboardState.nearbyLabel;
+    }
+}
+
+function updateNearbyOrigin(latitude, longitude, label = "") {
+    dashboardState.nearbyOrigin = {
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+    };
+    dashboardState.nearbyLabel = label || "";
+    dashboardState.nearbyRadiusKm = getStationRadiusKm();
+    dashboardState.stationNearbyOnly = true;
+    syncNearbyUiState();
+}
+
+function clearNearbyOrigin() {
+    dashboardState.nearbyOrigin = null;
+    dashboardState.nearbyLabel = "";
+}
+
+function setStationSearchBusy(isBusy, contextLabel = "") {
+    stationMapState.searchBusy = Boolean(isBusy);
+    const searchButton = getStationSearchButton();
+    const useLocationButton = getStationUseLocationButton();
+    const clearButton = getStationClearNearbyButton();
+    const searchInput = getStationMapSearchInput();
+
+    [searchButton, useLocationButton, clearButton, searchInput].forEach((element) => {
+        if (!element) {
+            return;
+        }
+        element.disabled = Boolean(isBusy);
+    });
+
+    if (searchButton) {
+        searchButton.innerHTML = isBusy
+            ? `<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>${contextLabel || "Working"}`
+            : `<i class="bi bi-search"></i>Search`;
+    }
+    if (useLocationButton) {
+        useLocationButton.innerHTML = isBusy
+            ? `<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>Locating`
+            : `<i class="bi bi-crosshair"></i>Use my location`;
+    }
+}
+
+function normalizeStationSearchResult(result) {
+    const latitude = Number(result?.lat);
+    const longitude = Number(result?.lon);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return null;
+    }
+
+    const displayName = String(result?.display_name || "").trim();
+    const segments = displayName
+        .split(",")
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+    const primaryLabel = segments[0] || result?.name || "Selected location";
+    const secondaryLabel = segments.slice(1).join(", ");
+
+    return {
+        latitude,
+        longitude,
+        label: displayName || primaryLabel,
+        primaryLabel,
+        secondaryLabel,
+    };
+}
+
+function hideStationSearchSuggestions() {
+    const suggestionsContainer = getStationSearchSuggestionsContainer();
+    if (!suggestionsContainer) {
+        return false;
+    }
+    suggestionsContainer.hidden = true;
+    suggestionsContainer.innerHTML = "";
+    stationMapState.searchSuggestions = [];
+    stationMapState.highlightedSuggestionIndex = -1;
+    return true;
+}
+
+function updateStationSearchSuggestionHighlight() {
+    const suggestionsContainer = getStationSearchSuggestionsContainer();
+    if (!suggestionsContainer) {
+        return;
+    }
+
+    suggestionsContainer.querySelectorAll(".station-search-suggestion").forEach((button, index) => {
+        const isActive = index === stationMapState.highlightedSuggestionIndex;
+        button.classList.toggle("is-active", isActive);
+        if (isActive) {
+            button.scrollIntoView({ block: "nearest" });
+        }
+    });
+}
+
+function renderStationSearchSuggestions(suggestions) {
+    const suggestionsContainer = getStationSearchSuggestionsContainer();
+    if (!suggestionsContainer) {
+        return;
+    }
+
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+        hideStationSearchSuggestions();
+        return;
+    }
+
+    stationMapState.searchSuggestions = suggestions;
+    stationMapState.highlightedSuggestionIndex = -1;
+    suggestionsContainer.innerHTML = suggestions
+        .map(
+            (suggestion, index) => `
+                <button
+                    type="button"
+                    class="station-search-suggestion"
+                    data-station-suggestion-index="${index}"
+                    role="option"
+                >
+                    <span class="station-search-suggestion__title">${escapeHtml(suggestion.primaryLabel || suggestion.label)}</span>
+                    ${
+                        suggestion.secondaryLabel
+                            ? `<span class="station-search-suggestion__meta">${escapeHtml(suggestion.secondaryLabel)}</span>`
+                            : ""
+                    }
+                </button>
+            `
+        )
+        .join("");
+    suggestionsContainer.hidden = false;
+    suggestionsContainer.querySelectorAll("[data-station-suggestion-index]").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const suggestionIndex = Number(button.dataset.stationSuggestionIndex || -1);
+            const suggestion = stationMapState.searchSuggestions[suggestionIndex];
+            if (suggestion) {
+                await applyStationSearchSelection(suggestion);
+            }
+        });
+    });
+}
+
+function initializeStationMap() {
+    const container = getStationMapContainer();
+    if (!container || stationMapState.map) {
+        return;
+    }
+
+    stationMapState.map = L.map(container, {
+        zoomControl: true,
+        attributionControl: true,
+    });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(stationMapState.map);
+    stationMapState.map.setView([STATION_MAP_DEFAULT_CENTER.lat, STATION_MAP_DEFAULT_CENTER.lng], STATION_MAP_DEFAULT_ZOOM);
+}
+
+function refreshStationMapLayout() {
+    if (!stationMapState.map) {
+        return;
+    }
+    window.requestAnimationFrame(() => {
+        stationMapState.map.invalidateSize(false);
+    });
+}
+
+function bindStationTabRefresh() {
+    if (stationMapState.stationsTabClickBound) {
+        return;
+    }
+
+    document.addEventListener("click", (event) => {
+        const trigger = event.target.closest("[data-tab], [data-tab-trigger], [data-tab-target]");
+        if (!trigger) {
+            return;
+        }
+        const targetTab = trigger.dataset.tab || trigger.dataset.tabTrigger || trigger.dataset.tabTarget;
+        if (targetTab === "stations") {
+            window.setTimeout(refreshStationMapLayout, 140);
+        }
+    });
+    window.addEventListener("resize", refreshStationMapLayout);
+    stationMapState.stationsTabClickBound = true;
+}
+
+function initializeStationSearchUi() {
+    const searchInput = getStationMapSearchInput();
+    if (!searchInput || stationMapState.searchUiBound) {
+        return;
+    }
+
+    searchInput.setAttribute("autocomplete", "off");
+    searchInput.setAttribute("spellcheck", "false");
+    searchInput.addEventListener("input", handleStationSearchInputEvent);
+    searchInput.addEventListener("focus", () => {
+        if (stationMapState.searchSuggestions.length > 0) {
+            renderStationSearchSuggestions(stationMapState.searchSuggestions);
+        }
+    });
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".station-search-shell")) {
+            hideStationSearchSuggestions();
+        }
+    });
+    bindStationTabRefresh();
+    stationMapState.searchUiBound = true;
+}
+
+function ensureLeafletLoaded() {
+    initializeStationSearchUi();
+    if (window.L?.map) {
+        if (!stationMapState.map) {
+            initializeStationMap();
+        }
+        refreshStationMapLayout();
+        return true;
+    }
+
+    setStationMapMessage("Map library is unavailable right now. Reload the page and check your network access.", true);
+    setStationMapSearchMeta("Nearby filtering works without API keys, but the visual map still needs the Leaflet assets to load.", true);
+    return false;
+}
+
+async function fetchStationLocationSearch(queryText, limit = STATION_MAP_SUGGESTION_LIMIT, signal = undefined) {
+    const trimmedQuery = String(queryText || "").trim();
+    if (!trimmedQuery) {
+        return [];
+    }
+
+    const cacheKey = `${trimmedQuery.toLowerCase()}::${limit}`;
+    if (!signal && stationMapState.searchQueryCache.has(cacheKey)) {
+        return stationMapState.searchQueryCache.get(cacheKey);
+    }
+
+    const url = new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("q", trimmedQuery);
+
+    const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+        signal,
+    });
+    if (!response.ok) {
+        throw new Error("Location search is unavailable right now.");
+    }
+
+    const results = await response.json();
+    const normalizedResults = (Array.isArray(results) ? results : []).map(normalizeStationSearchResult).filter(Boolean);
+    if (!signal) {
+        stationMapState.searchQueryCache.set(cacheKey, normalizedResults);
+    }
+    return normalizedResults;
+}
+
+async function reverseGeocodeStationLocation(latitude, longitude) {
+    const lat = Number(latitude);
+    const lon = Number(longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return null;
+    }
+
+    const cacheKey = `${lat.toFixed(5)},${lon.toFixed(5)}`;
+    if (stationMapState.reverseGeocodeCache.has(cacheKey)) {
+        return stationMapState.reverseGeocodeCache.get(cacheKey);
+    }
+
+    const requestPromise = (async () => {
+        const url = new URL("https://nominatim.openstreetmap.org/reverse");
+        url.searchParams.set("format", "jsonv2");
+        url.searchParams.set("lat", String(lat));
+        url.searchParams.set("lon", String(lon));
+
+        const response = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+                Accept: "application/json",
+            },
+        });
+        if (!response.ok) {
+            return null;
+        }
+
+        const result = await response.json();
+        const displayName = String(result?.display_name || "").trim();
+        return displayName || null;
+    })().catch(() => null);
+
+    stationMapState.reverseGeocodeCache.set(cacheKey, requestPromise);
+    return requestPromise;
+}
+
+async function handleStationSearchInputEvent(event) {
+    const queryText = event.target.value.trim();
+    if (queryText.length < STATION_MAP_MIN_SEARCH_LENGTH) {
+        if (stationMapState.suggestionDebounceTimer) {
+            window.clearTimeout(stationMapState.suggestionDebounceTimer);
+            stationMapState.suggestionDebounceTimer = null;
+        }
+        if (stationMapState.suggestionAbortController) {
+            stationMapState.suggestionAbortController.abort();
+        }
+        hideStationSearchSuggestions();
+        return;
+    }
+
+    if (stationMapState.suggestionDebounceTimer) {
+        window.clearTimeout(stationMapState.suggestionDebounceTimer);
+    }
+
+    stationMapState.suggestionDebounceTimer = window.setTimeout(async () => {
+        if (stationMapState.suggestionAbortController) {
+            stationMapState.suggestionAbortController.abort();
+        }
+        stationMapState.suggestionAbortController = new AbortController();
+
+        try {
+            const suggestions = await fetchStationLocationSearch(
+                queryText,
+                STATION_MAP_SUGGESTION_LIMIT,
+                stationMapState.suggestionAbortController.signal
+            );
+            renderStationSearchSuggestions(suggestions);
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                hideStationSearchSuggestions();
+            }
+        }
+    }, 220);
+}
+
+function handleStationSearchKeydown(event) {
+    const suggestions = stationMapState.searchSuggestions;
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleStationNearbySearch();
+        }
+        return;
+    }
+
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+        stationMapState.highlightedSuggestionIndex =
+            (stationMapState.highlightedSuggestionIndex + 1 + suggestions.length) % suggestions.length;
+        updateStationSearchSuggestionHighlight();
+        return;
+    }
+
+    if (event.key === "ArrowUp") {
+        event.preventDefault();
+        stationMapState.highlightedSuggestionIndex =
+            (stationMapState.highlightedSuggestionIndex - 1 + suggestions.length) % suggestions.length;
+        updateStationSearchSuggestionHighlight();
+        return;
+    }
+
+    if (event.key === "Escape") {
+        hideStationSearchSuggestions();
+        return;
+    }
+
+    if (event.key === "Enter") {
+        event.preventDefault();
+        const selectedSuggestion =
+            stationMapState.highlightedSuggestionIndex >= 0
+                ? suggestions[stationMapState.highlightedSuggestionIndex]
+                : suggestions[0];
+        if (selectedSuggestion) {
+            applyStationSearchSelection(selectedSuggestion);
+        } else {
+            handleStationNearbySearch();
+        }
+    }
+}
+
+async function applyStationSearchSelection(selection) {
+    const searchInput = getStationMapSearchInput();
+    const label = selection?.label || selection?.primaryLabel || "Selected location";
+    if (searchInput) {
+        searchInput.value = label;
+    }
+
+    hideStationSearchSuggestions();
+    updateNearbyOrigin(selection.latitude, selection.longitude, label);
+    setStationMapMessage("");
+    setStationMapSearchMeta(`Centered on ${label}.`);
+    await loadStations();
+    if (dashboardState.bookingNearbyOnly && typeof loadMyBookings === "function") {
+        await loadMyBookings(bookingViewState.customer);
+    }
+    if (dashboardState.ownerNearbyOnly && typeof window.applyOwnerNearbyStationFilter === "function") {
+        window.applyOwnerNearbyStationFilter();
+    }
+}
+
+function clearStationMarkers() {
+    stationMapState.markers.forEach((marker) => {
+        stationMapState.map?.removeLayer(marker);
+    });
+    stationMapState.markers = [];
+}
+
+function clearStationSearchOverlay() {
+    if (stationMapState.searchMarker) {
+        stationMapState.map?.removeLayer(stationMapState.searchMarker);
+        stationMapState.searchMarker = null;
+    }
+    if (stationMapState.searchCircle) {
+        stationMapState.map?.removeLayer(stationMapState.searchCircle);
+        stationMapState.searchCircle = null;
+    }
+}
+
+function updateStationSearchOverlay(origin) {
+    if (!stationMapState.map) {
+        return;
+    }
+    clearStationSearchOverlay();
+    if (!origin) {
+        return;
+    }
+
+    const center = [origin.latitude, origin.longitude];
+    const radiusKm = getStationRadiusKm();
+    if (radiusKm > 0) {
+        stationMapState.searchCircle = L.circle(center, {
+            radius: radiusKm * 1000,
+            color: "#0f9f8f",
+            weight: 1.5,
+            fillColor: "#14b8a6",
+            fillOpacity: 0.12,
+        }).addTo(stationMapState.map);
+    }
+    stationMapState.searchMarker = L.circleMarker(center, {
+        radius: 7,
+        color: "#ffffff",
+        weight: 3,
+        fillColor: "#0f9f8f",
+        fillOpacity: 1,
+    })
+        .bindTooltip(dashboardState.nearbyLabel || "Search location", {
+            direction: "top",
+            offset: [0, -8],
+        })
+        .addTo(stationMapState.map);
+}
+
+function getStationMarkerPresentation(station) {
+    const availabilityStatus = String(station.availability_status || "").toLowerCase();
+    if (availabilityStatus === "available") {
+        return {
+            fillColor: "#16a34a",
+            statusLabel: "Available",
+        };
+    }
+    if (availabilityStatus === "out_of_service") {
+        return {
+            fillColor: "#dc2626",
+            statusLabel: "Out of service",
+        };
+    }
+    if (availabilityStatus === "busy") {
+        return {
+            fillColor: "#f59e0b",
+            statusLabel: "Busy",
+        };
+    }
+    return {
+        fillColor: "#2563eb",
+        statusLabel: normalizeStatusLabel(availabilityStatus || "station"),
+    };
+}
+
+function parseStationCoordinates(station) {
+    const latitude = Number(station.latitude ?? station.lat);
+    const longitude = Number(station.longitude ?? station.lng);
+    return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+async function persistStationCoordinates(stationId, position) {
+    const numericStationId = Number(stationId || 0);
+    if (!numericStationId || !position || stationMapState.syncingStationIds.has(numericStationId)) {
+        return;
+    }
+
+    stationMapState.syncingStationIds.add(numericStationId);
+    try {
+        await apiRequest(
+            `/api/stations/${numericStationId}/coordinates`,
+            {
+                method: "PUT",
+                body: JSON.stringify({
+                    latitude: position.lat,
+                    longitude: position.lng,
+                }),
+            },
+            true
+        );
+    } catch (_error) {
+        // Coordinate sync is best-effort.
+    } finally {
+        stationMapState.syncingStationIds.delete(numericStationId);
+    }
+}
+
+function resolveStationPosition(station) {
+    const coordinates = parseStationCoordinates(station);
+    if (coordinates) {
+        return Promise.resolve({ lat: coordinates.latitude, lng: coordinates.longitude });
+    }
+    const address = station.location || station.station_name;
+    if (!address) {
+        return Promise.resolve(null);
+    }
+    const cacheKey = String(address).trim().toLowerCase();
+    if (!stationMapState.geocodeCache.has(cacheKey)) {
+        stationMapState.geocodeCache.set(
+            cacheKey,
+            fetchStationLocationSearch(address, 1)
+                .then((results) => {
+                    const [match] = results;
+                    if (!match) {
+                        return null;
+                    }
+                    const resolvedPosition = { lat: match.latitude, lng: match.longitude };
+                    persistStationCoordinates(station.station_id, resolvedPosition);
+                    return resolvedPosition;
+                })
+                .catch(() => null)
+        );
+    }
+    return stationMapState.geocodeCache.get(cacheKey);
+}
+
+function buildMapInfoWindow(station, distanceLabel) {
+    const chargerCount = Number(station.charger_count ?? station.total_slots ?? station.matching_slots ?? 0) || 0;
+    const meta = [distanceLabel, `${chargerCount} chargers`].filter(Boolean).join(" | ");
+    const markerPresentation = getStationMarkerPresentation(station);
+    return `<div class="map-infowindow"><strong>${escapeHtml(station.station_name || "EV Station")}</strong><br>${escapeHtml(
+        station.location || "Location unavailable"
+    )}${meta ? `<div class="map-infowindow__meta">${escapeHtml(meta)}</div>` : ""}<div class="map-infowindow__status" style="color:${escapeHtml(
+        markerPresentation.fillColor
+    )};"><span class="map-infowindow__status-dot" aria-hidden="true"></span>${escapeHtml(markerPresentation.statusLabel)}</div></div>`;
+}
+
+async function geocodeStationSearch(queryText) {
+    const results = await fetchStationLocationSearch(queryText, 1);
+    if (!results.length) {
+        throw new Error("Location not found.");
+    }
+    return results[0];
+}
+
+async function resolveMapStations(mapStations, fallbackStations) {
+    const mergedStations = new Map();
+    const origin = getNearbyOrigin();
+
+    (Array.isArray(mapStations) ? mapStations : []).forEach((station) => {
+        mergedStations.set(Number(station.station_id), { ...station });
+    });
+
+    for (const station of Array.isArray(fallbackStations) ? fallbackStations : []) {
+        const stationId = Number(station.station_id || 0);
+        const existing = mergedStations.get(stationId);
+        if (existing) {
+            mergedStations.set(stationId, { ...station, ...existing });
+            continue;
+        }
+
+        const position = await resolveStationPosition(station);
+        if (!position) {
+            continue;
+        }
+
+        const distanceKm = origin
+            ? haversineDistanceKm(origin.latitude, origin.longitude, position.lat, position.lng)
+            : Number(station.distance_km);
+        mergedStations.set(stationId, {
+            ...station,
+            latitude: position.lat,
+            longitude: position.lng,
+            distance_km: Number.isFinite(distanceKm) ? Number(distanceKm.toFixed(2)) : null,
+            charger_count: Number(station.total_slots ?? station.matching_slots ?? 0) || 0,
+        });
+    }
+
+    return Array.from(mergedStations.values());
+}
+
+async function filterStationsByNearbyOrigin(stations, origin, radiusKm) {
+    if (!Array.isArray(stations) || !origin) {
+        return Array.isArray(stations) ? stations : [];
+    }
+
+    const effectiveRadiusKm = radiusKm > 0 ? radiusKm : STATION_MAP_AUTO_NEARBY_RADIUS_KM;
+    const resolvedStations = await resolveMapStations([], stations);
+    return resolvedStations
+        .map((station) => {
+            const position = parseStationCoordinates(station);
+            if (!position) {
+                return null;
+            }
+
+            const distanceKm = haversineDistanceKm(origin.latitude, origin.longitude, position.latitude, position.longitude);
+            if (!Number.isFinite(distanceKm)) {
+                return null;
+            }
+            if (distanceKm > effectiveRadiusKm) {
+                return null;
+            }
+
+            return {
+                ...station,
+                latitude: position.latitude,
+                longitude: position.longitude,
+                distance_km: Number(distanceKm.toFixed(2)),
+            };
+        })
+        .filter(Boolean)
+        .sort((stationA, stationB) => Number(stationA.distance_km || 0) - Number(stationB.distance_km || 0));
+}
+
+async function renderStationsMap(mapStations, fallbackStations = []) {
+    const container = getStationMapContainer();
+    if (!container) {
+        return;
+    }
+    initializeStationSearchUi();
+    stationMapState.pendingStations = Array.isArray(fallbackStations) ? fallbackStations : [];
+    stationMapState.pendingMapStations = Array.isArray(mapStations) ? mapStations : [];
+    if (!ensureLeafletLoaded()) {
+        return;
+    }
+    if (!stationMapState.map) {
+        return;
+    }
+    clearStationMarkers();
+    const origin = getNearbyOrigin();
+    updateStationSearchOverlay(origin);
+    const resolvedStations = await resolveMapStations(stationMapState.pendingMapStations, stationMapState.pendingStations);
+    const markerPoints = [];
+
+    for (const station of resolvedStations) {
+        const position = parseStationCoordinates(station);
+        if (!position) {
+            continue;
+        }
+
+        const distanceLabel = formatDistanceKm(station.distance_km);
+        const markerPresentation = getStationMarkerPresentation(station);
+        const marker = L.circleMarker([position.latitude, position.longitude], {
+            radius: 8,
+            color: "#ffffff",
+            weight: 2,
+            fillColor: markerPresentation.fillColor,
+            fillOpacity: 0.92,
+        })
+            .bindPopup(buildMapInfoWindow(station, distanceLabel))
+            .addTo(stationMapState.map);
+        stationMapState.markers.push(marker);
+        markerPoints.push([position.latitude, position.longitude]);
+    }
+
+    refreshStationMapLayout();
+
+    if (markerPoints.length > 0) {
+        const boundsPoints = origin
+            ? [[origin.latitude, origin.longitude], ...markerPoints]
+            : markerPoints;
+        if (boundsPoints.length === 1) {
+            stationMapState.map.setView(boundsPoints[0], origin ? STATION_MAP_NEARBY_ZOOM : 13);
+        } else {
+            stationMapState.map.fitBounds(boundsPoints, {
+                padding: [50, 50],
+                maxZoom: 14,
+            });
+        }
+        setStationMapMessage("");
+        if (origin && resolvedStations.length > 0) {
+            const radiusKm = getStationRadiusKm();
+            const nearbyLabel = dashboardState.nearbyLabel || "your selected location";
+            setStationMapSearchMeta(
+                radiusKm > 0
+                    ? `${resolvedStations.length} station${resolvedStations.length === 1 ? "" : "s"} within ${radiusKm} km of ${nearbyLabel}.`
+                    : `${resolvedStations.length} station${resolvedStations.length === 1 ? "" : "s"} near ${nearbyLabel}.`
+            );
+        }
+    } else {
+        const fallbackCenter = origin
+            ? [origin.latitude, origin.longitude]
+            : [STATION_MAP_DEFAULT_CENTER.lat, STATION_MAP_DEFAULT_CENTER.lng];
+        stationMapState.map.setView(fallbackCenter, origin ? STATION_MAP_NEARBY_ZOOM : STATION_MAP_DEFAULT_ZOOM);
+        const radiusKm = getStationRadiusKm();
+        const nearbyLabel = dashboardState.nearbyLabel || "your selected location";
+        setStationMapMessage(
+            origin && shouldUseNearbyStations()
+                ? radiusKm > 0
+                    ? `No stations within ${radiusKm} km of ${nearbyLabel}.`
+                    : `No stations near ${nearbyLabel}.`
+                : "No station locations found for the current filters."
+        );
+    }
+}
+
+async function loadStationMapLocations(query) {
+    try {
+        const suffix = query.toString() ? `?${query.toString()}` : "";
+        return await apiRequest(`/api/stations/locations${suffix}`, { method: "GET" }, true);
+    } catch (_error) {
+        return [];
+    }
+}
+
 async function loadStations() {
+    syncNearbyUiState();
     const locationFilter = document.getElementById("locationFilter")?.value.trim() || "";
     const slotTypeFilter = document.getElementById("slotTypeFilter")?.value.trim() || "";
     const vehicleCategoryFilter = normalizeVehicleCategory(
         document.getElementById("vehicleCategoryFilter")?.value.trim() || ""
     );
+    const origin = getNearbyOrigin();
+    const useNearby = shouldUseNearbyStations();
+    const radiusKm = getStationRadiusKm();
+
+    dashboardState.stationNearbyOnly = useNearby;
+    dashboardState.nearbyRadiusKm = radiusKm;
 
     const query = new URLSearchParams();
     if (locationFilter) {
@@ -117,23 +992,167 @@ async function loadStations() {
         query.append("vehicle_category", vehicleCategoryFilter);
     }
 
-    const suffix = query.toString() ? `?${query.toString()}` : "";
+    if (useNearby && origin && radiusKm > 0) {
+        setStationMapSearchMeta(
+            `Using ${dashboardState.nearbyLabel || "your nearby search"} within ${radiusKm} km for station results.`
+        );
+    } else if (useNearby && origin) {
+        setStationMapSearchMeta(`Showing nearby stations for ${dashboardState.nearbyLabel || "your selected location"}.`);
+    } else if (useNearby) {
+        setStationMapSearchMeta("Search for a location or use your current location to find nearby stations.");
+    } else {
+        setStationMapSearchMeta("");
+    }
 
     try {
-        const stations = await apiRequest(`/api/bookings/stations${suffix}`, { method: "GET" }, true);
-        renderStations(stations);
-        updateDashboardSummaryState({ stations });
+        const stations = await apiRequest(`/api/bookings/stations${query.toString() ? `?${query.toString()}` : ""}`, { method: "GET" }, true);
+        let renderableStations = Array.isArray(stations) ? stations : [];
+
+        if (useNearby && origin) {
+            renderableStations = await filterStationsByNearbyOrigin(renderableStations, origin, radiusKm);
+        }
+
+        renderStations(renderableStations);
+        await renderStationsMap(renderableStations, renderableStations);
+        updateDashboardSummaryState({ stations: renderableStations });
     } catch (error) {
         const errorMessage = error.message || "Failed to load stations.";
         renderStationCollection("stationsList", [], { preview: true, emptyMessage: errorMessage });
         renderStationCollection("stationsFullList", [], { emptyMessage: errorMessage });
+        await renderStationsMap([], []);
+        setStationMapMessage(errorMessage, true);
     }
 }
+
+async function syncRelatedNearbyViews() {
+    if (dashboardState.bookingNearbyOnly && typeof loadMyBookings === "function") {
+        await loadMyBookings(bookingViewState.customer);
+    }
+    if (dashboardState.ownerNearbyOnly && typeof window.applyOwnerNearbyStationFilter === "function") {
+        window.applyOwnerNearbyStationFilter();
+    }
+}
+
+async function handleStationNearbySearch() {
+    const searchInput = getStationMapSearchInput();
+    const queryText = searchInput?.value.trim() || "";
+    if (!queryText) {
+        setStationMapSearchMeta("Enter a location to search nearby stations.", true);
+        return;
+    }
+
+    try {
+        setStationSearchBusy(true, "Searching");
+        const geocodedResult = await geocodeStationSearch(queryText);
+        if (!geocodedResult) {
+            return;
+        }
+        updateNearbyOrigin(geocodedResult.latitude, geocodedResult.longitude, geocodedResult.label);
+        setStationMapSearchMeta(`Centered on ${geocodedResult.label}.`);
+        await loadStations();
+        await syncRelatedNearbyViews();
+    } catch (error) {
+        setStationMapSearchMeta(error.message || "Location not found.", true);
+        setStationMapMessage("Location not found. Try a more specific city or address.", true);
+    } finally {
+        setStationSearchBusy(false);
+    }
+}
+
+async function handleStationUseMyLocation() {
+    if (!navigator.geolocation) {
+        setStationMapSearchMeta("Browser geolocation is not available on this device.", true);
+        return;
+    }
+
+    setStationMapSearchMeta("Detecting your current location...");
+    setStationSearchBusy(true, "Locating");
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            try {
+                const searchInput = getStationMapSearchInput();
+                hideStationSearchSuggestions();
+                const resolvedLabel =
+                    (await reverseGeocodeStationLocation(position.coords.latitude, position.coords.longitude)) || "Current location";
+                if (searchInput) {
+                    searchInput.value = resolvedLabel;
+                }
+                updateNearbyOrigin(position.coords.latitude, position.coords.longitude, resolvedLabel);
+                setStationMapSearchMeta(`Using ${resolvedLabel}.`);
+                await loadStations();
+                await syncRelatedNearbyViews();
+            } catch (_error) {
+                setStationMapSearchMeta("Unable to use your current location right now.", true);
+            } finally {
+                setStationSearchBusy(false);
+            }
+        },
+        (error) => {
+            const message =
+                error.code === error.PERMISSION_DENIED
+                    ? "Location permission was denied."
+                    : "Unable to read your current location.";
+            setStationMapSearchMeta(message, true);
+            setStationSearchBusy(false);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000,
+        }
+    );
+}
+
+async function handleStationClearNearby() {
+    const searchInput = getStationMapSearchInput();
+    const radiusFilter = getStationRadiusFilter();
+    const nearbyToggle = getNearbyStationsToggle();
+    const nearbyBookingsToggle = document.getElementById("nearbyBookingsToggle");
+    const ownerNearbyStationsToggle = document.getElementById("ownerNearbyStationsToggle");
+
+    clearNearbyOrigin();
+    dashboardState.nearbyRadiusKm = 0;
+    dashboardState.stationNearbyOnly = true;
+    dashboardState.bookingNearbyOnly = false;
+    dashboardState.ownerNearbyOnly = false;
+    if (searchInput) {
+        searchInput.value = "";
+    }
+    if (radiusFilter) {
+        radiusFilter.value = "";
+    }
+    if (nearbyToggle) {
+        nearbyToggle.checked = true;
+    }
+    if (nearbyBookingsToggle) {
+        nearbyBookingsToggle.checked = false;
+    }
+    if (ownerNearbyStationsToggle) {
+        ownerNearbyStationsToggle.checked = false;
+    }
+    hideStationSearchSuggestions();
+    setStationMapSearchMeta("");
+    setStationMapMessage("");
+    await loadStations();
+    if (typeof loadMyBookings === "function") {
+        await loadMyBookings(bookingViewState.customer);
+    }
+    if (typeof window.applyOwnerNearbyStationFilter === "function") {
+        window.applyOwnerNearbyStationFilter();
+    }
+}
+
+window.haversineDistanceKm = haversineDistanceKm;
 
 function buildSlotBookingForm(slot, minDatetime) {
     const role = getRole();
     if (role !== CUSTOMER_ROLE && role !== OWNER_ROLE) {
         return "";
+    }
+
+    const currentStatus = String(slot.current_status || slot.status || "").toLowerCase();
+    if (currentStatus === "out_of_service") {
+        return `<div class="slot-session-note slot-session-note--danger">Booking unavailable while this charger is out of service.</div>`;
     }
 
     const vehicleCategory = normalizeVehicleCategory(slot.vehicle_category) || VEHICLE_CATEGORY_CAR;
@@ -321,7 +1340,7 @@ function renderSlots(slots, stationName, options = {}) {
 
     slotsDiv.innerHTML = slots
         .map((slot) => {
-            const currentStatus = slot.current_status || slot.status || "available";
+            const currentStatus = String(slot.current_status || slot.status || "available").toLowerCase();
             const activeSession = slot.active_session || null;
             const powerKw = Number(slot.power_kw);
             const pricePerKwh = slot.price_per_kwh === null ? null : Number(slot.price_per_kwh);
@@ -343,7 +1362,10 @@ function renderSlots(slots, stationName, options = {}) {
                           )
                            .join("")
                     : "<li class='text-muted'>No upcoming reservations</li>";
-            const liveSessionHtml = activeSession
+            const isOutOfService = currentStatus === "out_of_service";
+            const liveSessionHtml = isOutOfService
+                ? `<div class="slot-session-note slot-session-note--danger">Out of service. This charger is temporarily offline.</div>`
+                : activeSession
                 ? buildChargingProgressWidget(
                       {
                           status: "charging_started",
@@ -373,7 +1395,7 @@ function renderSlots(slots, stationName, options = {}) {
                                 <div class="slot-card__subtitle">${escapeHtml(normalizeStatusLabel(slot.slot_type))} charger</div>
                             </div>
                             <span class="${getAvailabilityBadgeClass(currentStatus)}">${escapeHtml(
-                                normalizeStatusLabel(currentStatus)
+                                normalizeChargerStatusLabel(currentStatus)
                             )}</span>
                         </div>
 

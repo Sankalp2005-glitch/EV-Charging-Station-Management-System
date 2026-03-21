@@ -19,6 +19,13 @@ const BATTERY_LIMITS_BY_CATEGORY = {
 const dashboardState = {
     openStationId: null,
     openStationName: "",
+    nearbyOrigin: null,
+    nearbyLabel: "",
+    nearbyRadiusKm: 0,
+    stationNearbyOnly: true,
+    bookingNearbyOnly: false,
+    ownerNearbyOnly: false,
+    ownerStationsCache: [],
 };
 const bookingViewState = {
     customer: "upcoming",

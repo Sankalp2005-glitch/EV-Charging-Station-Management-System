@@ -20,7 +20,11 @@ from services.booking_schema import ensure_phase5_tables as _ensure_phase5_table
 from services.slot_repository import fetch_station_slots_with_pricing as _fetch_station_slots_with_pricing
 from services.value_utils import (
     close_cursor as _close_cursor,
+    ensure_station_geo_columns,
     format_dt as _format_dt,
+    haversine_distance_km,
+    normalize_coordinate_pair,
+    parse_geo_filters,
     to_str as _to_str,
 )
 from utils.jwt_handler import token_required
@@ -37,6 +41,9 @@ def get_stations(_current_user):
     location_filter = (request.args.get("location") or "").strip().lower()
     slot_type_filter = (request.args.get("slot_type") or "").strip().lower()
     vehicle_category_filter = normalize_vehicle_category(request.args.get("vehicle_category"))
+    geo_filters, geo_error = parse_geo_filters(request.args)
+    if geo_error:
+        return jsonify({"error": geo_error}), 400
     if slot_type_filter and slot_type_filter not in {"fast", "normal"}:
         return jsonify({"error": "slot_type must be 'fast' or 'normal'"}), 400
     if request.args.get("vehicle_category") and not vehicle_category_filter:
@@ -47,6 +54,7 @@ def get_stations(_current_user):
     try:
         cursor = mysql.connection.cursor()
         _ensure_phase5_tables(cursor)
+        ensure_station_geo_columns(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
@@ -58,10 +66,13 @@ def get_stations(_current_user):
                 cs.station_name,
                 cs.location,
                 cs.total_slots,
+                cs.latitude,
+                cs.longitude,
                 COUNT(sl.slot_id) AS matching_slots,
                 SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
                 SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
                 SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                SUM(CASE WHEN sl.status = 'out_of_service' THEN 1 ELSE 0 END) AS out_of_service_slots,
                 MIN(sl.price_per_kwh) AS min_price_kwh,
                 MIN(sl.price_per_minute) AS min_price_minute,
                 GROUP_CONCAT(DISTINCT sl.vehicle_category ORDER BY sl.vehicle_category SEPARATOR ',') AS vehicle_categories
@@ -83,13 +94,12 @@ def get_stations(_current_user):
             params.append(vehicle_category_filter)
 
         query += """
-            GROUP BY cs.station_id, cs.station_name, cs.location, cs.total_slots
+            GROUP BY cs.station_id, cs.station_name, cs.location, cs.total_slots, cs.latitude, cs.longitude
             ORDER BY cs.station_name ASC
         """
         try:
             cursor.execute(query, tuple(params))
         except Exception as inner_exc:
-            # if price columns don't exist (older schema), retry without them
             err_msg = str(inner_exc).lower()
             if "unknown column" in err_msg and ("price_per_kwh" in err_msg or "price_per_minute" in err_msg):
                 current_app.logger.warning("Price columns not found, retrying stations query without pricing aggregation")
@@ -99,10 +109,13 @@ def get_stations(_current_user):
                         cs.station_name,
                         cs.location,
                         cs.total_slots,
+                        cs.latitude,
+                        cs.longitude,
                         COUNT(sl.slot_id) AS matching_slots,
                         SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
                         SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
                         SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                        SUM(CASE WHEN sl.status = 'out_of_service' THEN 1 ELSE 0 END) AS out_of_service_slots,
                         GROUP_CONCAT(DISTINCT sl.vehicle_category ORDER BY sl.vehicle_category SEPARATOR ',') AS vehicle_categories
                     FROM ChargingStation cs
                     JOIN StationApproval sa ON sa.station_id = cs.station_id
@@ -116,7 +129,7 @@ def get_stations(_current_user):
                 if vehicle_category_filter:
                     fallback_query += " AND sl.vehicle_category = %s"
                 fallback_query += """
-                    GROUP BY cs.station_id, cs.station_name, cs.location, cs.total_slots
+                    GROUP BY cs.station_id, cs.station_name, cs.location, cs.total_slots, cs.latitude, cs.longitude
                     ORDER BY cs.station_name ASC
                 """
                 cursor.execute(fallback_query, tuple(params))
@@ -126,7 +139,6 @@ def get_stations(_current_user):
     except Exception as exc:
         mysql.connection.rollback()
         current_app.logger.exception("Failed to fetch charging stations")
-        # return the exception message for debugging (development only)
         return jsonify({"error": f"Failed to fetch stations: {str(exc)}"}), 500
     finally:
         _close_cursor(cursor)
@@ -135,29 +147,44 @@ def get_stations(_current_user):
 
     result = []
     for station in stations:
-        matching_slots = int(station[4] or 0)
-        available_slots = int(station[5] or 0)
-        occupied_slots = int(station[6] or 0)
-        charging_slots = int(station[7] or 0) if len(station) > 7 else 0
-        # pricing info may not be available if fallback query executed
-        has_pricing_aggregates = len(station) > 10
-        min_price_kwh = station[8] if has_pricing_aggregates else None
-        min_price_minute = station[9] if has_pricing_aggregates else None
-        supported_categories = (_to_str(station[10] if has_pricing_aggregates else station[8]) or "").split(",")
+        latitude, longitude = normalize_coordinate_pair(station[4], station[5])
+        distance_km = None
+        if geo_filters:
+            distance_km = haversine_distance_km(
+                geo_filters["latitude"],
+                geo_filters["longitude"],
+                latitude,
+                longitude,
+            )
+            if distance_km is None or distance_km > geo_filters["radius_km"]:
+                continue
+
+        matching_slots = int(station[6] or 0)
+        available_slots = int(station[7] or 0)
+        occupied_slots = int(station[8] or 0)
+        charging_slots = int(station[9] or 0) if len(station) > 9 else 0
+        out_of_service_slots = int(station[10] or 0) if len(station) > 10 else 0
+        has_pricing_aggregates = len(station) > 12
+        min_price_kwh = station[11] if has_pricing_aggregates else None
+        min_price_minute = station[12] if has_pricing_aggregates else None
+        supported_categories = (_to_str(station[13] if has_pricing_aggregates else station[11]) or "").split(",")
 
         if matching_slots == 0:
             availability_status = "no-compatible-slots"
         elif available_slots > 0:
             availability_status = "available"
+        elif charging_slots > 0 or occupied_slots > 0:
+            availability_status = "busy"
+        elif out_of_service_slots > 0:
+            availability_status = "out_of_service"
         else:
             availability_status = "busy"
 
-        # determine displayable price information
         price_info = None
         if min_price_kwh is not None and min_price_kwh > 0:
-            price_info = f"₹{min_price_kwh:.2f}/kWh"
+            price_info = f"INR {min_price_kwh:.2f}/kWh"
         elif min_price_minute is not None and min_price_minute > 0:
-            price_info = f"₹{min_price_minute:.2f}/min"
+            price_info = f"INR {min_price_minute:.2f}/min"
 
         result.append(
             {
@@ -165,10 +192,14 @@ def get_stations(_current_user):
                 "station_name": _to_str(station[1]),
                 "location": _to_str(station[2]),
                 "total_slots": int(station[3] or 0),
+                "latitude": latitude,
+                "longitude": longitude,
+                "distance_km": round(distance_km, 2) if distance_km is not None else None,
                 "matching_slots": matching_slots,
                 "available_slots": available_slots,
                 "occupied_slots": occupied_slots,
                 "charging_slots": charging_slots,
+                "out_of_service_slots": out_of_service_slots,
                 "availability_status": availability_status,
                 "price_info": price_info,
                 "vehicle_categories": [category for category in supported_categories if category],
@@ -188,6 +219,7 @@ def get_slots(current_user, station_id):
     try:
         cursor = mysql.connection.cursor()
         _ensure_phase5_tables(cursor)
+        ensure_station_geo_columns(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
@@ -309,23 +341,19 @@ def get_slots(current_user, station_id):
                     "vehicle_category": slot.get("vehicle_category"),
                     "connector_type": slot.get("connector_type"),
                     "charging_speed": slot.get("charging_speed"),
-                    "current_status": "charging" if active_session else "occupied" if active_booking else "available",
+                    "current_status": (
+                        "out_of_service"
+                        if str(slot.get("status") or "").lower() == "out_of_service"
+                        else ("charging" if active_session else "occupied" if active_booking else "available")
+                    ),
                     "status": slot["status"],
                     "power_kw": round(
                         parsed_power_kw or DEFAULT_POWER_KW_BY_SLOT_TYPE.get(slot_type, 7.0),
                         2,
                     ),
-                    "price_per_kwh": (
-                        round(parsed_price_per_kwh, 2)
-                        if parsed_price_per_kwh
-                        else None
-                    ),
-                    "price_per_minute": (
-                        round(parsed_price_per_minute, 2)
-                        if parsed_price_per_minute
-                        else None
-                    ),
-                    "is_available_now": active_booking is None and active_session is None,
+                    "price_per_kwh": round(parsed_price_per_kwh, 2) if parsed_price_per_kwh else None,
+                    "price_per_minute": round(parsed_price_per_minute, 2) if parsed_price_per_minute else None,
+                    "is_available_now": active_booking is None and active_session is None and str(slot.get("status") or "").lower() != "out_of_service",
                     "active_booking": active_booking,
                     "active_session": active_session,
                     "bookings": booking_list,
