@@ -725,7 +725,15 @@ function setupTopNavbarScrollBehavior() {
         return;
     }
 
-    let lastScrollY = window.scrollY || 0;
+    const getScrollTop = () =>
+        Math.max(
+            window.scrollY || 0,
+            window.pageYOffset || 0,
+            document.documentElement?.scrollTop || 0,
+            document.body?.scrollTop || 0
+        );
+
+    let lastScrollY = getScrollTop();
     let isHidden = false;
     let ticking = false;
     const deltaThreshold = 8;
@@ -741,7 +749,7 @@ function setupTopNavbarScrollBehavior() {
     };
 
     const handleScroll = () => {
-        const currentY = window.scrollY || 0;
+        const currentY = getScrollTop();
         const delta = currentY - lastScrollY;
 
         if (Math.abs(delta) >= deltaThreshold) {
@@ -756,21 +764,35 @@ function setupTopNavbarScrollBehavior() {
         }
     };
 
+    const queueScrollUpdate = () => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                handleScroll();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    };
+
+    window.addEventListener("scroll", queueScrollUpdate, { passive: true });
+    document.addEventListener("scroll", queueScrollUpdate, { passive: true });
+
+    const scrollPollId = window.setInterval(handleScroll, 200);
     window.addEventListener(
-        "scroll",
+        "beforeunload",
         () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    handleScroll();
-                    ticking = false;
-                });
-                ticking = true;
-            }
+            window.clearInterval(scrollPollId);
         },
-        { passive: true }
+        { once: true }
     );
 
-    window.addEventListener("resize", updateTopNavbarHeight);
+    window.addEventListener(
+        "resize",
+        () => {
+            lastScrollY = getScrollTop();
+            updateTopNavbarHeight();
+        },
+    );
     if (window.ResizeObserver) {
         const observer = new ResizeObserver(() => {
             updateTopNavbarHeight();
@@ -778,6 +800,7 @@ function setupTopNavbarScrollBehavior() {
         observer.observe(topNavbar);
     }
     updateTopNavbarHeight();
+    handleScroll();
     setHidden(false);
 }
 

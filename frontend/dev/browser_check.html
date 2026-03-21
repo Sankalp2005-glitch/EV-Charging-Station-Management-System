@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVgo Browser Check</title>
-    <link rel="icon" type="image/svg+xml" href="assets/evgo-icon.svg">
+    <link rel="icon" type="image/png" href="../assets/1-1_logo.png">
     <style>
         body {
             margin: 0;
@@ -310,7 +310,7 @@
         }
 
         async function registerUser(user, label) {
-            const { doc } = await navigate("index.html", `${label}-register`);
+            const { doc } = await navigate("../index.html", `${label}-register`);
             assert(getText(doc, ".brand-wordmark") === "EVgo", "Register page branding must be EVgo");
             verifyPasswordToggle(doc, "#password", "[data-password-toggle]");
             setValue(doc, "#name", user.name);
@@ -324,7 +324,7 @@
         }
 
         async function loginUser(email, password, expectedRole, label) {
-            const { doc } = await navigate("login.html", `${label}-login`);
+            const { doc } = await navigate("../login.html", `${label}-login`);
             assert(getText(doc, ".brand-wordmark") === "EVgo", "Login page branding must be EVgo");
             verifyPasswordToggle(doc, "#loginPassword", "[data-password-toggle]");
             setValue(doc, "#loginEmail", email);
@@ -347,7 +347,7 @@
         }
 
         async function verifyForgotPasswordFlow(user, label) {
-            const { doc } = await navigate("login.html", `${label}-forgot`);
+            const { doc } = await navigate("../login.html", `${label}-forgot`);
             const forgotLink = doc.querySelector("a[href='password_recovery.html']");
             assert(forgotLink, "Forgot Password link missing on login page");
             forgotLink.click();

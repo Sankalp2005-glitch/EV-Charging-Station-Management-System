@@ -1,4 +1,11 @@
-const API_BASE = "http://127.0.0.1:5000";
+const {
+    API_BASE,
+    bindPhoneInputGuards,
+    isValidCountryCode,
+    normalizeDigits,
+    parseJsonSafe,
+    resolveErrorMessage,
+} = window.EVgoShared;
 const CUSTOMER_ROLE = "customer";
 const OWNER_ROLE = "owner";
 const MIN_DURATION_MINUTES = 15;
@@ -67,21 +74,6 @@ function buildAuthHeaders() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
     };
-}
-
-async function parseJsonSafe(response) {
-    try {
-        return await response.json();
-    } catch (_err) {
-        return null;
-    }
-}
-
-function resolveErrorMessage(payload, fallback = "Request failed") {
-    if (!payload || typeof payload !== "object") {
-        return fallback;
-    }
-    return payload.error || payload.message || fallback;
 }
 
 function setBookingViewButtons(prefix, activeView) {
@@ -176,18 +168,6 @@ function classifyChargingSpeed(powerKw, vehicleCategory) {
     return "Slow";
 }
 
-function normalizeDigits(value) {
-    return String(value || "").replace(/\D/g, "");
-}
-
-function isValidPhone(phone) {
-    return /^[0-9]{10}$/.test(phone);
-}
-
-function isValidCountryCode(code) {
-    return /^[1-9][0-9]{0,2}$/.test(code);
-}
-
 function splitPhoneNumber(value, defaultCountryCode = "91") {
     const digits = normalizeDigits(value);
     if (digits.length > 10) {
@@ -216,25 +196,6 @@ function formatPhoneDisplay(value, defaultCountryCode = "91") {
         return `+${defaultCountryCode} ${digits}`;
     }
     return digits;
-}
-
-function bindPhoneInputGuards(root = document) {
-    if (!root || typeof root.addEventListener !== "function") {
-        return;
-    }
-    root.addEventListener("input", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) {
-            return;
-        }
-        if (target.classList.contains("phone-code")) {
-            const digits = normalizeDigits(target.value).slice(0, 3);
-            target.value = digits ? `+${digits}` : "";
-        }
-        if (target.classList.contains("phone-number")) {
-            target.value = normalizeDigits(target.value).slice(0, 10);
-        }
-    });
 }
 
 function calculateChargingEstimate({
