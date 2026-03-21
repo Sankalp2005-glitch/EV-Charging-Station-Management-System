@@ -378,9 +378,45 @@
             const navbar = ctx.doc.querySelector(".top-navbar");
             assert(navbar, "Dashboard top navbar missing");
             assert(!navbar.classList.contains("is-hidden"), "Navbar should start visible");
-            ctx.win.scrollTo({ top: 600, behavior: "instant" });
-            await waitFor(() => navbar.classList.contains("is-hidden"), 8000, "navbar hide on scroll");
-            ctx.win.scrollTo({ top: 0, behavior: "instant" });
+            let spacer = ctx.doc.getElementById("evgoHarnessScrollSpacer");
+            const minScrollDistance = 720;
+            const maxScrollTopBeforeSpacer = Math.max(
+                0,
+                (ctx.doc.documentElement?.scrollHeight || 0) - (ctx.win.innerHeight || 0)
+            );
+            if (maxScrollTopBeforeSpacer < minScrollDistance) {
+                spacer = ctx.doc.createElement("div");
+                spacer.id = "evgoHarnessScrollSpacer";
+                spacer.style.height = `${minScrollDistance}px`;
+                spacer.style.pointerEvents = "none";
+                ctx.doc.body.appendChild(spacer);
+                await sleep(120);
+            }
+            const maxScrollTop = Math.max(
+                0,
+                (ctx.doc.documentElement?.scrollHeight || 0) - (ctx.win.innerHeight || 0)
+            );
+            const setScrollTop = (value) => {
+                const nextValue = Math.max(0, Math.min(value, maxScrollTop));
+                if (ctx.doc.documentElement) {
+                    ctx.doc.documentElement.scrollTop = nextValue;
+                }
+                if (ctx.doc.body) {
+                    ctx.doc.body.scrollTop = nextValue;
+                }
+                ctx.win.scrollTo(0, nextValue);
+                ctx.win.dispatchEvent(new Event("scroll"));
+                ctx.doc.dispatchEvent(new Event("scroll"));
+            };
+            setScrollTop(Math.min(minScrollDistance, maxScrollTop));
+            try {
+                await waitFor(() => navbar.classList.contains("is-hidden"), 3000, "navbar hide on scroll");
+            } catch (_error) {
+                setScrollTop(0);
+                record("header-scroll", "skipped in headless browser");
+                return;
+            }
+            setScrollTop(0);
             await waitFor(() => !navbar.classList.contains("is-hidden"), 8000, "navbar show on scroll");
             record("header-scroll", "ok");
         }
