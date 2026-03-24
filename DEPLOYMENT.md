@@ -12,14 +12,18 @@ The backend reads configuration from environment variables.
 
 Required:
 
+- `APP_ENV=production`
 - `SECRET_KEY`
 - `MYSQL_URL` or `DATABASE_URL` from Railway
 - `FRONTEND_ORIGIN` or `CORS_ALLOWED_ORIGINS`
 
+In production the backend now fails fast if any of the values above are missing,
+instead of falling back to local-development defaults.
+
 Render start command:
 
 ```bash
-gunicorn --chdir backend --worker-class eventlet -w 1 app:app
+gunicorn --pythonpath backend --worker-class eventlet -w 1 backend.app:app
 ```
 
 Health check path:
