@@ -5,6 +5,7 @@ const {
     normalizeDigits,
     parseJsonSafe,
     resolveErrorMessage,
+    SOCKET_BASE,
 } = window.EVgoShared;
 const CUSTOMER_ROLE = "customer";
 const OWNER_ROLE = "owner";
@@ -27,6 +28,7 @@ const dashboardState = {
     openStationId: null,
     openStationName: "",
     nearbyOrigin: null,
+    deviceDistanceOrigin: null,
     nearbyLabel: "",
     nearbyRadiusKm: 0,
     stationNearbyOnly: true,
@@ -642,7 +644,7 @@ function initRealtimeUpdates() {
     }
 
     disconnectRealtimeUpdates();
-    realtimeSocket = window.io(API_BASE, {
+    realtimeSocket = window.io(SOCKET_BASE || undefined, {
         transports: ["websocket", "polling"],
         reconnectionAttempts: 3,
         timeout: 2500,

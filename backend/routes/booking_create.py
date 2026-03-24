@@ -4,18 +4,14 @@ from flask import current_app, jsonify, request
 
 from extensions import mysql
 from routes.booking_bp import booking_bp
-from services.booking_config import (
-    BOOKING_STATUS_WAITING_TO_START,
-    DATETIME_FMT,
-    DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE,
-    GRACE_PERIOD_MINUTES,
-    MAX_BOOKING_MINUTES,
+from services.booking_config import BOOKING_STATUS_WAITING_TO_START, DATETIME_FMT, GRACE_PERIOD_MINUTES
+from services.booking_mutations import (
+    BookingMutationError,
+    payment_requires_upfront_confirmation,
+    prepare_booking_mutation,
+    resolve_initial_payment_status,
 )
-from services.charging_profiles import (
-    default_power_kw,
-    estimate_charging_duration,
-    normalize_vehicle_category,
-)
+from services.charging_profiles import normalize_vehicle_category
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     refresh_single_slot_status as _refresh_single_slot_status,
@@ -27,7 +23,6 @@ from services.booking_security import (
     parse_bool as _parse_bool,
     parse_payment_method as _parse_payment_method,
 )
-from services.slot_repository import fetch_slot_with_pricing as _fetch_slot_with_pricing
 from services.value_utils import (
     close_cursor as _close_cursor,
     format_dt as _format_dt,
@@ -84,7 +79,7 @@ def book_slot(current_user):
         return jsonify({"error": "payment_method must be one of: upi, card, cash"}), 400
 
     payment_success = _parse_bool(payload.get("payment_success"))
-    if payment_success is not True:
+    if payment_requires_upfront_confirmation(payment_method) and payment_success is not True:
         return (
             jsonify(
                 {
@@ -99,98 +94,32 @@ def book_slot(current_user):
     cursor = None
     slot = None
     booking_id = None
-    payment_status = "paid"
+    payment_status = resolve_initial_payment_status(payment_method)
     lifecycle_records = []
 
     try:
         cursor = mysql.connection.cursor()
         _ensure_phase5_tables(cursor)
         lifecycle_records = _run_booking_lifecycle_updates(cursor)
-        slot = _fetch_slot_with_pricing(cursor, slot_id)
-        if not slot:
-            return jsonify({"error": "Slot not found"}), 404
-
-        slot_status = str(slot.get("status") or "").lower()
-        if slot_status == "out_of_service":
-            return jsonify({"error": "Charger is currently out of service"}), 409
-
-        slot_type = slot["slot_type"]
-        slot_vehicle_category = slot.get("vehicle_category")
-        if slot_vehicle_category and slot_vehicle_category != vehicle_category:
-            return jsonify(
-                {
-                    "error": (
-                        f"This charger supports {slot_vehicle_category}. "
-                        f"Select a compatible {slot_vehicle_category} charger."
-                    )
-                }
-            ), 409
-
-        power_kw = slot["power_kw"] or default_power_kw(vehicle_category, slot_type)
-        try:
-            charging_estimate = estimate_charging_duration(
-                battery_capacity_kwh=battery_capacity_kwh,
-                current_battery_percent=current_battery_percent,
-                target_battery_percent=target_battery_percent,
-                charger_power_kw=power_kw,
-                vehicle_category=vehicle_category,
-            )
-        except ValueError as error:
-            return jsonify({"error": str(error)}), 400
-
-        energy_required_kwh = charging_estimate["energy_required_kwh"]
-        duration_minutes = charging_estimate["duration_minutes"]
-        if duration_minutes > MAX_BOOKING_MINUTES:
-            return jsonify(
-                {
-                    "error": (
-                        "Estimated charging duration exceeds the maximum booking duration. "
-                        "Use a faster charger or lower the target battery percentage."
-                    ),
-                    "estimated_duration_minutes": duration_minutes,
-                }
-            ), 400
-
-        end_time = start_time + timedelta(minutes=duration_minutes)
-
-        price_per_kwh = slot["price_per_kwh"]
-        price_per_minute = slot["price_per_minute"]
-
-        if price_per_kwh is None and price_per_minute is None:
-            price_per_kwh = DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE.get(slot_type, 12.0)
-
-        if price_per_kwh is not None:
-            pricing_model = "per_kwh"
-            rate = price_per_kwh
-            estimated_cost = round(energy_required_kwh * rate, 2)
-        else:
-            pricing_model = "per_minute"
-            rate = price_per_minute
-            estimated_cost = round(duration_minutes * rate, 2)
-
-        cursor.execute(
-            """
-            SELECT booking_id, start_time, end_time
-            FROM Booking
-            WHERE slot_id = %s
-              AND status IN ('waiting_to_start', 'charging_started', 'confirmed')
-              AND (%s < end_time AND %s > start_time)
-            LIMIT 1
-            """,
-            (slot_id, start_time, end_time),
+        mutation = prepare_booking_mutation(
+            cursor,
+            slot_id=slot_id,
+            start_time=start_time,
+            vehicle_category=vehicle_category,
+            battery_capacity_kwh=battery_capacity_kwh,
+            current_battery_percent=current_battery_percent,
+            target_battery_percent=target_battery_percent,
         )
-        conflict = cursor.fetchone()
-        if conflict:
-            return jsonify(
-                {
-                    "error": "Slot already booked for this time range",
-                    "conflicting_booking": {
-                        "booking_id": conflict[0],
-                        "start_time": _format_dt(conflict[1]),
-                        "end_time": _format_dt(conflict[2]),
-                    },
-                }
-            ), 409
+        slot = mutation["slot"]
+        slot_type = mutation["slot_type"]
+        power_kw = mutation["power_kw"]
+        charging_estimate = mutation["charging_estimate"]
+        energy_required_kwh = mutation["energy_required_kwh"]
+        duration_minutes = mutation["duration_minutes"]
+        end_time = mutation["end_time"]
+        pricing_model = mutation["pricing_model"]
+        rate = mutation["rate"]
+        estimated_cost = mutation["estimated_cost"]
 
         cursor.execute(
             """
@@ -227,12 +156,17 @@ def book_slot(current_user):
         cursor.execute(
             """
             INSERT INTO Payment (booking_id, amount, payment_method, payment_status)
-            VALUES (%s, %s, %s, 'paid')
+            VALUES (%s, %s, %s, %s)
             """,
-            (booking_id, estimated_cost, payment_method),
+            (booking_id, estimated_cost, payment_method, payment_status),
         )
         _refresh_single_slot_status(cursor, slot_id)
         mysql.connection.commit()
+    except BookingMutationError as error:
+        mysql.connection.rollback()
+        payload = {"error": error.message}
+        payload.update(error.payload)
+        return jsonify(payload), error.status_code
     except Exception:
         mysql.connection.rollback()
         current_app.logger.exception(
@@ -286,7 +220,7 @@ def book_slot(current_user):
             "status": BOOKING_STATUS_WAITING_TO_START,
             "payment_method": payment_method,
             "payment_status": payment_status,
-            "payment_success": True,
+            "payment_success": payment_status == "paid",
             "grace_period_minutes": GRACE_PERIOD_MINUTES,
             "qr_token": qr_token,
             "qr_value": qr_value,

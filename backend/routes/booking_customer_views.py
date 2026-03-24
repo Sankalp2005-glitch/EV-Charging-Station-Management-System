@@ -1,17 +1,25 @@
 from datetime import datetime
 
+from MySQLdb import OperationalError
 from flask import current_app, jsonify, request
 
 from extensions import mysql
 from routes.booking_bp import booking_bp
-from services.booking_config import BOOKING_STATUS_WAITING_TO_START
-from services.charging_profiles import build_live_charging_snapshot, format_duration_human
+from services.booking_config import BOOKING_STATUS_WAITING_TO_START, DATETIME_FMT
+from services.booking_mutations import (
+    BookingMutationError,
+    is_booking_in_active_window,
+    is_payment_ready_for_qr,
+    prepare_booking_mutation,
+)
+from services.charging_profiles import build_live_charging_snapshot, format_duration_human, normalize_vehicle_category
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
     refresh_single_slot_status as _refresh_single_slot_status,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
+from services.db_errors import is_retryable_transaction_error
 from services.value_utils import (
     close_cursor as _close_cursor,
     ensure_station_geo_columns,
@@ -19,6 +27,9 @@ from services.value_utils import (
     haversine_distance_km,
     normalize_coordinate_pair,
     parse_geo_filters,
+    parse_percent as _parse_percent,
+    parse_positive_float as _parse_positive_float,
+    parse_start_time as _parse_start_time,
     to_str as _to_str,
 )
 from utils.jwt_handler import role_required, token_required
@@ -47,68 +58,85 @@ def my_bookings(current_user):
 
     now = datetime.now()
     lifecycle_records = []
+    bookings = []
 
-    try:
-        cursor = mysql.connection.cursor()
-        _ensure_phase5_tables(cursor)
-        ensure_station_geo_columns(cursor)
-        lifecycle_records = _run_booking_lifecycle_updates(cursor)
-        mysql.connection.commit()
+    for attempt in range(2):
+        try:
+            cursor = mysql.connection.cursor()
+            _ensure_phase5_tables(cursor)
+            ensure_station_geo_columns(cursor)
+            lifecycle_records = _run_booking_lifecycle_updates(cursor)
+            mysql.connection.commit()
 
-        query = """
-            SELECT
-                b.booking_id,
-                b.slot_id,
-                cs.station_name,
-                cs.location,
-                cs.latitude,
-                cs.longitude,
-                sl.slot_number,
-                sl.slot_type,
-                sl.charger_name,
-                sl.vehicle_category,
-                b.start_time,
-                b.end_time,
-                b.status,
-                p.payment_status,
-                p.payment_method,
-                sess.start_time AS charging_started_at,
-                sess.end_time AS charging_completed_at,
-                b.estimated_duration_minutes,
-                b.battery_capacity_kwh,
-                b.current_battery_percent,
-                b.target_battery_percent,
-                b.energy_required_kwh,
-                sl.power_kw
-            FROM Booking b
-            JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
-            JOIN ChargingStation cs ON sl.station_id = cs.station_id
-            LEFT JOIN Payment p ON p.booking_id = b.booking_id
-            LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
-            WHERE b.user_id = %s
-        """
-        params = [current_user["user_id"]]
+            query = """
+                SELECT
+                    b.booking_id,
+                    b.slot_id,
+                    cs.station_name,
+                    cs.location,
+                    cs.latitude,
+                    cs.longitude,
+                    sl.slot_number,
+                    sl.slot_type,
+                    sl.charger_name,
+                    sl.vehicle_category,
+                    b.start_time,
+                    b.end_time,
+                    b.status,
+                    p.payment_status,
+                    p.payment_method,
+                    sess.start_time AS charging_started_at,
+                    sess.end_time AS charging_completed_at,
+                    b.estimated_duration_minutes,
+                    b.battery_capacity_kwh,
+                    b.current_battery_percent,
+                    b.target_battery_percent,
+                    b.energy_required_kwh,
+                    sl.power_kw
+                FROM Booking b
+                JOIN ChargingSlot sl ON b.slot_id = sl.slot_id
+                JOIN ChargingStation cs ON sl.station_id = cs.station_id
+                LEFT JOIN Payment p ON p.booking_id = b.booking_id
+                LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+                WHERE b.user_id = %s
+            """
+            params = [current_user["user_id"]]
 
-        if view == "upcoming":
-            query += " AND b.status IN ('waiting_to_start', 'charging_started', 'confirmed') AND b.end_time >= NOW()"
-        elif view == "past":
-            query += " AND (b.status IN ('charging_completed', 'cancelled', 'completed') OR b.end_time < NOW())"
+            if view == "upcoming":
+                query += " AND b.status IN ('waiting_to_start', 'charging_started', 'confirmed') AND b.end_time >= NOW()"
+            elif view == "past":
+                query += " AND (b.status IN ('charging_completed', 'cancelled', 'completed') OR b.end_time < NOW())"
 
-        if view == "past":
-            query += " ORDER BY b.start_time DESC"
-        else:
-            query += " ORDER BY b.start_time ASC"
+            if view == "past":
+                query += " ORDER BY b.start_time DESC"
+            else:
+                query += " ORDER BY b.start_time ASC"
 
-        cursor.execute(query, tuple(params))
-        bookings = cursor.fetchall()
-    except Exception:
-        mysql.connection.rollback()
-        current_app.logger.exception(
-            "Failed to fetch bookings for user_id=%s", current_user.get("user_id")
-        )
-        return jsonify({"error": "Failed to fetch bookings"}), 500
-    finally:
-        _close_cursor(cursor)
+            cursor.execute(query, tuple(params))
+            bookings = cursor.fetchall()
+            break
+        except OperationalError as error:
+            mysql.connection.rollback()
+            if attempt == 0 and is_retryable_transaction_error(error):
+                current_app.logger.warning(
+                    "Retrying bookings fetch after transient database error for user_id=%s: %s",
+                    current_user.get("user_id"),
+                    error,
+                )
+                continue
+            current_app.logger.exception(
+                "Failed to fetch bookings for user_id=%s", current_user.get("user_id")
+            )
+            return jsonify({"error": "Failed to fetch bookings"}), 500
+        except Exception:
+            mysql.connection.rollback()
+            current_app.logger.exception(
+                "Failed to fetch bookings for user_id=%s", current_user.get("user_id")
+            )
+            return jsonify({"error": "Failed to fetch bookings"}), 500
+        finally:
+            _close_cursor(cursor)
+            cursor = None
 
     _emit_lifecycle_updates(lifecycle_records)
 
@@ -138,8 +166,11 @@ def my_bookings(current_user):
         energy_required_kwh = float(row[21]) if row[21] is not None else None
         charger_power_kw = float(row[22]) if row[22] is not None else None
         can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[11] > now and charging_started_at is None
+        can_edit = status == BOOKING_STATUS_WAITING_TO_START and row[10] > now and charging_started_at is None
         is_future_booking = row[10] >= now
-        can_show_qr = status == BOOKING_STATUS_WAITING_TO_START and row[11] > now and payment_status == "paid"
+        can_show_qr = is_booking_in_active_window(status, row[10], row[11], now=now) and is_payment_ready_for_qr(
+            payment_method, payment_status
+        )
         can_start_charging = can_show_qr and charging_started_at is None
         live_snapshot = build_live_charging_snapshot(
             booking_status=status,
@@ -171,6 +202,7 @@ def my_bookings(current_user):
                 "duration_display": format_duration_human(duration_minutes),
                 "status": status,
                 "can_cancel": can_cancel,
+                "can_edit": can_edit,
                 "is_future_booking": is_future_booking,
                 "payment_status": payment_status,
                 "payment_method": payment_method,
@@ -192,6 +224,193 @@ def my_bookings(current_user):
         )
 
     return jsonify(result), 200
+
+
+@booking_bp.route("/<int:booking_id>", methods=["PUT"])
+@token_required
+@role_required("customer")
+def update_booking(current_user, booking_id):
+    payload = request.get_json(silent=True) or {}
+
+    start_time = _parse_start_time(payload.get("start_time"))
+    if not start_time:
+        return jsonify({"error": f"start_time must match {DATETIME_FMT}"}), 400
+    if start_time < datetime.now():
+        return jsonify({"error": "Cannot reschedule a booking into the past"}), 400
+
+    vehicle_category = normalize_vehicle_category(payload.get("vehicle_category"))
+    if not vehicle_category:
+        return jsonify({"error": "vehicle_category must be one of: bike_scooter, car"}), 400
+
+    battery_capacity_kwh = _parse_positive_float(payload.get("battery_capacity_kwh"))
+    if battery_capacity_kwh is None:
+        return jsonify({"error": "battery_capacity_kwh must be a positive number"}), 400
+
+    current_battery_percent = _parse_percent(payload.get("current_battery_percent"))
+    if current_battery_percent is None:
+        return jsonify({"error": "current_battery_percent must be between 0 and 100"}), 400
+
+    target_battery_percent = _parse_percent(payload.get("target_battery_percent"))
+    if target_battery_percent is None:
+        return jsonify({"error": "target_battery_percent must be between 0 and 100"}), 400
+    if current_battery_percent >= 100:
+        return jsonify({"error": "current_battery_percent must be below 100"}), 400
+    if target_battery_percent <= current_battery_percent:
+        return jsonify({"error": "target_battery_percent must be greater than current_battery_percent"}), 400
+
+    cursor = None
+    now = datetime.now()
+    lifecycle_records = []
+    slot_id = None
+    station_id = None
+    payment_method = None
+    payment_status = "pending"
+
+    try:
+        cursor = mysql.connection.cursor()
+        _ensure_phase5_tables(cursor)
+        lifecycle_records = _run_booking_lifecycle_updates(cursor)
+        mysql.connection.commit()
+
+        cursor.execute(
+            """
+            SELECT
+                b.user_id,
+                b.slot_id,
+                b.start_time,
+                b.status,
+                sl.station_id,
+                p.payment_method,
+                p.payment_status,
+                sess.start_time AS charging_started_at
+            FROM Booking b
+            JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
+            LEFT JOIN Payment p ON p.booking_id = b.booking_id
+            LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+            WHERE b.booking_id = %s
+            LIMIT 1
+            """,
+            (booking_id,),
+        )
+        booking = cursor.fetchone()
+        if not booking:
+            return jsonify({"error": "Booking not found"}), 404
+        if booking[0] != current_user["user_id"]:
+            return jsonify({"error": "Unauthorized"}), 403
+
+        status = _to_str(booking[3])
+        if status != BOOKING_STATUS_WAITING_TO_START:
+            return jsonify({"error": "Only waiting-to-start bookings can be edited"}), 409
+        if booking[2] <= now:
+            return jsonify({"error": "Only future bookings can be edited"}), 409
+        if booking[7] is not None:
+            return jsonify({"error": "Charging already started for this booking"}), 409
+
+        slot_id = int(booking[1])
+        station_id = int(booking[4] or 0)
+        payment_method = (_to_str(booking[5]) or "").lower() or None
+        payment_status = (_to_str(booking[6]) or "pending").lower()
+
+        mutation = prepare_booking_mutation(
+            cursor,
+            slot_id=slot_id,
+            start_time=start_time,
+            vehicle_category=vehicle_category,
+            battery_capacity_kwh=battery_capacity_kwh,
+            current_battery_percent=current_battery_percent,
+            target_battery_percent=target_battery_percent,
+            exclude_booking_id=booking_id,
+        )
+
+        cursor.execute(
+            """
+            UPDATE Booking
+            SET
+                start_time = %s,
+                end_time = %s,
+                vehicle_category = %s,
+                battery_capacity_kwh = %s,
+                current_battery_percent = %s,
+                target_battery_percent = %s,
+                energy_required_kwh = %s,
+                estimated_duration_minutes = %s
+            WHERE booking_id = %s
+            """,
+            (
+                start_time,
+                mutation["end_time"],
+                vehicle_category,
+                battery_capacity_kwh,
+                current_battery_percent,
+                target_battery_percent,
+                mutation["energy_required_kwh"],
+                mutation["duration_minutes"],
+                booking_id,
+            ),
+        )
+        cursor.execute(
+            """
+            UPDATE Payment
+            SET amount = %s
+            WHERE booking_id = %s
+            """,
+            (mutation["estimated_cost"], booking_id),
+        )
+        _refresh_single_slot_status(cursor, slot_id)
+        mysql.connection.commit()
+    except BookingMutationError as error:
+        mysql.connection.rollback()
+        response = {"error": error.message}
+        response.update(error.payload)
+        return jsonify(response), error.status_code
+    except Exception:
+        mysql.connection.rollback()
+        current_app.logger.exception(
+            "Failed to update booking_id=%s for user_id=%s",
+            booking_id,
+            current_user.get("user_id"),
+        )
+        return jsonify({"error": "Failed to update booking"}), 500
+    finally:
+        _close_cursor(cursor)
+
+    _emit_lifecycle_updates(lifecycle_records)
+    emit_booking_update(
+        "booking_updated",
+        station_id=station_id,
+        slot_id=slot_id,
+        booking_id=booking_id,
+        status=BOOKING_STATUS_WAITING_TO_START,
+        extra={"payment_status": payment_status},
+    )
+
+    return (
+        jsonify(
+            {
+                "message": "Booking updated successfully",
+                "booking_id": booking_id,
+                "slot_id": slot_id,
+                "station_id": station_id,
+                "start_time": _format_dt(start_time),
+                "end_time": _format_dt(mutation["end_time"]),
+                "vehicle_category": vehicle_category,
+                "battery_capacity_kwh": round(battery_capacity_kwh, 2),
+                "current_battery_percent": round(current_battery_percent, 2),
+                "target_battery_percent": round(target_battery_percent, 2),
+                "energy_required_kwh": round(mutation["energy_required_kwh"], 3),
+                "charger_power_kw": round(mutation["power_kw"], 2),
+                "duration_minutes": mutation["duration_minutes"],
+                "duration_display": mutation["charging_estimate"]["duration_display"],
+                "charging_speed": mutation["charging_estimate"]["charging_speed"],
+                "pricing_model": mutation["pricing_model"],
+                "rate": round(mutation["rate"], 2),
+                "estimated_cost": mutation["estimated_cost"],
+                "payment_method": payment_method,
+                "payment_status": payment_status,
+            }
+        ),
+        200,
+    )
 
 
 @booking_bp.route("/cancel/<int:booking_id>", methods=["PUT"])

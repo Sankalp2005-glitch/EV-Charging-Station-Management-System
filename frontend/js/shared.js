@@ -1,5 +1,11 @@
 (() => {
-    const API_BASE = "http://127.0.0.1:5000";
+    const runtimeConfig = window.__EVGO_CONFIG__ || {};
+    const normalizeBase = (value) => {
+        const text = String(value || "").trim();
+        return text ? text.replace(/\/+$/, "") : "";
+    };
+    const API_BASE = normalizeBase(runtimeConfig.API_BASE);
+    const SOCKET_BASE = normalizeBase(runtimeConfig.SOCKET_BASE) || API_BASE;
 
     function normalizeDigits(value) {
         return String(value || "").replace(/\D/g, "");
@@ -55,5 +61,6 @@
         normalizeDigits,
         parseJsonSafe,
         resolveErrorMessage,
+        SOCKET_BASE,
     };
 })();

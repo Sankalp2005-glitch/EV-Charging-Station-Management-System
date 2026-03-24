@@ -26,6 +26,8 @@ CREATE TABLE ChargingStation (
     location VARCHAR(100) NOT NULL,
     contact_number VARCHAR(13),
     total_slots INT NOT NULL,
+    latitude DECIMAL(10,7) NULL,
+    longitude DECIMAL(10,7) NULL,
     user_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
@@ -83,6 +85,7 @@ CREATE TABLE Booking (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (slot_id) REFERENCES ChargingSlot(slot_id) ON DELETE CASCADE,
+    FOREIGN KEY (qr_verified_by) REFERENCES Users(user_id) ON DELETE SET NULL,
     CHECK (end_time > start_time)
 );
 
@@ -106,12 +109,12 @@ CREATE TABLE Payment (
     FOREIGN KEY (booking_id) REFERENCES Booking(booking_id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_booking_user ON Booking(user_id);
-CREATE INDEX idx_booking_slot ON Booking(slot_id);
-CREATE INDEX idx_slot_station ON ChargingSlot(station_id);
-CREATE INDEX idx_slot_status ON ChargingSlot(status);
+CREATE INDEX idx_booking_user_start_time ON Booking(user_id, start_time);
+CREATE INDEX idx_booking_slot_status_time ON Booking(slot_id, status, start_time, end_time);
+CREATE INDEX idx_booking_status_start_time ON Booking(status, start_time);
+CREATE INDEX idx_booking_status_end_time ON Booking(status, end_time);
 CREATE INDEX idx_station_approval_status ON StationApproval(status);
-CREATE INDEX idx_payment_booking ON Payment(booking_id);
+CREATE INDEX idx_station_owner_name ON ChargingStation(user_id, station_name);
 
 INSERT INTO Users (name, email, phone, password, role)
 VALUES (

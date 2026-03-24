@@ -1,6 +1,9 @@
+import base64
 from datetime import datetime
+from io import BytesIO
 
 from flask import current_app, jsonify, request
+import qrcode
 
 from extensions import mysql
 from routes.booking_bp import booking_bp
@@ -15,6 +18,7 @@ from services.booking_lifecycle import (
     refresh_single_slot_status as _refresh_single_slot_status,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
+from services.booking_mutations import is_booking_in_active_window, is_booking_ready_for_qr_verification, is_payment_ready_for_qr
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
 from services.booking_security import (
     decode_qr_token as _decode_qr_token,
@@ -28,6 +32,23 @@ from services.value_utils import (
 )
 from utils.jwt_handler import role_required, token_required
 from utils.realtime_events import emit_booking_update
+
+
+def _build_qr_image_data_url(value):
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=8,
+        border=2,
+    )
+    qr.add_data(value)
+    qr.make(fit=True)
+
+    image = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 
 @booking_bp.route("/<int:booking_id>/qr", methods=["GET"])
@@ -54,7 +75,8 @@ def get_booking_qr(current_user, booking_id):
                 b.status,
                 sl.station_id,
                 cs.user_id AS station_owner_id,
-                p.payment_status
+                p.payment_status,
+                p.payment_method
             FROM Booking b
             JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
             JOIN ChargingStation cs ON cs.station_id = sl.station_id
@@ -90,33 +112,44 @@ def get_booking_qr(current_user, booking_id):
         return jsonify({"error": "Unauthorized"}), 403
 
     status = (_to_str(row[5]) or "").lower()
-    if status not in {BOOKING_STATUS_WAITING_TO_START, LEGACY_BOOKING_STATUS_CONFIRMED}:
-        return jsonify({"error": "QR is available only for waiting-to-start bookings"}), 409
-    if row[4] <= datetime.now():
+    if status not in {BOOKING_STATUS_WAITING_TO_START, BOOKING_STATUS_CHARGING_STARTED, LEGACY_BOOKING_STATUS_CONFIRMED}:
+        return jsonify({"error": "Booking is not eligible for QR access"}), 409
+
+    now = datetime.now()
+    if row[3] > now:
+        return jsonify({"error": "QR becomes available when the charging window starts"}), 409
+    if row[4] <= now:
         return jsonify({"error": "Booking already ended"}), 409
+    if not is_booking_in_active_window(status, row[3], row[4], now=now):
+        return jsonify({"error": "QR is available only during the active booking window"}), 409
 
     payment_status = (_to_str(row[8]) or "pending").lower()
-    if payment_status != "paid":
+    payment_method = (_to_str(row[9]) or "").lower() or None
+    if not is_payment_ready_for_qr(payment_method, payment_status):
         return jsonify({"error": "Payment is pending for this booking"}), 409
 
     qr_token = _encode_qr_token(row[0], row[1], row[2])
     qr_value = f"evcs://booking/{row[0]}?token={qr_token}"
-    return (
-        jsonify(
-            {
-                "booking_id": int(row[0]),
-                "slot_id": int(row[2]),
-                "station_id": int(row[6]),
-                "start_time": _format_dt(row[3]),
-                "end_time": _format_dt(row[4]),
-                "payment_status": payment_status,
-                "grace_period_minutes": GRACE_PERIOD_MINUTES,
-                "qr_token": qr_token,
-                "qr_value": qr_value,
-            }
-        ),
-        200,
+    qr_image_data_url = _build_qr_image_data_url(qr_value)
+    response = jsonify(
+        {
+            "booking_id": int(row[0]),
+            "slot_id": int(row[2]),
+            "station_id": int(row[6]),
+            "start_time": _format_dt(row[3]),
+            "end_time": _format_dt(row[4]),
+            "payment_status": payment_status,
+            "payment_method": payment_method,
+            "grace_period_minutes": GRACE_PERIOD_MINUTES,
+            "qr_token": qr_token,
+            "qr_value": qr_value,
+            "qr_image_data_url": qr_image_data_url,
+        }
     )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response, 200
 
 
 @booking_bp.route("/scan-qr", methods=["POST"])
@@ -163,7 +196,8 @@ def scan_booking_qr(current_user):
                 b.status,
                 sl.station_id,
                 cs.user_id AS station_owner_id,
-                p.payment_status
+                p.payment_status,
+                p.payment_method
             FROM Booking b
             JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
             JOIN ChargingStation cs ON cs.station_id = sl.station_id
@@ -183,16 +217,10 @@ def scan_booking_qr(current_user):
         station_owner_id = int(booking[7] or 0)
         status = (_to_str(booking[5]) or "").lower()
         payment_status = (_to_str(booking[8]) or "pending").lower()
+        payment_method = (_to_str(booking[9]) or "").lower() or None
 
         if booking_user_id != expected_user_id or slot_id != expected_slot_id:
             return jsonify({"error": "QR token does not match booking details"}), 409
-        if status not in {BOOKING_STATUS_WAITING_TO_START, BOOKING_STATUS_CHARGING_STARTED, LEGACY_BOOKING_STATUS_CONFIRMED}:
-            return jsonify({"error": "Booking is not eligible for QR verification"}), 409
-        if payment_status != "paid":
-            return jsonify({"error": "Payment not completed"}), 409
-        if booking[4] <= datetime.now():
-            return jsonify({"error": "Booking already ended"}), 409
-
         requester_id = int(current_user.get("user_id") or 0)
         if requester_role == "admin":
             pass
@@ -211,18 +239,29 @@ def scan_booking_qr(current_user):
         )
         existing_session = cursor.fetchone()
         if existing_session and existing_session[0] is not None:
-            already_started = True
-            started_at = existing_session[0]
-            if status != BOOKING_STATUS_CHARGING_STARTED:
-                cursor.execute(
-                    """
-                    UPDATE Booking
-                    SET status = %s, qr_verified_at = COALESCE(qr_verified_at, %s)
-                    WHERE booking_id = %s
-                    """,
-                    (BOOKING_STATUS_CHARGING_STARTED, started_at, booking_id),
-                )
+            return jsonify({"error": "Charging already active"}), 409
         else:
+            now = datetime.now()
+            if booking[3] > now:
+                return jsonify({"error": "QR verification starts at the booking time"}), 409
+            if booking[4] <= now:
+                return jsonify({"error": "Booking already ended"}), 409
+            if not is_booking_in_active_window(status, booking[3], booking[4], now=now):
+                return jsonify({"error": "Booking is outside the active charging window"}), 409
+            if not is_payment_ready_for_qr(payment_method, payment_status):
+                return jsonify({"error": "Payment not completed"}), 409
+            if not is_booking_ready_for_qr_verification(
+                status,
+                booking[3],
+                booking[4],
+                payment_method,
+                payment_status,
+                now=now,
+            ):
+                if status == BOOKING_STATUS_CHARGING_STARTED:
+                    return jsonify({"error": "Charging already active"}), 409
+                return jsonify({"error": "Booking is not eligible for QR verification"}), 409
+
             cursor.execute(
                 """
                 INSERT INTO ChargingSession (booking_id, start_time)

@@ -1,5 +1,10 @@
 let currentQrToken = null;
 let currentQrBookingId = null;
+let currentQrValue = "";
+let currentQrImageDataUrl = "";
+let myBookingsCache = [];
+let ownerMyBookingsCache = [];
+let activeBookingEdit = null;
 
 function setNearbyBookingsMeta(message, isError = false) {
     const meta = document.getElementById("nearbyBookingsMeta");
@@ -15,30 +20,32 @@ function resolveBookingChargingLabel(booking) {
     if (booking.charging_completed_at) {
         return `Completed ${booking.charging_completed_at}`;
     }
+    if (normalizedStatus === "charging_completed" || normalizedStatus === "completed") {
+        return "Charging completed";
+    }
     if (booking.charging_started_at) {
         return `Started ${booking.charging_started_at}`;
     }
     if (normalizedStatus === "waiting_to_start") {
-        return "Waiting for QR verification";
+        return booking.is_future_booking ? `Scheduled for ${booking.start_time}` : "Waiting for QR verification";
     }
     if (normalizedStatus === "cancelled") {
         return "Not applicable";
-    }
-    if (normalizedStatus === "charging_completed" || normalizedStatus === "completed") {
-        return "Charging completed";
     }
     return "Not started";
 }
 
 function buildBookingChargingCell(booking) {
     const normalizedStatus = String(booking.status || "").toLowerCase();
+    const isCompleted =
+        normalizedStatus === "charging_completed" ||
+        normalizedStatus === "completed" ||
+        Boolean(booking.charging_completed_at);
     const shouldRenderProgress =
         normalizedStatus === "waiting_to_start" ||
         normalizedStatus === "charging_started" ||
-        normalizedStatus === "charging_completed" ||
-        normalizedStatus === "completed" ||
-        Boolean(booking.charging_started_at) ||
-        Boolean(booking.charging_completed_at);
+        normalizedStatus === "confirmed" ||
+        (Boolean(booking.charging_started_at) && !isCompleted);
 
     const progressHtml = shouldRenderProgress
         ? buildChargingProgressWidget(
@@ -76,6 +83,11 @@ function buildUserBookingsTable(bookings, options = {}) {
     const rows = bookings
         .map((booking) => {
             const actionButtons = [];
+            if (booking.can_edit) {
+                actionButtons.push(
+                    `<button class="btn btn-outline-secondary btn-sm" type="button" onclick="openBookingEditModal(${booking.booking_id})">Edit</button>`
+                );
+            }
             if (booking.can_cancel) {
                 actionButtons.push(
                     `<button class="btn btn-outline-danger btn-sm" type="button" onclick="cancelBooking(${booking.booking_id})">Cancel</button>`
@@ -165,6 +177,7 @@ function renderMyBookings(bookings) {
     if (!container) {
         return;
     }
+    myBookingsCache = Array.isArray(bookings) ? bookings : [];
     container.innerHTML = buildUserBookingsTable(bookings, {
         emptyMessage: "No bookings yet. Book a charger to see your sessions here.",
     });
@@ -176,6 +189,7 @@ function renderOwnerMyBookings(bookings) {
     if (!container) {
         return;
     }
+    ownerMyBookingsCache = Array.isArray(bookings) ? bookings : [];
     container.innerHTML = buildUserBookingsTable(bookings, {
         emptyMessage: "No personal bookings found for this view.",
     });
@@ -219,6 +233,7 @@ async function loadMyBookings(view = bookingViewState.customer) {
         renderMyBookings(bookings);
         updateDashboardSummaryState({ customerBookings: bookings });
     } catch (error) {
+        myBookingsCache = [];
         document.getElementById("myBookingsList").innerHTML = `<div class="empty-state text-danger">${escapeHtml(
             error.message
         )}</div>`;
@@ -241,6 +256,7 @@ async function loadOwnerMyBookings(view = bookingViewState.ownerMine) {
         );
         renderOwnerMyBookings(bookings);
     } catch (error) {
+        ownerMyBookingsCache = [];
         const container = document.getElementById("ownerMyBookingsList");
         if (container) {
             container.innerHTML = `<div class="empty-state text-danger">${escapeHtml(error.message)}</div>`;
@@ -276,14 +292,174 @@ async function cancelBooking(bookingId) {
     }
 }
 
+function findEditableBooking(bookingId) {
+    return [...myBookingsCache, ...ownerMyBookingsCache].find(
+        (booking) => Number(booking.booking_id) === Number(bookingId)
+    ) || null;
+}
+
+function toDateTimeLocalValue(value) {
+    const date = typeof parseApiDateTime === "function" ? parseApiDateTime(value) : null;
+    if (!date) {
+        return "";
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function openBookingEditModal(bookingId) {
+    const booking = findEditableBooking(bookingId);
+    if (!booking) {
+        alert("Booking details are no longer in view. Refresh and try again.");
+        return;
+    }
+    if (!booking.can_edit) {
+        alert("Only future waiting-to-start bookings can be edited.");
+        return;
+    }
+
+    const modal = document.getElementById("bookingEditModal");
+    const modalBody = document.getElementById("bookingEditModalBody");
+    const modalTitle = document.getElementById("bookingEditModalTitle");
+    if (!modal || !modalBody || !modalTitle) {
+        alert("Booking edit form is not available on this page.");
+        return;
+    }
+
+    activeBookingEdit = booking;
+    modalTitle.textContent = `Edit booking #${booking.booking_id}`;
+    modalBody.innerHTML = `
+        <p class="modal-subtitle mb-3">${escapeHtml(booking.station_name || "-")} | ${escapeHtml(
+        booking.charger_name || `Slot ${booking.slot_number}`
+    )}</p>
+        <form id="bookingEditForm" data-booking-id="${Number(booking.booking_id) || 0}">
+            <div class="details-grid">
+                <div>
+                    <label class="form-label" for="bookingEditStartTime">Start time</label>
+                    <input
+                        id="bookingEditStartTime"
+                        name="start_time"
+                        class="form-control"
+                        type="datetime-local"
+                        min="${new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}"
+                        value="${escapeHtml(toDateTimeLocalValue(booking.start_time))}"
+                        required
+                    >
+                </div>
+                <div>
+                    <label class="form-label" for="bookingEditBattery">Battery capacity (kWh)</label>
+                    <input id="bookingEditBattery" name="battery_capacity_kwh" class="form-control" type="number" min="1" step="0.1" value="${escapeHtml(booking.battery_capacity_kwh ?? "")}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="bookingEditCurrent">Current battery (%)</label>
+                    <input id="bookingEditCurrent" name="current_battery_percent" class="form-control" type="number" min="0" max="99" step="0.1" value="${escapeHtml(booking.current_battery_percent ?? "")}" required>
+                </div>
+                <div>
+                    <label class="form-label" for="bookingEditTarget">Target battery (%)</label>
+                    <input id="bookingEditTarget" name="target_battery_percent" class="form-control" type="number" min="1" max="100" step="0.1" value="${escapeHtml(booking.target_battery_percent ?? "")}" required>
+                </div>
+            </div>
+            <input type="hidden" name="vehicle_category" value="${escapeHtml(booking.vehicle_category || "")}">
+            <p class="form-helper-text mt-3 mb-0">Payment method stays <strong>${escapeHtml(
+                normalizeStatusLabel(booking.payment_method || "pending")
+            )}</strong>. Slot availability is checked again before saving.</p>
+            <div class="d-flex flex-wrap gap-2 justify-content-end mt-4">
+                <button class="btn btn-outline-secondary" type="button" data-modal-close="bookingEditModal">Close</button>
+                <button class="btn btn-primary" type="submit">Save changes</button>
+            </div>
+        </form>
+    `;
+    modal.classList.add("is-visible");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+}
+
+function closeBookingEditModal() {
+    const modal = document.getElementById("bookingEditModal");
+    const modalBody = document.getElementById("bookingEditModalBody");
+    if (!modal) {
+        return;
+    }
+    modal.classList.remove("is-visible");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    activeBookingEdit = null;
+    if (modalBody) {
+        modalBody.innerHTML = "";
+    }
+}
+
+async function saveBookingEdit(form) {
+    const bookingId = Number(form?.dataset.bookingId || activeBookingEdit?.booking_id || 0);
+    if (!bookingId) {
+        alert("Booking details are missing.");
+        return;
+    }
+
+    const formData = new FormData(form);
+    const startTime = String(formData.get("start_time") || "").trim();
+    const payload = {
+        start_time: startTime ? `${startTime.replace("T", " ")}:00` : "",
+        vehicle_category: String(formData.get("vehicle_category") || "").trim(),
+        battery_capacity_kwh: Number(formData.get("battery_capacity_kwh")),
+        current_battery_percent: Number(formData.get("current_battery_percent")),
+        target_battery_percent: Number(formData.get("target_battery_percent")),
+    };
+
+    try {
+        const result = await apiRequest(
+            `/api/bookings/${bookingId}`,
+            {
+                method: "PUT",
+                body: JSON.stringify(payload),
+            },
+            true
+        );
+        const estimatedCost = Number(result.estimated_cost);
+        const costText = Number.isFinite(estimatedCost) ? formatMoney(estimatedCost) : "N/A";
+        alert(
+            `Booking updated.
+New schedule: ${result.start_time} to ${result.end_time}
+Estimated duration: ${result.duration_display || formatDurationHuman(result.duration_minutes)}
+Estimated cost: ${costText}`
+        );
+        closeBookingEditModal();
+        if (currentQrBookingId === bookingId) {
+            hideBookingQrSection();
+        }
+        await loadStations();
+        await loadMyBookings(bookingViewState.customer);
+        if (getRole() === OWNER_ROLE) {
+            await loadOwnerMyBookings(bookingViewState.ownerMine);
+            await loadOwnerBookings(bookingViewState.owner);
+            await loadOwnerStations();
+            await loadOwnerStats();
+            await loadOwnerRevenueAnalytics();
+        }
+        if (dashboardState.openStationId) {
+            await toggleSlots(dashboardState.openStationId, dashboardState.openStationName, true);
+        }
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+
 function hideBookingQrSection() {
     const section = document.getElementById("bookingQrSection");
     const meta = document.getElementById("bookingQrMeta");
     const value = document.getElementById("bookingQrValue");
     const canvas = document.getElementById("bookingQrCanvas");
+    const status = document.getElementById("bookingQrRenderStatus");
 
     currentQrToken = null;
     currentQrBookingId = null;
+    currentQrValue = "";
+    currentQrImageDataUrl = "";
     if (section) {
         section.style.display = "none";
     }
@@ -293,6 +469,10 @@ function hideBookingQrSection() {
     if (value) {
         value.innerText = "";
     }
+    if (status) {
+        status.hidden = true;
+        status.innerText = "";
+    }
     if (canvas) {
         const context = canvas.getContext("2d");
         if (context) {
@@ -301,12 +481,23 @@ function hideBookingQrSection() {
     }
 }
 
+function setBookingQrRenderStatus(message = "") {
+    const status = document.getElementById("bookingQrRenderStatus");
+    if (!status) {
+        return;
+    }
+    status.innerText = message;
+    status.hidden = !message;
+}
+
 function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
     const section = document.getElementById("bookingQrSection");
     const meta = document.getElementById("bookingQrMeta");
     const value = document.getElementById("bookingQrValue");
     const canvas = document.getElementById("bookingQrCanvas");
     const bookingId = Number(bookingIdOverride || qrPayload?.booking_id || 0);
+    const qrValue = qrPayload?.qr_value || qrPayload?.qr_token || "";
+    const qrImageDataUrl = qrPayload?.qr_image_data_url || "";
 
     if (!section || !meta || !value || !canvas) {
         alert("QR section is not available on this page.");
@@ -315,32 +506,157 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
 
     currentQrToken = qrPayload?.qr_token || null;
     currentQrBookingId = bookingId || null;
+    currentQrValue = qrValue;
+    currentQrImageDataUrl = qrImageDataUrl;
     section.style.display = "block";
-    meta.innerText = `Booking #${bookingId} | Valid until ${qrPayload?.end_time || "-"} | Show this QR to the station owner`;
-    value.innerText = qrPayload?.qr_value || "";
+    meta.innerText = `Booking #${bookingId} | Active until ${qrPayload?.end_time || "-"} | Show this QR to the station owner`;
+    value.innerText = qrValue;
+    canvas.setAttribute("aria-label", `Charging confirmation QR for booking ${bookingId}`);
+    setBookingQrRenderStatus("");
 
-    if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
-        window.QRCode.toCanvas(canvas, qrPayload?.qr_value || qrPayload?.qr_token || "", {
-            width: 220,
-            margin: 1,
-        }).catch(() => {
-            value.innerText = qrPayload?.qr_value || "";
-        });
+    canvas.width = 260;
+    canvas.height = 260;
+    const context = canvas.getContext("2d");
+    if (context) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    if (qrImageDataUrl) {
+        const image = new Image();
+        image.onload = () => {
+            if (!context) {
+                return;
+            }
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "#ffffff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        };
+        image.onerror = () => {
+            setBookingQrRenderStatus("Unable to display the QR image. Use the QR value below for confirmation.");
+        };
+        image.src = qrImageDataUrl;
+    } else if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
+        window.QRCode.toCanvas(
+            canvas,
+            qrValue,
+            {
+                width: 260,
+                margin: 2,
+                errorCorrectionLevel: "M",
+                color: {
+                    dark: "#0f172a",
+                    light: "#ffffff",
+                },
+            },
+            (error) => {
+                if (error) {
+                    setBookingQrRenderStatus("Unable to render the QR image. Use the QR value below for confirmation.");
+                }
+            }
+        );
+    } else {
+        setBookingQrRenderStatus("QR library not available. Use the QR value below for confirmation.");
     }
 
     window.scrollTo({ top: section.offsetTop - 20, behavior: "smooth" });
 }
 
+async function copyBookingQrValue() {
+    if (!currentQrValue) {
+        alert("Generate the booking QR first.");
+        return;
+    }
+
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(currentQrValue);
+        } else {
+            const helper = document.createElement("textarea");
+            helper.value = currentQrValue;
+            helper.setAttribute("readonly", "readonly");
+            helper.style.position = "absolute";
+            helper.style.left = "-9999px";
+            document.body.appendChild(helper);
+            helper.select();
+            document.execCommand("copy");
+            document.body.removeChild(helper);
+        }
+        alert("QR value copied.");
+    } catch (error) {
+        alert(error?.message || "Unable to copy the QR value.");
+    }
+}
+
+function downloadBookingQrImage() {
+    const canvas = document.getElementById("bookingQrCanvas");
+    if (!canvas || !currentQrValue) {
+        alert("Generate the booking QR first.");
+        return;
+    }
+
+    try {
+        const link = document.createElement("a");
+        link.href = currentQrImageDataUrl || canvas.toDataURL("image/png");
+        link.download = `booking-${currentQrBookingId || "qr"}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        alert(error?.message || "Unable to download the QR image.");
+    }
+}
+
 async function showBookingQr(bookingId) {
     try {
-        const qrPayload = await apiRequest(`/api/bookings/${bookingId}/qr`, { method: "GET" }, true);
+        const qrPayload = await apiRequest(
+            `/api/bookings/${bookingId}/qr?ts=${Date.now()}`,
+            { method: "GET" },
+            true
+        );
         renderBookingQrPayload(qrPayload, bookingId);
     } catch (error) {
         alert(error.message);
     }
 }
 
+const bookingEditModal = document.getElementById("bookingEditModal");
+if (bookingEditModal) {
+    bookingEditModal.addEventListener("click", (event) => {
+        if (event.target === bookingEditModal) {
+            closeBookingEditModal();
+        }
+    });
+}
+
+document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest("[data-modal-close='bookingEditModal']")) {
+        closeBookingEditModal();
+    }
+});
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeBookingEditModal();
+    }
+});
+
+document.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (!form || form.id !== "bookingEditForm") {
+        return;
+    }
+    event.preventDefault();
+    saveBookingEdit(form);
+});
+
 window.cancelBooking = cancelBooking;
+window.openBookingEditModal = openBookingEditModal;
 window.showBookingQr = showBookingQr;
 window.renderBookingQrPayload = renderBookingQrPayload;
 window.loadOwnerMyBookings = loadOwnerMyBookings;
+window.copyBookingQrValue = copyBookingQrValue;
+window.downloadBookingQrImage = downloadBookingQrImage;

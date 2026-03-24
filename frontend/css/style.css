@@ -2121,9 +2121,9 @@ body.navbar-hidden .main-content {
 .booking-table,
 .booking-table.table {
     font-size: var(--font-body);
-    width: 100%;
-    table-layout: fixed;
-    min-width: 720px;
+    width: max-content;
+    min-width: max(100%, 720px);
+    table-layout: auto;
     border-collapse: separate;
     border-spacing: 0;
 }
@@ -2139,10 +2139,10 @@ body.navbar-hidden .main-content {
     vertical-align: middle;
     border-color: rgba(226, 232, 240, 0.9);
     word-break: normal;
-    overflow-wrap: normal;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: break-word;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .booking-table thead th {
@@ -2158,6 +2158,12 @@ body.navbar-hidden .main-content {
     position: sticky;
     top: 0;
     z-index: 1;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.booking-table tbody td {
+    vertical-align: top;
 }
 
 .booking-table tbody tr:hover {
@@ -2168,9 +2174,10 @@ body.navbar-hidden .main-content {
     display: block;
     color: var(--text-strong);
     font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
     max-width: 100%;
 }
 
@@ -2179,17 +2186,18 @@ body.navbar-hidden .main-content {
     margin-top: 0.15rem;
     color: var(--text-muted);
     font-size: 0.82rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
     max-width: 100%;
 }
 
 .booking-table__actions {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 0.5rem;
-    white-space: nowrap;
 }
 
 .booking-table__actions .btn {
@@ -2197,7 +2205,7 @@ body.navbar-hidden .main-content {
 }
 
 .booking-table--sessions {
-    width: 100%;
+    min-width: 1500px;
 }
 
 .booking-table--sessions > :not(caption) > * > * {
@@ -2263,14 +2271,14 @@ body.navbar-hidden .main-content {
 }
 
 .booking-table--sessions .charging-cell__label {
-    white-space: nowrap;
+    white-space: normal;
     font-size: 0.86rem;
 }
 
 .booking-table--sessions .charging-progress__title,
 .booking-table--sessions .charging-progress__battery,
 .booking-table--sessions .charging-progress__eta {
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .booking-table--admin-bookings {
@@ -2638,12 +2646,14 @@ body.modal-open {
 .charging-cell {
     display: grid;
     gap: 0.6rem;
+    min-width: 0;
 }
 
 .charging-cell__label {
     color: var(--text-base);
     font-size: 0.88rem;
     font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 .charging-progress-card {
@@ -2676,6 +2686,7 @@ body.modal-open {
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .charging-progress__title {
@@ -2714,6 +2725,7 @@ body.modal-open {
     color: var(--text-base);
     font-size: 0.82rem;
     font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 .schedule-card {
@@ -2765,6 +2777,20 @@ body.modal-open {
     box-shadow: var(--shadow-soft);
 }
 
+.qr-panel__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.qr-panel__status {
+    text-align: center;
+    color: var(--color-danger);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
 .qr-panel__value {
     width: 100%;
     max-width: 26rem;
@@ -2774,6 +2800,14 @@ body.modal-open {
     overflow-wrap: break-word;
     text-align: center;
     color: var(--text-strong);
+}
+
+.qr-panel__hint {
+    width: 100%;
+    max-width: 32rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
 }
 
 .table-responsive {

@@ -1,12 +1,15 @@
-import os
-
 import mysql.connector
+
+from config import load_mysql_config
 
 
 def get_connection():
+    mysql_config = load_mysql_config()
     return mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST", "localhost"),
-        user=os.getenv("MYSQL_USER", "root"),
-        password=os.getenv("MYSQL_PASSWORD", "Sankalp268@"),
-        database=os.getenv("MYSQL_DB", "ev_charging_system"),
+        host=mysql_config["MYSQL_HOST"],
+        port=mysql_config["MYSQL_PORT"],
+        user=mysql_config["MYSQL_USER"],
+        password=mysql_config["MYSQL_PASSWORD"],
+        database=mysql_config["MYSQL_DB"],
+        connection_timeout=mysql_config["MYSQL_CONNECT_TIMEOUT"],
     )

@@ -125,6 +125,8 @@ const stationMapState = {
     searchUiBound: false,
     stationsTabClickBound: false,
     searchBusy: false,
+    distanceOriginPromise: null,
+    distanceOriginUnavailable: false,
 };
 
 function getStationMapContainer() {
@@ -168,8 +170,17 @@ function getNearbyStationsToggle() {
 }
 
 function formatDistanceKm(distanceKm) {
+    if (distanceKm === null || distanceKm === undefined || distanceKm === "") {
+        return "";
+    }
     const parsed = Number(distanceKm);
-    return Number.isFinite(parsed) ? `${parsed.toFixed(parsed >= 10 ? 0 : 1)} km away` : "";
+    if (!Number.isFinite(parsed)) {
+        return "";
+    }
+    if (parsed < 0.05) {
+        return "Less than 0.1 km away";
+    }
+    return `${parsed.toFixed(parsed >= 10 ? 0 : 1)} km away`;
 }
 
 function haversineDistanceKm(latitudeA, longitudeA, latitudeB, longitudeB) {
@@ -221,6 +232,58 @@ function getNearbyOrigin() {
     const latitude = Number(origin.latitude);
     const longitude = Number(origin.longitude);
     return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+function getDeviceDistanceOrigin() {
+    const origin = dashboardState.deviceDistanceOrigin;
+    if (!origin) {
+        return null;
+    }
+    const latitude = Number(origin.latitude);
+    const longitude = Number(origin.longitude);
+    return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+function getDistanceOrigin() {
+    return getNearbyOrigin() || getDeviceDistanceOrigin();
+}
+
+async function ensureStationDistanceOrigin() {
+    const existingOrigin = getDistanceOrigin();
+    if (existingOrigin) {
+        return existingOrigin;
+    }
+    if (stationMapState.distanceOriginUnavailable || !navigator.geolocation) {
+        return null;
+    }
+    if (stationMapState.distanceOriginPromise) {
+        return stationMapState.distanceOriginPromise;
+    }
+
+    stationMapState.distanceOriginPromise = new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                dashboardState.deviceDistanceOrigin = {
+                    latitude: Number(position.coords.latitude),
+                    longitude: Number(position.coords.longitude),
+                };
+                stationMapState.distanceOriginPromise = null;
+                resolve(getDeviceDistanceOrigin());
+            },
+            () => {
+                stationMapState.distanceOriginUnavailable = true;
+                stationMapState.distanceOriginPromise = null;
+                resolve(null);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000,
+            }
+        );
+    });
+
+    return stationMapState.distanceOriginPromise;
 }
 
 function getStationRadiusKm() {
@@ -809,7 +872,7 @@ async function geocodeStationSearch(queryText) {
 
 async function resolveMapStations(mapStations, fallbackStations) {
     const mergedStations = new Map();
-    const origin = getNearbyOrigin();
+    const origin = getDistanceOrigin();
 
     (Array.isArray(mapStations) ? mapStations : []).forEach((station) => {
         mergedStations.set(Number(station.station_id), { ...station });
@@ -828,9 +891,13 @@ async function resolveMapStations(mapStations, fallbackStations) {
             continue;
         }
 
+        const fallbackDistanceKm =
+            station.distance_km === null || station.distance_km === undefined || station.distance_km === ""
+                ? null
+                : Number(station.distance_km);
         const distanceKm = origin
             ? haversineDistanceKm(origin.latitude, origin.longitude, position.lat, position.lng)
-            : Number(station.distance_km);
+            : fallbackDistanceKm;
         mergedStations.set(stationId, {
             ...station,
             latitude: position.lat,
@@ -841,6 +908,33 @@ async function resolveMapStations(mapStations, fallbackStations) {
     }
 
     return Array.from(mergedStations.values());
+}
+
+async function applyDistanceOriginToStations(stations, origin) {
+    if (!Array.isArray(stations) || stations.length === 0 || !origin) {
+        return Array.isArray(stations) ? stations : [];
+    }
+
+    const resolvedStations = await resolveMapStations([], stations);
+    const resolvedById = new Map(
+        resolvedStations.map((station) => [Number(station.station_id || 0), station])
+    );
+
+    return stations.map((station) => {
+        const resolvedStation = resolvedById.get(Number(station.station_id || 0)) || station;
+        const position = parseStationCoordinates(resolvedStation);
+        if (!position) {
+            return resolvedStation;
+        }
+
+        const distanceKm = haversineDistanceKm(origin.latitude, origin.longitude, position.latitude, position.longitude);
+        return {
+            ...resolvedStation,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            distance_km: Number.isFinite(distanceKm) ? Number(distanceKm.toFixed(2)) : null,
+        };
+    });
 }
 
 async function filterStationsByNearbyOrigin(stations, origin, radiusKm) {
@@ -974,7 +1068,7 @@ async function loadStations() {
     const vehicleCategoryFilter = normalizeVehicleCategory(
         document.getElementById("vehicleCategoryFilter")?.value.trim() || ""
     );
-    const origin = getNearbyOrigin();
+    let origin = getNearbyOrigin();
     const useNearby = shouldUseNearbyStations();
     const radiusKm = getStationRadiusKm();
 
@@ -1007,9 +1101,12 @@ async function loadStations() {
     try {
         const stations = await apiRequest(`/api/bookings/stations${query.toString() ? `?${query.toString()}` : ""}`, { method: "GET" }, true);
         let renderableStations = Array.isArray(stations) ? stations : [];
+        const distanceOrigin = origin || (await ensureStationDistanceOrigin());
 
         if (useNearby && origin) {
             renderableStations = await filterStationsByNearbyOrigin(renderableStations, origin, radiusKm);
+        } else if (distanceOrigin) {
+            renderableStations = await applyDistanceOriginToStations(renderableStations, distanceOrigin);
         }
 
         renderStations(renderableStations);
@@ -1144,6 +1241,41 @@ async function handleStationClearNearby() {
 
 window.haversineDistanceKm = haversineDistanceKm;
 
+function syncSlotPaymentUi(slotId) {
+    const paymentMethodField = document.getElementById(`payment-method-${slotId}`);
+    const paymentOkField = document.getElementById(`payment-ok-${slotId}`);
+    const paymentLabel = document.getElementById(`payment-ok-label-${slotId}`);
+    const paymentNote = document.getElementById(`payment-note-${slotId}`);
+    if (!paymentMethodField || !paymentOkField) {
+        return;
+    }
+
+    const paymentMethod = String(paymentMethodField.value || "upi").trim().toLowerCase();
+    const wasDisabled = paymentOkField.disabled;
+    if (paymentMethod === "cash") {
+        paymentOkField.checked = false;
+        paymentOkField.disabled = true;
+        if (paymentLabel) {
+            paymentLabel.textContent = "Cash settles after charging completes";
+        }
+        if (paymentNote) {
+            paymentNote.textContent = "Cash bookings stay pending until the charging session is completed.";
+        }
+        return;
+    }
+
+    paymentOkField.disabled = false;
+    if (wasDisabled) {
+        paymentOkField.checked = true;
+    }
+    if (paymentLabel) {
+        paymentLabel.textContent = "Payment successful (simulated)";
+    }
+    if (paymentNote) {
+        paymentNote.textContent = "Use this simulated confirmation for UPI or card before booking.";
+    }
+}
+
 function buildSlotBookingForm(slot, minDatetime) {
     const role = getRole();
     if (role !== CUSTOMER_ROLE && role !== OWNER_ROLE) {
@@ -1199,12 +1331,13 @@ function buildSlotBookingForm(slot, minDatetime) {
                 <option value="card">Card</option>
                 <option value="cash">Cash</option>
             </select>
-            <div class="form-check mb-3">
+            <div class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" id="payment-ok-${slot.slot_id}" checked>
-                <label class="form-check-label" for="payment-ok-${slot.slot_id}">
+                <label class="form-check-label" id="payment-ok-label-${slot.slot_id}" for="payment-ok-${slot.slot_id}">
                     Payment successful (simulated)
                 </label>
             </div>
+            <div id="payment-note-${slot.slot_id}" class="small text-muted mb-3">Use this simulated confirmation for UPI or card before booking.</div>
             <div id="estimate-${slot.slot_id}" class="small text-muted mb-3">Enter battery details to see estimate.</div>
             <button type="button" class="btn btn-success btn-sm w-100" data-slot-action="book" data-slot-id="${slot.slot_id}">
                 Book slot
@@ -1297,6 +1430,7 @@ function restoreSlotBookingFormState(container, state) {
         if (paymentOkField && "payment-ok" in values) {
             paymentOkField.checked = Boolean(values["payment-ok"]);
         }
+        syncSlotPaymentUi(slotId);
 
         ["battery", "current", "target"].forEach((field) => {
             const input = container.querySelector(`#${field}-${slotId}`);
@@ -1458,6 +1592,8 @@ function renderSlots(slots, stationName, options = {}) {
         slotsDiv.querySelector(`#battery-${slot.slot_id}`)?.addEventListener("input", estimateHandler);
         slotsDiv.querySelector(`#current-${slot.slot_id}`)?.addEventListener("input", estimateHandler);
         slotsDiv.querySelector(`#target-${slot.slot_id}`)?.addEventListener("input", estimateHandler);
+        slotsDiv.querySelector(`#payment-method-${slot.slot_id}`)?.addEventListener("change", () => syncSlotPaymentUi(slot.slot_id));
+        syncSlotPaymentUi(slot.slot_id);
         estimateHandler();
     });
 
@@ -1584,7 +1720,7 @@ async function bookSlot(slotId) {
         alert("Select a valid payment method.");
         return;
     }
-    if (!paymentSuccess) {
+    if (paymentMethod !== "cash" && !paymentSuccess) {
         alert("Complete payment (simulated) before booking.");
         return;
     }
@@ -1609,14 +1745,15 @@ async function bookSlot(slotId) {
         );
         const estimatedCost = Number(booking.estimated_cost);
         const costText = Number.isFinite(estimatedCost) ? formatMoney(estimatedCost) : "N/A";
+        const paymentSummary = booking.payment_method === "cash"
+            ? `${booking.payment_status || "pending"} (cash settles after charging)`
+            : booking.payment_status || "paid";
         alert(
-            `Booking successful.\nEstimated duration: ${booking.duration_display || formatDurationHuman(booking.duration_minutes)}\nEstimated cost: ${costText}\nPayment: ${booking.payment_status || "paid"}`
+            `Booking successful.\nEstimated duration: ${booking.duration_display || formatDurationHuman(booking.duration_minutes)}\nEstimated cost: ${costText}\nPayment: ${paymentSummary}\nQR: available when the booking window starts.`
         );
 
-        if (typeof renderBookingQrPayload === "function") {
-            renderBookingQrPayload(booking, booking.booking_id);
-        } else {
-            await showBookingQr(booking.booking_id);
+        if (typeof hideBookingQrSection === "function") {
+            hideBookingQrSection();
         }
 
         await loadStations();

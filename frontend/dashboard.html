@@ -525,7 +525,7 @@
                                 <div>
                                     <span class="section-heading__eyebrow">Views</span>
                                     <h4 class="section-heading__title mb-1">Owner booking workspace</h4>
-                                    <p class="section-heading__text mb-0">Keep customer station bookings separate from reservations made for your own vehicles.</p>
+                                    <p class="section-heading__text mb-0">Review all station bookings here, including reservations made for your own vehicles.</p>
                                 </div>
                                 <div class="btn-group btn-group-sm dashboard-button-group">
                                     <button id="ownerScopeStationBtn" class="btn btn-outline-primary" type="button">Station Bookings</button>
@@ -575,7 +575,7 @@
                                 <div>
                                     <span class="section-heading__eyebrow">Manage</span>
                                     <h4 class="section-heading__title mb-1">Station bookings</h4>
-                                    <p class="section-heading__text mb-0">See customer reservations, status, and active charging sessions.</p>
+                                    <p class="section-heading__text mb-0">See station reservations, status, and active charging sessions, including your own bookings.</p>
                                 </div>
                                 <div class="btn-group btn-group-sm dashboard-button-group">
                                     <button id="ownerBookingsUpcomingBtn" class="btn btn-outline-primary" type="button">Upcoming</button>
@@ -616,9 +616,9 @@
                             <div class="surface-card surface-card--padded">
                                 <div class="section-heading">
                                     <div>
-                                        <span class="section-heading__eyebrow">Personal</span>
-                                        <h4 class="section-heading__title mb-1">My bookings</h4>
-                                        <p class="section-heading__text mb-0">Reservations you made for your own vehicles, shown separately from customer station bookings.</p>
+                                    <span class="section-heading__eyebrow">Personal</span>
+                                    <h4 class="section-heading__title mb-1">My bookings</h4>
+                                    <p class="section-heading__text mb-0">A personal-only view of reservations you made for your own vehicles.</p>
                                     </div>
                                     <div class="btn-group btn-group-sm dashboard-button-group">
                                         <button id="ownerMyBookingsUpcomingBtn" class="btn btn-outline-primary" type="button">Upcoming</button>
@@ -660,14 +660,41 @@
                             <div>
                                 <span class="section-heading__eyebrow">QR</span>
                                 <h4 class="section-heading__title mb-1">Booking QR code</h4>
-                                <p class="section-heading__text mb-0">Show this QR to the station owner so they can verify and start charging.</p>
+                                <p class="section-heading__text mb-0">Show this QR to the station owner during the active booking window so they can verify and start charging.</p>
                             </div>
                             <button id="closeBookingQrBtn" class="btn btn-outline-secondary btn-sm" type="button">Close</button>
                         </div>
                         <p id="bookingQrMeta" class="small text-muted mb-3"></p>
                         <div class="qr-panel">
                             <canvas id="bookingQrCanvas"></canvas>
+                            <p id="bookingQrRenderStatus" class="qr-panel__status mb-0" hidden></p>
+                            <div class="qr-panel__actions">
+                                <button id="downloadBookingQrBtn" class="btn btn-primary btn-sm" type="button">
+                                    <i class="bi bi-download"></i>
+                                    Download QR
+                                </button>
+                                <button id="copyBookingQrValueBtn" class="btn btn-outline-secondary btn-sm" type="button">
+                                    <i class="bi bi-copy"></i>
+                                    Copy QR value
+                                </button>
+                            </div>
                             <code id="bookingQrValue" class="qr-panel__value"></code>
+                            <p class="qr-panel__hint mb-0">Show this QR to the station owner while the booking window is active, or share the QR value if scanning is unavailable.</p>
+                        </div>
+                    </div>
+
+                    <div id="bookingEditModal" class="modal-overlay" aria-hidden="true">
+                        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="bookingEditModalTitle">
+                            <div class="modal-header">
+                                <div>
+                                    <span class="section-heading__eyebrow">Booking</span>
+                                    <h4 class="modal-title mb-0" id="bookingEditModalTitle">Edit booking</h4>
+                                </div>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-modal-close="bookingEditModal">
+                                    Close
+                                </button>
+                            </div>
+                            <div id="bookingEditModalBody" class="modal-body"></div>
                         </div>
                     </div>
                 </section>
@@ -967,6 +994,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/runtime-config.js"></script>
     <script src="js/shared.js"></script>
     <script src="js/api.js"></script>
     <script src="js/dashboard_profile.js"></script>

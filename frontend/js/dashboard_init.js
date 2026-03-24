@@ -177,6 +177,8 @@ async function initDashboard() {
         setProfileEditMode(false);
     });
     document.getElementById("closeBookingQrBtn")?.addEventListener("click", hideBookingQrSection);
+    document.getElementById("downloadBookingQrBtn")?.addEventListener("click", downloadBookingQrImage);
+    document.getElementById("copyBookingQrValueBtn")?.addEventListener("click", copyBookingQrValue);
     document.getElementById("closeOwnerQrVerificationBtn")?.addEventListener("click", hideOwnerQrVerification);
     document.getElementById("ownerVerifyQrBtn")?.addEventListener("click", submitOwnerQrVerification);
 

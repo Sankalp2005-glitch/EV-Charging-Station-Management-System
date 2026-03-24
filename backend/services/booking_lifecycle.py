@@ -39,6 +39,7 @@ def auto_release_no_show_bookings(cursor):
     cursor.execute(
         """
         UPDATE Booking b
+        JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
         LEFT JOIN ChargingSession cs ON cs.booking_id = b.booking_id
         SET b.status = %s
         WHERE b.status IN (%s, %s)
@@ -88,6 +89,7 @@ def mark_expired_bookings(cursor):
         """
         UPDATE ChargingSession cs
         JOIN Booking b ON b.booking_id = cs.booking_id
+        JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
         LEFT JOIN Payment p ON p.booking_id = b.booking_id
         SET
             cs.end_time = COALESCE(cs.end_time, b.end_time),
@@ -97,6 +99,25 @@ def mark_expired_bookings(cursor):
           AND sl.status <> 'out_of_service'
           AND cs.start_time IS NOT NULL
           AND b.end_time <= NOW()
+        """,
+        (BOOKING_STATUS_CHARGING_STARTED, LEGACY_BOOKING_STATUS_CONFIRMED),
+    )
+
+    cursor.execute(
+        """
+        UPDATE Payment p
+        JOIN Booking b ON b.booking_id = p.booking_id
+        JOIN ChargingSession cs ON cs.booking_id = b.booking_id
+        JOIN ChargingSlot sl ON sl.slot_id = b.slot_id
+        SET
+            p.payment_status = 'paid',
+            p.payment_date = COALESCE(cs.end_time, b.end_time, NOW())
+        WHERE b.status IN (%s, %s)
+          AND sl.status <> 'out_of_service'
+          AND cs.start_time IS NOT NULL
+          AND b.end_time <= NOW()
+          AND p.payment_method = 'cash'
+          AND p.payment_status <> 'paid'
         """,
         (BOOKING_STATUS_CHARGING_STARTED, LEGACY_BOOKING_STATUS_CONFIRMED),
     )

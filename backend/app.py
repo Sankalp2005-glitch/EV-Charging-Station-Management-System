@@ -1,24 +1,28 @@
-import os
-
 from flask import Flask, g, jsonify
 from flask_cors import CORS
 from MySQLdb import OperationalError
 from werkzeug.exceptions import HTTPException
 
+from config import (
+    get_bind_host,
+    get_bind_port,
+    get_cors_allowed_origins,
+    get_debug_enabled,
+    get_secret_key,
+    load_mysql_config,
+)
 from extensions import mysql, socketio
 from utils.jwt_handler import generate_token
 
 app = Flask(__name__)
-CORS(app)
+app.config.update(load_mysql_config())
+app.config["SECRET_KEY"] = get_secret_key()
 
-app.config["MYSQL_HOST"] = os.getenv("MYSQL_HOST", "localhost")
-app.config["MYSQL_USER"] = os.getenv("MYSQL_USER", "root")
-app.config["MYSQL_PASSWORD"] = os.getenv("MYSQL_PASSWORD", "Sankalp268@")
-app.config["MYSQL_DB"] = os.getenv("MYSQL_DB", "ev_charging_system")
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "super_secret_key_change_this")
+allowed_origins = get_cors_allowed_origins()
+CORS(app, origins=allowed_origins)
 
 mysql.init_app(app)
-socketio.init_app(app, cors_allowed_origins="*")
+socketio.init_app(app, cors_allowed_origins=allowed_origins)
 
 
 def _safe_mysql_teardown(exception):
@@ -61,6 +65,11 @@ def handle_unexpected_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 
+@app.get("/healthz")
+def health_check():
+    return jsonify({"status": "ok"}), 200
+
+
 @app.after_request
 def refresh_session_token(response):
     authenticated_user = getattr(g, "authenticated_user", None)
@@ -81,11 +90,11 @@ def refresh_session_token(response):
 
 
 if __name__ == "__main__":
-    debug_enabled = os.getenv("FLASK_DEBUG", "1") == "1"
+    debug_enabled = get_debug_enabled()
     socketio.run(
         app,
-        host=os.getenv("FLASK_RUN_HOST", "127.0.0.1"),
-        port=int(os.getenv("FLASK_RUN_PORT", "5000")),
+        host=get_bind_host(),
+        port=get_bind_port(),
         debug=debug_enabled,
         allow_unsafe_werkzeug=True,
     )

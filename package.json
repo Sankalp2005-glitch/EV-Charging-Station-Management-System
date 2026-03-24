@@ -1,0 +1,7 @@
+{
+  "name": "evgo-deployment-tools",
+  "private": true,
+  "scripts": {
+    "build:frontend": "node scripts/generate-runtime-config.mjs"
+  }
+}

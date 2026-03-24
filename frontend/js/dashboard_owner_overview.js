@@ -544,7 +544,7 @@ function renderOwnerStationSchedule(data) {
 
     const slots = Array.isArray(data?.slots) ? data.slots : [];
     if (slots.length === 0) {
-        container.innerHTML = "<div class='empty-state'>No customer bookings found for this station.</div>";
+        container.innerHTML = "<div class='empty-state'>No bookings found for this station.</div>";
         return;
     }
 
@@ -560,7 +560,9 @@ function renderOwnerStationSchedule(data) {
                                   <li>
                                       ${buildChargerStatusBadge(booking.status)}
                                       <span>${escapeHtml(booking.start_time)} - ${escapeHtml(booking.end_time)}</span>
-                                      <span class="text-muted">(${escapeHtml(booking.customer_name)})</span>
+                                      <span class="text-muted">(${escapeHtml(
+                                          booking.is_owner_booking ? `${booking.customer_name} | Your booking` : booking.customer_name
+                                      )})</span>
                                   </li>
                               `
                           )
@@ -604,7 +606,7 @@ async function loadOwnerStationSchedule(view = ownerStationScheduleState.view) {
 
     const selectedStationId = Number(stationSelect.value || ownerStationScheduleState.stationId || 0);
     if (!Number.isInteger(selectedStationId) || selectedStationId <= 0) {
-        container.innerHTML = "<div class='empty-state'>Select a station to view customer bookings.</div>";
+        container.innerHTML = "<div class='empty-state'>Select a station to view bookings.</div>";
         return;
     }
 
@@ -718,7 +720,7 @@ function renderOwnerBookings(bookings) {
     }
 
     if (!Array.isArray(bookings) || bookings.length === 0) {
-        container.innerHTML = "<div class='empty-state'>No customer station bookings found for this view.</div>";
+        container.innerHTML = "<div class='empty-state'>No station bookings found for this view.</div>";
         return;
     }
 
@@ -739,41 +741,61 @@ function renderOwnerBookings(bookings) {
             }
             if (booking.can_cancel) {
                 actions.push(
-                    `<button class="btn btn-outline-danger btn-sm" type="button" onclick="cancelOwnerBooking(${booking.booking_id})">Cancel</button>`
+                    `<button class="btn btn-outline-danger btn-sm" type="button" onclick="${
+                        booking.is_managed_station ? "cancelOwnerBooking" : "cancelBooking"
+                    }(${booking.booking_id})">Cancel</button>`
                 );
             }
             const actionHtml = actions.length > 0 ? actions.join("") : "<span class='text-muted'>Locked</span>";
-            const chargingLabel = booking.charging_started_at
-                ? `Started ${booking.charging_started_at}`
-                : booking.status === "waiting_to_start"
-                ? "Waiting for verification"
-                : booking.status === "charging_completed"
+            const normalizedStatus = String(booking.status || "").toLowerCase();
+            const isCompleted =
+                normalizedStatus === "charging_completed" ||
+                normalizedStatus === "completed" ||
+                Boolean(booking.charging_completed_at);
+            const chargingLabel = booking.charging_completed_at
+                ? `Completed ${booking.charging_completed_at}`
+                : isCompleted
                 ? "Charging completed"
+                : booking.charging_started_at
+                ? `Started ${booking.charging_started_at}`
+                : normalizedStatus === "waiting_to_start"
+                ? "Waiting for verification"
                 : "Not started";
-            const chargingWidget = buildChargingProgressWidget(
-                {
-                    status: booking.status,
-                    charging_started_at: booking.charging_started_at,
-                    charging_completed_at: booking.charging_completed_at,
-                    duration_minutes: booking.duration_minutes,
-                    current_battery_percent: booking.current_battery_percent,
-                    target_battery_percent: booking.target_battery_percent,
-                    charging_progress_percent: booking.charging_progress_percent,
-                    estimated_current_battery_percent: booking.estimated_current_battery_percent,
-                    estimated_completion_time: booking.estimated_completion_time,
-                    remaining_minutes: booking.remaining_minutes,
-                },
-                { title: "Charging progress" }
-            );
+            const shouldRenderProgress =
+                normalizedStatus === "waiting_to_start" ||
+                normalizedStatus === "charging_started" ||
+                normalizedStatus === "confirmed" ||
+                (Boolean(booking.charging_started_at) && !isCompleted);
+            const chargingWidget = shouldRenderProgress
+                ? buildChargingProgressWidget(
+                      {
+                          status: booking.status,
+                          charging_started_at: booking.charging_started_at,
+                          charging_completed_at: booking.charging_completed_at,
+                          duration_minutes: booking.duration_minutes,
+                          current_battery_percent: booking.current_battery_percent,
+                          target_battery_percent: booking.target_battery_percent,
+                          charging_progress_percent: booking.charging_progress_percent,
+                          estimated_current_battery_percent: booking.estimated_current_battery_percent,
+                          estimated_completion_time: booking.estimated_completion_time,
+                          remaining_minutes: booking.remaining_minutes,
+                      },
+                      { title: "Charging progress" }
+                  )
+                : "";
 
             return `
                 <tr>
                     <td>
                         <span class="booking-table__primary">#${escapeHtml(booking.booking_id)}</span>
-                        <span class="booking-table__secondary">${escapeHtml(booking.customer_email)}</span>
+                        <span class="booking-table__secondary">${escapeHtml(
+                            booking.is_owner_booking ? `${booking.customer_email} | Your booking` : booking.customer_email
+                        )}</span>
                     </td>
                     <td>
-                        <span class="booking-table__primary">${escapeHtml(booking.customer_name)}</span>
+                        <span class="booking-table__primary">${escapeHtml(
+                            booking.is_owner_booking ? `${booking.customer_name} (You)` : booking.customer_name
+                        )}</span>
                         <span class="booking-table__secondary">${escapeHtml(booking.station_name)}</span>
                     </td>
                     <td>
@@ -802,7 +824,7 @@ function renderOwnerBookings(bookings) {
 
     container.innerHTML = `
         <div class="table-shell">
-            <table class="table booking-table align-middle">
+            <table class="table booking-table booking-table--sessions align-middle">
                 <thead>
                     <tr>
                         <th>Booking</th>

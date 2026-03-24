@@ -4,6 +4,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from extensions import mysql
 from services.booking_config import BOOKING_STATUS_WAITING_TO_START
+from services.booking_mutations import is_booking_ready_for_qr_verification
 from services.charging_profiles import build_live_charging_snapshot, format_duration_human
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
@@ -96,6 +97,7 @@ def get_owner_station_bookings(current_user, station_id):
                 u.name,
                 u.email,
                 p.payment_status,
+                p.payment_method,
                 b.start_time,
                 b.end_time,
                 b.status,
@@ -106,9 +108,8 @@ def get_owner_station_bookings(current_user, station_id):
             LEFT JOIN Payment p ON p.booking_id = b.booking_id
             LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
             WHERE sl.station_id = %s
-              AND b.user_id <> %s
         """
-        params = [station_id, current_user["user_id"]]
+        params = [station_id]
 
         if view == "upcoming":
             query += " AND b.status IN ('waiting_to_start', 'charging_started', 'confirmed') AND b.end_time >= NOW()"
@@ -150,16 +151,25 @@ def get_owner_station_bookings(current_user, station_id):
         ordered_slots.append(slot_item)
 
     for row in bookings:
-        status = _to_str(row[10])
+        status = _to_str(row[11])
         payment_status = (_to_str(row[7]) or "pending").lower()
-        charging_started_at = row[11]
+        payment_method = (_to_str(row[8]) or "").lower() or None
+        charging_started_at = row[12]
         slot_item = slots_map.get(int(row[1]))
         if not slot_item:
             continue
 
-        is_active = status in {"waiting_to_start", "charging_started", "confirmed"} and row[8] <= now < row[9]
-        can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[9] > now and charging_started_at is None
-        can_verify_qr = status == BOOKING_STATUS_WAITING_TO_START and payment_status == "paid"
+        is_active = status in {"waiting_to_start", "charging_started", "confirmed"} and row[9] <= now < row[10]
+        can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[10] > now and charging_started_at is None
+        can_verify_qr = is_booking_ready_for_qr_verification(
+            status,
+            row[9],
+            row[10],
+            payment_method,
+            payment_status,
+            charging_started_at=charging_started_at,
+            now=now,
+        )
 
         slot_item["bookings"].append(
             {
@@ -170,9 +180,10 @@ def get_owner_station_bookings(current_user, station_id):
                 "customer_id": int(row[4]),
                 "customer_name": _to_str(row[5]),
                 "customer_email": _to_str(row[6]),
+                "is_owner_booking": int(row[4]) == int(current_user["user_id"]),
                 "payment_status": payment_status,
-                "start_time": _format_dt(row[8]),
-                "end_time": _format_dt(row[9]),
+                "start_time": _format_dt(row[9]),
+                "end_time": _format_dt(row[10]),
                 "status": status,
                 "is_active": is_active,
                 "can_cancel": can_cancel,
@@ -216,8 +227,10 @@ def get_owner_bookings(current_user):
                 u.name,
                 u.email,
                 p.payment_status,
+                p.payment_method,
                 cs.station_id,
                 cs.station_name,
+                cs.user_id AS station_owner_id,
                 sl.slot_id,
                 sl.slot_number,
                 sl.slot_type,
@@ -240,8 +253,7 @@ def get_owner_bookings(current_user):
             JOIN Users u ON b.user_id = u.user_id
             LEFT JOIN Payment p ON p.booking_id = b.booking_id
             LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
-            WHERE cs.user_id = %s
-              AND b.user_id <> %s
+            WHERE (cs.user_id = %s OR b.user_id = %s)
         """
         params = [current_user["user_id"], current_user["user_id"]]
 
@@ -272,17 +284,19 @@ def get_owner_bookings(current_user):
 
     result = []
     for row in bookings:
-        status = _to_str(row[14])
+        status = _to_str(row[16])
         payment_status = (_to_str(row[4]) or "pending").lower()
-        charging_started_at = row[15]
-        charging_completed_at = row[16]
-        duration_minutes = int(row[17] or max(int((row[13] - row[12]).total_seconds() // 60), 0))
-        battery_capacity_kwh = float(row[18]) if row[18] is not None else None
-        current_battery_percent = float(row[19]) if row[19] is not None else None
-        target_battery_percent = float(row[20]) if row[20] is not None else None
-        energy_required_kwh = float(row[21]) if row[21] is not None else None
-        charger_power_kw = float(row[22]) if row[22] is not None else None
-        can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[13] > now and charging_started_at is None
+        payment_method = (_to_str(row[5]) or "").lower() or None
+        is_managed_station = int(row[8] or 0) == int(current_user["user_id"])
+        charging_started_at = row[17]
+        charging_completed_at = row[18]
+        duration_minutes = int(row[19] or max(int((row[15] - row[14]).total_seconds() // 60), 0))
+        battery_capacity_kwh = float(row[20]) if row[20] is not None else None
+        current_battery_percent = float(row[21]) if row[21] is not None else None
+        target_battery_percent = float(row[22]) if row[22] is not None else None
+        energy_required_kwh = float(row[23]) if row[23] is not None else None
+        charger_power_kw = float(row[24]) if row[24] is not None else None
+        can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[15] > now and charging_started_at is None
         live_snapshot = build_live_charging_snapshot(
             booking_status=status,
             charging_started_at=charging_started_at,
@@ -299,21 +313,31 @@ def get_owner_bookings(current_user):
                 "customer_id": row[1],
                 "customer_name": _to_str(row[2]),
                 "customer_email": _to_str(row[3]),
+                "is_owner_booking": int(row[1]) == int(current_user["user_id"]),
+                "is_managed_station": is_managed_station,
                 "payment_status": payment_status,
-                "station_id": row[5],
-                "station_name": _to_str(row[6]),
-                "slot_id": row[7],
-                "slot_number": row[8],
-                "slot_type": _to_str(row[9]),
-                "charger_name": _to_str(row[10]),
-                "vehicle_category": _to_str(row[11]),
-                "start_time": row[12].strftime("%Y-%m-%d %H:%M:%S"),
-                "end_time": row[13].strftime("%Y-%m-%d %H:%M:%S"),
+                "station_id": row[6],
+                "station_name": _to_str(row[7]),
+                "slot_id": row[9],
+                "slot_number": row[10],
+                "slot_type": _to_str(row[11]),
+                "charger_name": _to_str(row[12]),
+                "vehicle_category": _to_str(row[13]),
+                "start_time": row[14].strftime("%Y-%m-%d %H:%M:%S"),
+                "end_time": row[15].strftime("%Y-%m-%d %H:%M:%S"),
                 "duration_minutes": duration_minutes,
                 "duration_display": format_duration_human(duration_minutes),
                 "status": status,
                 "can_cancel": can_cancel,
-                "can_verify_qr": status == BOOKING_STATUS_WAITING_TO_START and payment_status == "paid",
+                "can_verify_qr": is_managed_station and is_booking_ready_for_qr_verification(
+                    status,
+                    row[14],
+                    row[15],
+                    payment_method,
+                    payment_status,
+                    charging_started_at=charging_started_at,
+                    now=now,
+                ),
                 "charging_started_at": _format_dt(charging_started_at),
                 "charging_completed_at": _format_dt(charging_completed_at),
                 "battery_capacity_kwh": battery_capacity_kwh,
