@@ -41,6 +41,12 @@ For Vercel deployments, the build step generates that file from:
 - `EVGO_API_BASE`
 - `EVGO_SOCKET_BASE`
 
+Vercel project settings should use:
+
+- Root Directory: repository root (`.`)
+- Build Command: `npm run build:frontend`
+- Output Directory: `frontend`
+
 If you are not using Vercel, you can copy `frontend/js/runtime-config.example.js`
 over `frontend/js/runtime-config.js` and replace the placeholder Render URL.
 
