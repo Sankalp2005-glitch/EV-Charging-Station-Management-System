@@ -1,5 +1,5 @@
-CREATE DATABASE ev_charging_system;
-USE ev_charging_system;
+-- Run this schema in the active target database selected by your MySQL host/client.
+-- For Railway, import it into the provisioned database directly.
 
 CREATE TABLE Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,

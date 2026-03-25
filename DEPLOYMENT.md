@@ -57,3 +57,7 @@ Import the schema from:
 ```text
 database/ev_project_setup.sql
 ```
+
+For managed MySQL providers like Railway, import the schema into the existing
+provisioned database. The SQL file is written to create tables in the current
+active database instead of creating and switching databases itself.
