@@ -1,3 +1,10 @@
+try:
+    import eventlet
+
+    eventlet.monkey_patch()
+except Exception:  # pragma: no cover - eventlet patching is environment-specific.
+    eventlet = None
+
 from flask import Flask, g, jsonify
 from flask_cors import CORS
 from MySQLdb import OperationalError
