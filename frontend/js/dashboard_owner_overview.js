@@ -430,6 +430,7 @@ async function loadOwnerRevenueAnalytics() {
         return;
     }
 
+    renderLoadingState("ownerRevenueBreakdown", "Loading revenue analytics...");
     try {
         const analytics = await apiRequest("/api/owner/revenue-analytics", { method: "GET" }, true);
         renderOwnerRevenueAnalytics(analytics);
@@ -451,6 +452,7 @@ async function loadOwnerStats() {
         return;
     }
 
+    container.innerHTML = `<div class="col-12">${buildLoadingState("Loading owner insights...")}</div>`;
     try {
         const stats = await apiRequest("/api/owner/stats", { method: "GET" }, true);
         renderOwnerStats(stats);
@@ -623,6 +625,7 @@ async function loadOwnerStationSchedule(view = ownerStationScheduleState.view) {
     }
 
     ownerStationScheduleState.stationId = selectedStationId;
+    renderLoadingState(container, "Loading station bookings...");
 
     try {
         const data = await apiRequest(
@@ -644,6 +647,7 @@ async function loadOwnerStations() {
         return;
     }
 
+    renderLoadingState("ownerStationsList", "Loading your stations...");
     try {
         const stations = await apiRequest("/api/owner/stations", { method: "GET" }, true);
         renderOwnerStations(stations);
@@ -882,6 +886,7 @@ async function loadOwnerBookings(view = bookingViewState.owner) {
 
     bookingViewState.owner = view;
     setBookingViewButtons("ownerBookings", bookingViewState.owner);
+    renderLoadingState("ownerBookingsList", "Loading station bookings...");
 
     try {
         const bookings = await apiRequest(

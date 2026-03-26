@@ -55,6 +55,29 @@ function setProfileEditMode(enabled) {
     }
 }
 
+function setProfileLoadingState(isLoading, message = "Loading profile...") {
+    const section = document.getElementById("profileSection");
+    const form = document.getElementById("profileForm");
+    const modeText = document.getElementById("profileModeText");
+    if (!section || !form || !modeText) {
+        return;
+    }
+
+    section.classList.toggle("is-loading", Boolean(isLoading));
+    if (isLoading) {
+        form.querySelectorAll("input, button").forEach((field) => {
+            if (!(field instanceof HTMLInputElement || field instanceof HTMLButtonElement)) {
+                return;
+            }
+            field.disabled = true;
+        });
+        modeText.innerText = message;
+        return;
+    }
+
+    setProfileEditMode(profileEditMode);
+}
+
 function openProfileSection(enableEdit = false) {
     const section = document.getElementById("profileSection");
     if (!section) {
@@ -71,6 +94,7 @@ async function loadMyProfile() {
         return;
     }
 
+    setProfileLoadingState(true);
     try {
         const profile = await apiRequest("/api/auth/me", { method: "GET" }, true);
         document.getElementById("profileName").value = profile.name || "";
@@ -92,6 +116,8 @@ async function loadMyProfile() {
         }
     } catch (error) {
         alert(error.message);
+    } finally {
+        setProfileLoadingState(false);
     }
 }
 

@@ -224,6 +224,8 @@ async function loadMyBookings(view = bookingViewState.customer) {
         setNearbyBookingsMeta("Uses the active map search or current location from the stations tab.");
     }
 
+    renderLoadingState("myBookingsList", "Loading your bookings...");
+
     try {
         const bookings = await apiRequest(
             `/api/bookings/my-bookings?${query.toString()}`,
@@ -247,6 +249,7 @@ async function loadOwnerMyBookings(view = bookingViewState.ownerMine) {
 
     bookingViewState.ownerMine = view;
     setBookingViewButtons("ownerMyBookings", bookingViewState.ownerMine);
+    renderLoadingState("ownerMyBookingsList", "Loading your personal bookings...");
 
     try {
         const bookings = await apiRequest(

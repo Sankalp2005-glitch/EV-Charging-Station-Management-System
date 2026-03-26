@@ -33,6 +33,114 @@ function formatAdminRevenueAxisLabel(value) {
     return formatMoney(Number(value || 0));
 }
 
+function formatAdminPreciseCurrencyTick(value) {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount)) {
+        return "\u20B90";
+    }
+    if (Math.abs(amount) >= 1000) {
+        return formatAdminRevenueAxisLabel(amount);
+    }
+    if (Math.abs(amount) >= 10) {
+        return `\u20B9${amount.toFixed(0)}`;
+    }
+    if (Math.abs(amount) >= 1) {
+        return `\u20B9${amount.toFixed(1)}`;
+    }
+    return `\u20B9${amount.toFixed(2)}`;
+}
+
+function buildAdminRevenueScaleOptions(values, options = {}) {
+    const {
+        tickFormatter = formatAdminRevenueAxisLabel,
+        maxTicksLimit = 6,
+        forceSmallRange = false,
+    } = options;
+    const numericValues = Array.isArray(values)
+        ? values.map((value) => Number(value || 0)).filter((value) => Number.isFinite(value))
+        : [];
+    const peakValue = numericValues.length > 0 ? Math.max(...numericValues, 0) : 0;
+    const smallRange = forceSmallRange || peakValue <= 10;
+    const resolvedTickFormatter =
+        smallRange && tickFormatter === formatAdminRevenueAxisLabel ? formatAdminPreciseCurrencyTick : tickFormatter;
+
+    const scaleOptions = {
+        beginAtZero: true,
+        grace: peakValue > 0 ? "8%" : 0,
+        grid: {
+            color: "rgba(148, 163, 184, 0.16)",
+            drawBorder: false,
+        },
+        ticks: {
+            color: "#64748b",
+            font: { family: "Manrope", size: 11, weight: "700" },
+            maxTicksLimit,
+            callback: (value) => resolvedTickFormatter(value),
+        },
+    };
+
+    if (smallRange) {
+        scaleOptions.suggestedMax = peakValue > 0 ? Number((peakValue * 1.2).toFixed(2)) : 1;
+    }
+
+    return scaleOptions;
+}
+
+function formatAdminSessionStatusLabel(status) {
+    const normalized = String(status || "").trim().toLowerCase();
+    const labels = {
+        charging_completed: "Completed",
+        completed: "Completed",
+        charging_started: "Charging",
+        charging: "Charging",
+        waiting_to_start: "Ready to start",
+        confirmed: "Confirmed",
+        reserved: "Reserved",
+        cancelled: "Cancelled",
+        pending: "Pending",
+    };
+    return labels[normalized] || normalizeStatusLabel(status);
+}
+
+function getAdminSessionStatusColor(status) {
+    const normalized = String(status || "").trim().toLowerCase();
+    const colors = {
+        charging_completed: "#0f9f8f",
+        completed: "#0f9f8f",
+        charging_started: "#2563eb",
+        charging: "#2563eb",
+        waiting_to_start: "#f59e0b",
+        confirmed: "#7c3aed",
+        reserved: "#f97316",
+        cancelled: "#ef4444",
+        pending: "#64748b",
+    };
+    return colors[normalized] || "#14b8a6";
+}
+
+function ensureAnalyticsChartCanvas(shellId, canvasId) {
+    const shell = document.getElementById(shellId);
+    if (!shell) {
+        return null;
+    }
+
+    let canvas = document.getElementById(canvasId);
+    if (canvas) {
+        return canvas;
+    }
+
+    shell.innerHTML = `<canvas id="${escapeHtml(canvasId)}" class="analytics-chart"></canvas>`;
+    return document.getElementById(canvasId);
+}
+
+function renderAnalyticsChartEmptyState(shellId, message) {
+    const shell = document.getElementById(shellId);
+    if (!shell) {
+        return;
+    }
+    shell.innerHTML = `<div class="empty-state">${escapeHtml(message)}</div>`;
+}
+
 function formatAdminRevenueStationLabels(stations) {
     return stations.map((item) =>
         typeof window.truncateChartLabel === "function" ? window.truncateChartLabel(item.station_name, 16) : item.station_name
@@ -313,6 +421,7 @@ async function loadAdminRevenueAnalytics() {
         return;
     }
 
+    renderLoadingState("adminRevenueBreakdown", "Loading revenue analytics...");
     try {
         const analytics = await apiRequest("/api/admin/revenue-analytics", { method: "GET" }, true);
         renderAdminRevenueAnalytics(analytics);
@@ -334,6 +443,7 @@ async function loadAdminStats() {
         return;
     }
 
+    container.innerHTML = `<div class="col-12">${buildLoadingState("Loading admin overview...")}</div>`;
     try {
         const stats = await apiRequest("/api/admin/stats", { method: "GET" }, true);
         renderAdminStats(stats);
@@ -453,6 +563,7 @@ async function loadAdminStationApprovals(status = adminViewState.stationStatus) 
 
     adminViewState.stationStatus = status;
     setAdminStationStatusButtons(adminViewState.stationStatus);
+    renderLoadingState(container, "Loading station approvals...");
 
     try {
         const stations = await apiRequest(
@@ -729,6 +840,7 @@ async function loadAdminUsers(force = false) {
         return;
     }
 
+    renderLoadingState("adminUsersTable", "Loading users...");
     const search = document.getElementById("adminUserSearch")?.value || "";
     const role = document.getElementById("adminUserRoleFilter")?.value || "all";
     const status = document.getElementById("adminUserStatusFilter")?.value || "all";
@@ -1011,6 +1123,7 @@ async function loadAdminStationsManagement(force = false) {
         renderAdminStationsTable(adminManagementState.stations);
         return;
     }
+    renderLoadingState("adminStationsTable", "Loading stations...");
     const statusFilter = document.getElementById("adminStationStatusFilter")?.value || "all";
     const apiStatus = statusFilter === "disabled" ? "rejected" : statusFilter;
     try {
@@ -1293,6 +1406,7 @@ async function loadAdminBookings(force = false) {
         return;
     }
 
+    renderLoadingState("adminBookingsTable", "Loading bookings...");
     const status = document.getElementById("adminBookingStatusFilter")?.value || "all";
     const stationId = document.getElementById("adminBookingStationFilter")?.value || "all";
     const location = document.getElementById("adminBookingLocationFilter")?.value.trim() || "";
@@ -1406,12 +1520,20 @@ function renderAdminRevenueCharts(analytics) {
     const stationData = Array.isArray(analytics?.station_revenue) ? analytics.station_revenue : [];
     const monthlyTrend = Array.isArray(analytics?.monthly_trend) ? analytics.monthly_trend : [];
     const dailyTrend = Array.isArray(analytics?.daily_trend) ? analytics.daily_trend : [];
-    const sessionDistribution = Array.isArray(analytics?.session_distribution) ? analytics.session_distribution : [];
+    const sessionDistribution = Array.isArray(analytics?.session_distribution)
+        ? analytics.session_distribution.filter((item) => Number(item?.count || 0) > 0)
+        : [];
+    const monthlyValues = monthlyTrend.map((item) => Number(item.total_revenue || 0));
+    const dailyValues = dailyTrend.map((item) => Number(item.total_revenue || 0));
+    const sessionLabels = sessionDistribution.map((item) => formatAdminSessionStatusLabel(item.status));
+    const sessionCounts = sessionDistribution.map((item) => Number(item.count || 0));
+    const sessionColors = sessionDistribution.map((item) => getAdminSessionStatusColor(item.status));
+    const totalSessions = sessionCounts.reduce((sum, value) => sum + value, 0);
 
     const stationCanvas = document.getElementById("adminRevenuePageStationChart");
     const monthlyCanvas = document.getElementById("adminRevenuePageMonthlyChart");
-    const dailyCanvas = document.getElementById("adminRevenueDailyChart");
-    const sessionCanvas = document.getElementById("adminSessionDistributionChart");
+    const dailyCanvas = ensureAnalyticsChartCanvas("adminRevenueDailyChartShell", "adminRevenueDailyChart");
+    const sessionCanvas = ensureAnalyticsChartCanvas("adminSessionDistributionChartShell", "adminSessionDistributionChart");
 
     if (stationCanvas && typeof window.setAnalyticsChartShellHeight === "function") {
         window.setAnalyticsChartShellHeight(stationCanvas, stationData.length, {
@@ -1447,16 +1569,7 @@ function renderAdminRevenueCharts(analytics) {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
-                        beginAtZero: true,
-                        grid: {
-                            color: "rgba(148, 163, 184, 0.16)",
-                            drawBorder: false,
-                        },
-                        ticks: {
-                            color: "#64748b",
-                            font: { family: "Manrope", size: 11, weight: "700" },
-                            callback: (value) => formatAdminRevenueAxisLabel(value),
-                        },
+                        ...buildAdminRevenueScaleOptions(stationData.map((item) => Number(item.total_revenue || 0))),
                     },
                     y: {
                         grid: { display: false, drawBorder: false },
@@ -1502,16 +1615,17 @@ function renderAdminRevenueCharts(analytics) {
                 resizeDelay: 150,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false, drawBorder: false }, ticks: { color: "#64748b", font: { family: "Manrope", size: 11, weight: "700" } } },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: "rgba(148, 163, 184, 0.16)", drawBorder: false },
+                    x: {
+                        grid: { display: false, drawBorder: false },
                         ticks: {
                             color: "#64748b",
                             font: { family: "Manrope", size: 11, weight: "700" },
-                            callback: (value) => formatAdminRevenueAxisLabel(value),
+                            maxRotation: 0,
+                            minRotation: 0,
+                            maxTicksLimit: 6,
                         },
                     },
+                    y: buildAdminRevenueScaleOptions(monthlyValues),
                 },
             },
         });
@@ -1519,85 +1633,136 @@ function renderAdminRevenueCharts(analytics) {
 
     if (dailyCanvas && typeof window.Chart === "function") {
         adminRevenueDailyChart = destroyRevenueChart(adminRevenueDailyChart);
-        adminRevenueDailyChart = new window.Chart(dailyCanvas, {
-            type: "line",
-            data: {
-                labels: dailyTrend.map((item) => item.label),
-                datasets: [
-                    {
-                        label: "Daily revenue",
-                        data: dailyTrend.map((item) => Number(item.total_revenue || 0)),
-                        borderColor: "#14b8a6",
-                        backgroundColor: "rgba(20, 184, 166, 0.2)",
-                        tension: 0.35,
-                        fill: true,
-                        borderWidth: 3,
-                        pointRadius: 3,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                resizeDelay: 150,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false, drawBorder: false }, ticks: { color: "#64748b", font: { family: "Manrope", size: 11, weight: "700" } } },
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: "rgba(148, 163, 184, 0.16)", drawBorder: false },
-                        ticks: {
-                            color: "#64748b",
-                            font: { family: "Manrope", size: 11, weight: "700" },
-                            callback: (value) => formatAdminRevenueAxisLabel(value),
+        if (dailyValues.every((value) => value === 0)) {
+            renderAnalyticsChartEmptyState(
+                "adminRevenueDailyChartShell",
+                "No paid revenue was recorded during the last two weeks."
+            );
+        } else {
+            const restoredDailyCanvas = ensureAnalyticsChartCanvas("adminRevenueDailyChartShell", "adminRevenueDailyChart");
+            adminRevenueDailyChart = new window.Chart(restoredDailyCanvas, {
+                type: "line",
+                data: {
+                    labels: dailyTrend.map((item) => item.label),
+                    datasets: [
+                        {
+                            label: "Daily revenue",
+                            data: dailyValues,
+                            borderColor: "#14b8a6",
+                            backgroundColor: "rgba(20, 184, 166, 0.2)",
+                            tension: 0.35,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 3,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    resizeDelay: 150,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `Revenue: ${formatMoney(Number(context.raw || 0))}`,
+                            },
                         },
                     },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: {
+                                color: "#64748b",
+                                font: { family: "Manrope", size: 11, weight: "700" },
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 7,
+                            },
+                        },
+                        y: buildAdminRevenueScaleOptions(dailyValues, {
+                            tickFormatter: formatAdminPreciseCurrencyTick,
+                            maxTicksLimit: 5,
+                        }),
+                    },
                 },
-            },
-        });
+            });
+        }
     }
 
     if (sessionCanvas && typeof window.Chart === "function") {
         adminSessionDistributionChart = destroyRevenueChart(adminSessionDistributionChart);
-        adminSessionDistributionChart = new window.Chart(sessionCanvas, {
-            type: "doughnut",
-            data: {
-                labels: sessionDistribution.map((item) => normalizeStatusLabel(item.status)),
-                datasets: [
-                    {
-                        data: sessionDistribution.map((item) => Number(item.count || 0)),
-                        backgroundColor: ["#0f9f8f", "#f59e0b", "#2563eb", "#ef4444", "#8b5cf6", "#64748b"],
-                        borderWidth: 0,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "bottom",
-                        labels: {
-                            color: "#475569",
-                            font: { family: "Manrope", size: 11, weight: "700" },
-                            boxWidth: 8,
-                            padding: 12,
-                            generateLabels: (chart) => {
-                                const generate = window.Chart?.defaults?.plugins?.legend?.labels?.generateLabels;
-                                const labels = generate ? generate(chart) : chart.legend?.legendItems || [];
-                                return labels.map((label) => ({
-                                    ...label,
-                                    text:
-                                        typeof window.truncateChartLabel === "function"
-                                            ? window.truncateChartLabel(label.text, 16)
-                                            : label.text,
-                                }));
+        if (sessionCounts.length === 0) {
+            renderAnalyticsChartEmptyState(
+                "adminSessionDistributionChartShell",
+                "No booking status data is available yet."
+            );
+        } else {
+            const restoredSessionCanvas = ensureAnalyticsChartCanvas(
+                "adminSessionDistributionChartShell",
+                "adminSessionDistributionChart"
+            );
+            adminSessionDistributionChart = new window.Chart(restoredSessionCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: sessionLabels,
+                    datasets: [
+                        {
+                            data: sessionCounts,
+                            backgroundColor: sessionColors,
+                            borderWidth: 0,
+                            hoverOffset: 6,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "50%",
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: {
+                                color: "#475569",
+                                font: { family: "Manrope", size: 12, weight: "700" },
+                                boxWidth: 12,
+                                padding: 16,
+                                generateLabels: (chart) => {
+                                    const labels = chart.data.labels || [];
+                                    const dataset = chart.data.datasets?.[0];
+                                    const data = Array.isArray(dataset?.data) ? dataset.data : [];
+                                    const colors = Array.isArray(dataset?.backgroundColor) ? dataset.backgroundColor : [];
+                                    const total = data.reduce((sum, value) => sum + Number(value || 0), 0);
+
+                                    return labels.map((label, index) => {
+                                        const count = Number(data[index] || 0);
+                                        const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                                        return {
+                                            text: `${label} (${count}, ${percentage}%)`,
+                                            fillStyle: colors[index] || "#14b8a6",
+                                            strokeStyle: colors[index] || "#14b8a6",
+                                            lineWidth: 0,
+                                            hidden: !chart.getDataVisibility(index),
+                                            index,
+                                        };
+                                    });
+                                },
+                            },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const count = Number(context.raw || 0);
+                                    const percentage = totalSessions > 0 ? Math.round((count / totalSessions) * 100) : 0;
+                                    return `${context.label}: ${count} booking${count === 1 ? "" : "s"} (${percentage}%)`;
+                                },
                             },
                         },
                     },
                 },
-            },
-        });
+            });
+        }
     }
 }
 
@@ -1693,6 +1858,14 @@ async function loadAdminRevenuePage(force = false) {
         renderAdminRevenueTables(adminManagementState.revenue);
         return;
     }
+    const summaryContainer = document.getElementById("adminRevenueSummaryCards");
+    const stationTable = document.getElementById("adminRevenueStationTable");
+    const chargerTable = document.getElementById("adminRevenueChargerTable");
+    if (summaryContainer) {
+        summaryContainer.innerHTML = `<div class="col-12">${buildLoadingState("Loading revenue summary...")}</div>`;
+    }
+    renderLoadingState(stationTable, "Loading station revenue...");
+    renderLoadingState(chargerTable, "Loading charger revenue...");
     try {
         const analytics = await apiRequest("/api/admin/revenue", { method: "GET" }, true);
         adminManagementState.revenue = analytics;

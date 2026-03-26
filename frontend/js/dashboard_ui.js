@@ -32,6 +32,28 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
+function buildLoadingState(message = "Loading...") {
+    return `
+        <div class="loading-state" role="status" aria-live="polite">
+            <span class="spinner-border spinner-border-sm loading-state__spinner" aria-hidden="true"></span>
+            <span class="loading-state__text">${escapeHtml(message)}</span>
+        </div>
+    `;
+}
+
+function renderLoadingState(targetOrId, message = "Loading...") {
+    const target =
+        typeof targetOrId === "string"
+            ? document.getElementById(targetOrId)
+            : targetOrId instanceof HTMLElement
+            ? targetOrId
+            : null;
+    if (!target) {
+        return;
+    }
+    target.innerHTML = buildLoadingState(message);
+}
+
 function normalizeStatusLabel(value) {
     const text = String(value || "unknown").replace(/[_-]+/g, " ").trim();
     return text ? text.charAt(0).toUpperCase() + text.slice(1) : "Unknown";

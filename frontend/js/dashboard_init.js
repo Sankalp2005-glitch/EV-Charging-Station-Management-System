@@ -51,6 +51,8 @@ async function initDashboard() {
     }
 
     const role = getRole();
+    const initialTab =
+        typeof readDashboardTabFromLocation === "function" ? readDashboardTabFromLocation() : "dashboard";
 
     setRoleDisplay();
     startInactivityTracking();
@@ -174,17 +176,18 @@ async function initDashboard() {
     document.getElementById("refreshOwnerStations")?.addEventListener("click", loadOwnerStations);
     document.getElementById("createStationForm")?.addEventListener("submit", handleCreateStation);
     document.getElementById("profileForm")?.addEventListener("submit", handleProfileUpdate);
-    document.getElementById("openProfileBtn")?.addEventListener("click", async () => {
-        await loadMyProfile();
+    document.getElementById("openProfileBtn")?.addEventListener("click", () => {
         openProfileSection(false);
+        loadMyProfile();
     });
-    document.getElementById("profileEditBtn")?.addEventListener("click", async () => {
-        await loadMyProfile();
+    document.getElementById("profileEditBtn")?.addEventListener("click", () => {
         openProfileSection(true);
+        loadMyProfile();
     });
-    document.getElementById("profileCancelBtn")?.addEventListener("click", async () => {
-        await loadMyProfile();
+    document.getElementById("profileCancelBtn")?.addEventListener("click", () => {
         setProfileEditMode(false);
+        openProfileSection(false);
+        loadMyProfile();
     });
     document.getElementById("closeBookingQrBtn")?.addEventListener("click", hideBookingQrSection);
     document.getElementById("downloadBookingQrBtn")?.addEventListener("click", downloadBookingQrImage);
@@ -198,22 +201,101 @@ async function initDashboard() {
     });
     renderOwnerSlotTypeInputs(ownerTotalSlotsInput?.value || "1");
 
-    await loadMyProfile();
-    if (role === CUSTOMER_ROLE) {
-        await loadStations();
-    }
+    const startupTasks = [loadMyProfile()];
 
     if (role === CUSTOMER_ROLE) {
-        await loadMyBookings(bookingViewState.customer);
+        if (initialTab === "dashboard" || initialTab === "stations") {
+            startupTasks.push(loadStations());
+        }
+        if (initialTab === "dashboard" || initialTab === "bookings") {
+            startupTasks.push(loadMyBookings(bookingViewState.customer));
+        }
+        if ((initialTab === "dashboard" || initialTab === "stations") && typeof window.primeStationCurrentLocation === "function") {
+            window.primeStationCurrentLocation({ refreshStations: true });
+        }
     }
     if (role === OWNER_ROLE) {
         switchOwnerBookingScope("station");
+        if (initialTab === "dashboard") {
+            startupTasks.push(loadOwnerStats(), loadOwnerRevenueAnalytics(), loadOwnerStations());
+        }
+        if (initialTab === "stations") {
+            startupTasks.push(loadOwnerStations());
+        }
+        if (initialTab === "bookings") {
+            startupTasks.push(loadOwnerStations(), loadOwnerBookings(bookingViewState.owner));
+        }
     }
     if (role === "admin") {
         if (typeof window.initAdminManagement === "function") {
             window.initAdminManagement();
         }
+        if (initialTab === "dashboard") {
+            startupTasks.push(loadAdminStats(), loadAdminRevenueAnalytics());
+        }
+        if (initialTab === "bookings") {
+            startupTasks.push(loadAdminStationApprovals(adminViewState.stationStatus));
+        }
+        if (initialTab === "admin-users") {
+            startupTasks.push(loadAdminUsers());
+        }
+        if (initialTab === "admin-stations") {
+            startupTasks.push(loadAdminStationsManagement());
+        }
+        if (initialTab === "admin-bookings") {
+            startupTasks.push(loadAdminBookings());
+        }
+        if (initialTab === "admin-revenue") {
+            startupTasks.push(loadAdminRevenuePage());
+        }
     }
+
+    await Promise.allSettled(startupTasks);
+
+    const scheduleBackgroundWork =
+        typeof window.requestIdleCallback === "function"
+            ? (callback) => window.requestIdleCallback(callback, { timeout: 1200 })
+            : (callback) => window.setTimeout(callback, 450);
+
+    scheduleBackgroundWork(() => {
+        if (role === CUSTOMER_ROLE) {
+            if (initialTab === "bookings") {
+                loadStations().catch(() => {});
+            }
+            if (initialTab === "stations") {
+                loadMyBookings(bookingViewState.customer).catch(() => {});
+            }
+            return;
+        }
+
+        if (role === OWNER_ROLE) {
+            if (initialTab === "stations" || initialTab === "bookings") {
+                Promise.allSettled([loadOwnerStats(), loadOwnerRevenueAnalytics()]);
+            }
+            if (initialTab === "bookings") {
+                loadOwnerStations().catch(() => {});
+            }
+            if (initialTab === "dashboard" || initialTab === "stations") {
+                loadOwnerBookings(bookingViewState.owner).catch(() => {});
+            }
+            return;
+        }
+
+        if (role === "admin") {
+            if (initialTab !== "admin-users") {
+                loadAdminUsers().catch(() => {});
+            }
+            if (initialTab !== "admin-stations") {
+                loadAdminStationsManagement().catch(() => {});
+            }
+            if (initialTab !== "admin-bookings") {
+                loadAdminBookings().catch(() => {});
+            }
+            if (initialTab !== "admin-revenue") {
+                loadAdminRevenuePage().catch(() => {});
+            }
+        }
+    });
 }
 
 function logout() {
@@ -237,6 +319,9 @@ const existingDashboardTabChangeHandler =
     typeof window.handleDashboardTabChange === "function" ? window.handleDashboardTabChange : null;
 
 window.handleDashboardTabChange = (tabName) => {
+    if (getRole() === CUSTOMER_ROLE && tabName === "stations" && typeof window.primeStationCurrentLocation === "function") {
+        window.primeStationCurrentLocation({ refreshStations: true });
+    }
     if (getRole() === OWNER_ROLE) {
         if (tabName === "dashboard") {
             if (typeof window.shouldLoadOwnerDashboardInsights === "function" && window.shouldLoadOwnerDashboardInsights()) {

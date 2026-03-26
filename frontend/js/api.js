@@ -46,7 +46,7 @@ const ownerStationScheduleState = {
     stationId: null,
 };
 const adminViewState = {
-    stationStatus: "pending",
+    stationStatus: "all",
 };
 
 let inactivityTimer = null;
@@ -801,3 +801,4 @@ window.bindPhoneInputGuards = bindPhoneInputGuards;
 window.markAuthSessionActive = markAuthSessionActive;
 window.markAuthSessionEnding = markAuthSessionEnding;
 window.abortPendingAuthRequests = abortPendingAuthRequests;
+

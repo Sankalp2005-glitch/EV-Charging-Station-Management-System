@@ -127,6 +127,7 @@ const stationMapState = {
     searchBusy: false,
     distanceOriginPromise: null,
     distanceOriginUnavailable: false,
+    autoLocateTriggered: false,
 };
 
 function getStationMapContainer() {
@@ -248,6 +249,16 @@ function getDistanceOrigin() {
     return getNearbyOrigin() || getDeviceDistanceOrigin();
 }
 
+function getCurrentDistanceOriginLabel() {
+    if (dashboardState.nearbyOrigin) {
+        return dashboardState.nearbyLabel || "Current location";
+    }
+    if (dashboardState.deviceDistanceOrigin) {
+        return "Current location";
+    }
+    return "";
+}
+
 async function ensureStationDistanceOrigin() {
     const existingOrigin = getDistanceOrigin();
     if (existingOrigin) {
@@ -284,6 +295,73 @@ async function ensureStationDistanceOrigin() {
     });
 
     return stationMapState.distanceOriginPromise;
+}
+
+function renderStationsLoadingState() {
+    const previewContainer = document.getElementById("stationsList");
+    const fullContainer = document.getElementById("stationsFullList");
+
+    if (previewContainer) {
+        previewContainer.innerHTML = `<div class="col-12">${buildLoadingState("Loading nearby stations...")}</div>`;
+    }
+    if (fullContainer) {
+        fullContainer.innerHTML = `<div class="col-12">${buildLoadingState("Loading station results...")}</div>`;
+    }
+
+    setStationMapMessage("Loading station coverage...");
+}
+
+async function primeStationCurrentLocation(options = {}) {
+    const { refreshStations = false } = options;
+    const existingOrigin = getDistanceOrigin();
+    if (existingOrigin) {
+        return existingOrigin;
+    }
+    if (stationMapState.distanceOriginUnavailable || !navigator.geolocation) {
+        return null;
+    }
+
+    stationMapState.autoLocateTriggered = true;
+
+    const origin = await ensureStationDistanceOrigin();
+    if (!origin) {
+        return null;
+    }
+
+    if (!dashboardState.nearbyOrigin) {
+        updateNearbyOrigin(origin.latitude, origin.longitude, "Current location");
+        const searchInput = getStationMapSearchInput();
+        if (searchInput && !searchInput.value.trim()) {
+            searchInput.value = "Current location";
+        }
+    }
+
+    reverseGeocodeStationLocation(origin.latitude, origin.longitude)
+        .then((resolvedLabel) => {
+            if (!resolvedLabel) {
+                return;
+            }
+            if (dashboardState.nearbyOrigin) {
+                dashboardState.nearbyLabel = resolvedLabel;
+            }
+            const searchInput = getStationMapSearchInput();
+            if (searchInput && (!searchInput.value.trim() || searchInput.value.trim() === "Current location")) {
+                searchInput.value = resolvedLabel;
+            }
+        })
+        .catch(() => {
+            // Best-effort label enhancement for the current location.
+        });
+
+    if (refreshStations) {
+        window.setTimeout(() => {
+            loadStations().catch(() => {
+                // The regular stations loader will surface any user-facing errors.
+            });
+        }, 0);
+    }
+
+    return origin;
 }
 
 function getStationRadiusKm() {
@@ -757,7 +835,7 @@ function updateStationSearchOverlay(origin) {
         fillColor: "#0f9f8f",
         fillOpacity: 1,
     })
-        .bindTooltip(dashboardState.nearbyLabel || "Search location", {
+        .bindTooltip(getCurrentDistanceOriginLabel() || "Current location", {
             direction: "top",
             offset: [0, -8],
         })
@@ -985,7 +1063,7 @@ async function renderStationsMap(mapStations, fallbackStations = []) {
         return;
     }
     clearStationMarkers();
-    const origin = getNearbyOrigin();
+    const origin = getDistanceOrigin();
     updateStationSearchOverlay(origin);
     const resolvedStations = await resolveMapStations(stationMapState.pendingMapStations, stationMapState.pendingStations);
     const markerPoints = [];
@@ -1028,7 +1106,7 @@ async function renderStationsMap(mapStations, fallbackStations = []) {
         setStationMapMessage("");
         if (origin && resolvedStations.length > 0) {
             const radiusKm = getStationRadiusKm();
-            const nearbyLabel = dashboardState.nearbyLabel || "your selected location";
+            const nearbyLabel = getCurrentDistanceOriginLabel() || "your current location";
             setStationMapSearchMeta(
                 radiusKm > 0
                     ? `${resolvedStations.length} station${resolvedStations.length === 1 ? "" : "s"} within ${radiusKm} km of ${nearbyLabel}.`
@@ -1041,7 +1119,7 @@ async function renderStationsMap(mapStations, fallbackStations = []) {
             : [STATION_MAP_DEFAULT_CENTER.lat, STATION_MAP_DEFAULT_CENTER.lng];
         stationMapState.map.setView(fallbackCenter, origin ? STATION_MAP_NEARBY_ZOOM : STATION_MAP_DEFAULT_ZOOM);
         const radiusKm = getStationRadiusKm();
-        const nearbyLabel = dashboardState.nearbyLabel || "your selected location";
+        const nearbyLabel = getCurrentDistanceOriginLabel() || "your current location";
         setStationMapMessage(
             origin && shouldUseNearbyStations()
                 ? radiusKm > 0
@@ -1063,6 +1141,7 @@ async function loadStationMapLocations(query) {
 
 async function loadStations() {
     syncNearbyUiState();
+    renderStationsLoadingState();
     const locationFilter = document.getElementById("locationFilter")?.value.trim() || "";
     const slotTypeFilter = document.getElementById("slotTypeFilter")?.value.trim() || "";
     const vehicleCategoryFilter = normalizeVehicleCategory(
@@ -1074,6 +1153,10 @@ async function loadStations() {
 
     dashboardState.stationNearbyOnly = useNearby;
     dashboardState.nearbyRadiusKm = radiusKm;
+
+    if (useNearby && !origin) {
+        origin = await primeStationCurrentLocation();
+    }
 
     const query = new URLSearchParams();
     if (locationFilter) {
@@ -1101,7 +1184,7 @@ async function loadStations() {
     try {
         const stations = await apiRequest(`/api/bookings/stations${query.toString() ? `?${query.toString()}` : ""}`, { method: "GET" }, true);
         let renderableStations = Array.isArray(stations) ? stations : [];
-        const distanceOrigin = origin || (await ensureStationDistanceOrigin());
+        const distanceOrigin = origin || getDeviceDistanceOrigin();
 
         if (useNearby && origin) {
             renderableStations = await filterStationsByNearbyOrigin(renderableStations, origin, radiusKm);
@@ -1238,6 +1321,8 @@ async function handleStationClearNearby() {
         window.applyOwnerNearbyStationFilter();
     }
 }
+
+window.primeStationCurrentLocation = primeStationCurrentLocation;
 
 window.haversineDistanceKm = haversineDistanceKm;
 

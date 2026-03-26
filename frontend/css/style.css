@@ -2503,6 +2503,29 @@ body.navbar-hidden .main-content {
     text-align: center;
 }
 
+.loading-state {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    width: 100%;
+    min-height: 88px;
+    padding: 1.1rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: 1rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.72);
+    text-align: center;
+}
+
+.loading-state__spinner {
+    flex-shrink: 0;
+}
+
+.loading-state__text {
+    font-weight: 600;
+}
+
 .dashboard-filter-bar {
     display: flex;
     flex-wrap: wrap;
