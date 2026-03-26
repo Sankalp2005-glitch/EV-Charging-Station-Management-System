@@ -77,6 +77,55 @@ def health_check():
     return jsonify({"status": "ok"}), 200
 
 
+@app.get("/debug/db")
+def debug_db():
+    """Temporary diagnostic endpoint – remove after debugging."""
+    results = {"mysql_config": {}, "connection": False, "tables": [], "users_schema": [], "error": None}
+    try:
+        results["mysql_config"] = {
+            "host": app.config.get("MYSQL_HOST", ""),
+            "port": app.config.get("MYSQL_PORT", ""),
+            "user": app.config.get("MYSQL_USER", ""),
+            "db": app.config.get("MYSQL_DB", ""),
+            "has_password": bool(app.config.get("MYSQL_PASSWORD")),
+            "ssl_mode": (app.config.get("MYSQL_CUSTOM_OPTIONS") or {}).get("ssl_mode", "not set"),
+        }
+        cursor = mysql.connection.cursor()
+        results["connection"] = True
+
+        cursor.execute("SHOW TABLES")
+        results["tables"] = [row[0] if isinstance(row[0], str) else row[0].decode() for row in cursor.fetchall()]
+
+        cursor.execute("DESCRIBE Users")
+        results["users_schema"] = [
+            {
+                "field": r[0].decode() if isinstance(r[0], bytes) else r[0],
+                "type": r[1].decode() if isinstance(r[1], bytes) else r[1],
+                "null": r[2].decode() if isinstance(r[2], bytes) else r[2],
+                "key": r[3].decode() if isinstance(r[3], bytes) else r[3],
+            }
+            for r in cursor.fetchall()
+        ]
+
+        # Test a simple insert/rollback to find the exact error
+        from werkzeug.security import generate_password_hash
+        try:
+            cursor.execute(
+                "INSERT INTO Users (name, email, phone, password, role) VALUES (%s, %s, %s, %s, %s)",
+                ("__debug_test__", "__debug__@test.invalid", "0000000000", generate_password_hash("test1234"), "customer"),
+            )
+            mysql.connection.rollback()
+            results["insert_test"] = "OK (rolled back)"
+        except Exception as insert_err:
+            mysql.connection.rollback()
+            results["insert_test"] = f"FAILED: {type(insert_err).__name__}: {insert_err}"
+
+        cursor.close()
+    except Exception as exc:
+        results["error"] = f"{type(exc).__name__}: {exc}"
+    return jsonify(results), 200
+
+
 @app.after_request
 def refresh_session_token(response):
     authenticated_user = getattr(g, "authenticated_user", None)
