@@ -559,8 +559,18 @@ h5,
     border-radius: 1.1rem;
     padding: 0.82rem 1rem;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(226, 232, 240, 0.08));
-    color: #f8fafc;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-body .auth-card .form-control,
+.auth-form .form-control {
+    color: #f8fafc;
+}
+
+.dashboard-body .auth-card .form-select,
+.auth-form .form-select {
+    color: var(--text-strong);
+    font-weight: 700;
 }
 
 .dashboard-body .auth-card .form-control:focus,
@@ -3176,8 +3186,15 @@ body.modal-open {
     .auth-card--mobile-inline .auth-form .form-select {
         border-color: rgba(226, 232, 240, 0.12);
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(226, 232, 240, 0.08));
-        color: #f8fafc;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .auth-card--mobile-inline .auth-form .form-control {
+        color: #f8fafc;
+    }
+
+    .auth-card--mobile-inline .auth-form .form-select {
+        color: var(--text-strong);
     }
 
     .auth-card--mobile-inline .auth-form .form-control::placeholder {
