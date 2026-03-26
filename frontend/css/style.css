@@ -569,7 +569,7 @@ h5,
 
 .dashboard-body .auth-card .form-select,
 .auth-form .form-select {
-    color: var(--text-strong);
+    color: #f8fafc;
     font-weight: 700;
 }
 
@@ -591,8 +591,8 @@ h5,
 
 .dashboard-body .auth-card .form-select option,
 .auth-form .form-select option {
-    color: var(--text-strong);
-    background: #f8fafc;
+    color: var(--text-strong) !important;
+    background: #f8fafc !important;
 }
 
 .dashboard-body .auth-card .form-control:-webkit-autofill,
@@ -3194,7 +3194,7 @@ body.modal-open {
     }
 
     .auth-card--mobile-inline .auth-form .form-select {
-        color: var(--text-strong);
+        color: #f8fafc;
     }
 
     .auth-card--mobile-inline .auth-form .form-control::placeholder {
