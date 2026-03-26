@@ -54,6 +54,8 @@ let inactivityTrackingStarted = false;
 let realtimeSocket = null;
 let realtimeRefreshTimer = null;
 let chargingProgressTimer = null;
+let authSessionEnding = false;
+const activeAuthRequestControllers = new Set();
 
 function getToken() {
     return localStorage.getItem("token");
@@ -70,12 +72,34 @@ function isDashboardPage() {
 function buildAuthHeaders() {
     const token = getToken();
     if (!token) {
-        throw new Error("Please login again.");
+        const error = new Error("Please login again.");
+        error.code = "AUTH_MISSING";
+        error.silent = authSessionEnding;
+        throw error;
     }
+    authSessionEnding = false;
     return {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
     };
+}
+
+function markAuthSessionActive() {
+    authSessionEnding = false;
+}
+
+function markAuthSessionEnding() {
+    authSessionEnding = true;
+}
+
+function abortPendingAuthRequests() {
+    if (activeAuthRequestControllers.size === 0) {
+        return;
+    }
+    for (const controller of Array.from(activeAuthRequestControllers)) {
+        controller.abort();
+        activeAuthRequestControllers.delete(controller);
+    }
 }
 
 function setBookingViewButtons(prefix, activeView) {
@@ -589,6 +613,10 @@ function startInactivityTracking() {
 }
 
 function disconnectRealtimeUpdates() {
+    if (realtimeRefreshTimer) {
+        clearTimeout(realtimeRefreshTimer);
+        realtimeRefreshTimer = null;
+    }
     if (realtimeSocket) {
         realtimeSocket.off("booking_update");
         realtimeSocket.disconnect();
@@ -643,9 +671,19 @@ function initRealtimeUpdates() {
         return;
     }
 
+    const resolvedSocketUrl = SOCKET_BASE || window.location.origin;
+    let usePollingOnly = false;
+    try {
+        const socketUrl = new URL(resolvedSocketUrl, window.location.href);
+        usePollingOnly = ["127.0.0.1", "localhost"].includes(socketUrl.hostname);
+    } catch (_error) {
+        usePollingOnly = ["127.0.0.1", "localhost"].includes(window.location.hostname);
+    }
+
     disconnectRealtimeUpdates();
     realtimeSocket = window.io(SOCKET_BASE || undefined, {
-        transports: ["websocket", "polling"],
+        transports: usePollingOnly ? ["polling"] : ["websocket", "polling"],
+        upgrade: !usePollingOnly,
         reconnectionAttempts: 3,
         timeout: 2500,
         auth: {
@@ -663,45 +701,79 @@ function initRealtimeUpdates() {
 async function apiRequest(path, options = {}, useAuth = false) {
     const requestOptions = { ...options };
     requestOptions.headers = requestOptions.headers || {};
+    let authRequestController = null;
 
     if (useAuth) {
         requestOptions.headers = {
             ...buildAuthHeaders(),
             ...requestOptions.headers,
         };
+        if (!requestOptions.signal) {
+            authRequestController = new AbortController();
+            activeAuthRequestControllers.add(authRequestController);
+            requestOptions.signal = authRequestController.signal;
+        }
     }
 
     if (requestOptions.body && !requestOptions.headers["Content-Type"]) {
         requestOptions.headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(`${API_BASE}${path}`, requestOptions);
-    const payload = await parseJsonSafe(response);
+    try {
+        const response = await fetch(`${API_BASE}${path}`, requestOptions);
+        const payload = await parseJsonSafe(response);
 
-    if (useAuth) {
-        const refreshedToken = response.headers.get("X-Session-Token");
-        if (refreshedToken) {
-            localStorage.setItem("token", refreshedToken);
+        if (useAuth) {
+            const refreshedToken = response.headers.get("X-Session-Token");
+            if (refreshedToken) {
+                localStorage.setItem("token", refreshedToken);
+            }
         }
-    }
 
-    if (!response.ok) {
-        if (useAuth && response.status === 401) {
-            stopInactivityTracking();
-            localStorage.clear();
-            window.location.href = "login.html";
+        if (!response.ok) {
+            if (useAuth && response.status === 401 && !authSessionEnding) {
+                authSessionEnding = true;
+                stopInactivityTracking();
+                disconnectRealtimeUpdates();
+                abortPendingAuthRequests();
+                localStorage.clear();
+                window.location.href = "login.html";
+            }
+            const error = new Error(resolveErrorMessage(payload, `Request failed (${response.status})`));
+            error.status = response.status;
+            error.payload = payload;
+            throw error;
         }
-        const error = new Error(resolveErrorMessage(payload, `Request failed (${response.status})`));
-        error.status = response.status;
-        error.payload = payload;
+
+        if (useAuth) {
+            resetInactivityTimer();
+        }
+
+        return payload;
+    } catch (error) {
+        if (error?.name === "AbortError") {
+            error.silent = true;
+        }
         throw error;
+    } finally {
+        if (authRequestController) {
+            activeAuthRequestControllers.delete(authRequestController);
+        }
+    }
+}
+
+function formatDateTimeLocalInputValue(value) {
+    const date = value instanceof Date ? value : parseApiDateTime(value);
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return "";
     }
 
-    if (useAuth) {
-        resetInactivityTimer();
-    }
-
-    return payload;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -715,6 +787,7 @@ window.normalizeVehicleCategoryLabel = normalizeVehicleCategoryLabel;
 window.formatDurationHuman = formatDurationHuman;
 window.classifyChargingSpeed = classifyChargingSpeed;
 window.parseApiDateTime = parseApiDateTime;
+window.formatDateTimeLocalInputValue = formatDateTimeLocalInputValue;
 window.formatDateTimeShort = formatDateTimeShort;
 window.getLiveChargingProgressSnapshot = getLiveChargingProgressSnapshot;
 window.buildChargingProgressWidget = buildChargingProgressWidget;
@@ -725,3 +798,6 @@ window.isValidCountryCode = isValidCountryCode;
 window.splitPhoneNumber = splitPhoneNumber;
 window.formatPhoneDisplay = formatPhoneDisplay;
 window.bindPhoneInputGuards = bindPhoneInputGuards;
+window.markAuthSessionActive = markAuthSessionActive;
+window.markAuthSessionEnding = markAuthSessionEnding;
+window.abortPendingAuthRequests = abortPendingAuthRequests;

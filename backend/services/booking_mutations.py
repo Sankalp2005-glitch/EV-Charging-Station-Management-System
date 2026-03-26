@@ -4,6 +4,7 @@ from services.booking_config import (
     BOOKING_STATUS_CHARGING_STARTED,
     BOOKING_STATUS_WAITING_TO_START,
     DEFAULT_PRICE_PER_KWH_BY_SLOT_TYPE,
+    GRACE_PERIOD_MINUTES,
     LEGACY_BOOKING_STATUS_CONFIRMED,
     MAX_BOOKING_MINUTES,
 )
@@ -55,6 +56,17 @@ def is_booking_in_active_window(status, start_time, end_time, now=None):
     return start_time <= reference_time < end_time
 
 
+def is_booking_in_qr_window(status, start_time, end_time, now=None):
+    reference_time = now or datetime.now()
+    normalized_status = str(status or "").lower()
+    if normalized_status not in ACTIVE_BOOKING_STATUSES:
+        return False
+    if not start_time or not end_time:
+        return False
+    qr_window_start = start_time - timedelta(minutes=GRACE_PERIOD_MINUTES)
+    return qr_window_start <= reference_time < end_time
+
+
 def is_booking_ready_for_qr_verification(
     status,
     start_time,
@@ -70,7 +82,7 @@ def is_booking_ready_for_qr_verification(
         return False
     if charging_started_at is not None:
         return False
-    return is_booking_in_active_window(normalized_status, start_time, end_time, now=now) and is_payment_ready_for_qr(
+    return is_booking_in_qr_window(normalized_status, start_time, end_time, now=now) and is_payment_ready_for_qr(
         payment_method, payment_status
     )
 

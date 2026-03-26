@@ -1,6 +1,6 @@
 import re
 
-from MySQLdb import IntegrityError
+from MySQLdb import IntegrityError, OperationalError
 from flask import Blueprint, current_app, jsonify, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -15,6 +15,7 @@ LOCAL_PHONE_PATTERN = re.compile(r"^[0-9]{10}$")
 FULL_PHONE_PATTERN = re.compile(r"^[0-9]{10,13}$")
 COUNTRY_CODE_PATTERN = re.compile(r"^[1-9][0-9]{0,2}$")
 MIN_PASSWORD_LENGTH = 8
+VALID_ROLES = {"customer", "owner"}
 
 
 def _clean_text(value):
@@ -31,18 +32,14 @@ def _normalize_phone(value):
     return re.sub(r"\D", "", value)
 
 
-def _normalize_digits(value):
-    return _normalize_phone(value)
-
-
 def _normalize_country_code(value):
     if value is None:
         return ""
-    return _normalize_digits(value)
+    return _normalize_phone(value)
 
 
 def _build_full_phone(country_code_raw, phone_raw):
-    local_phone = _normalize_digits(phone_raw)
+    local_phone = _normalize_phone(phone_raw)
     country_code = _normalize_country_code(country_code_raw)
 
     if country_code:
@@ -118,6 +115,32 @@ def _fetch_user_status(cursor, user_id):
         return USER_STATUS_ACTIVE
 
 
+def _integrity_error_response(error, fallback_message):
+    error_text = str(error).lower()
+    if "email" in error_text:
+        return jsonify({"error": "Email already exists"}), 409
+    if "phone" in error_text:
+        return jsonify({"error": "Phone already exists"}), 409
+    return jsonify({"error": fallback_message}), 409
+
+
+def _safe_rollback():
+    try:
+        mysql.connection.rollback()
+    except OperationalError:
+        current_app.logger.warning("Skipped rollback because the database connection is unavailable.")
+
+
+def _database_unavailable_response(action):
+    mysql_host = str(current_app.config.get("MYSQL_HOST") or "").strip().lower()
+    if mysql_host.endswith(".railway.internal"):
+        message = "Local development cannot reach Railway internal MySQL hosts. Replace MYSQL_URL with Railway's public connection string."
+    else:
+        message = "Database connection unavailable. Check your local .env database settings."
+    current_app.logger.exception("Database unavailable during %s", action)
+    return jsonify({"error": message}), 503
+
+
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json(silent=True) or {}
@@ -131,7 +154,7 @@ def register():
 
     if not name or not email or not phone_raw or not password or not role:
         return jsonify({"error": "All fields are required"}), 400
-    if role not in {"customer", "owner"}:
+    if role not in VALID_ROLES:
         return jsonify({"error": "Invalid role"}), 400
     if not EMAIL_PATTERN.match(email):
         return jsonify({"error": "Invalid email format"}), 400
@@ -152,17 +175,16 @@ def register():
             """,
             (name, email, full_phone, generate_password_hash(password), role),
         )
+
         mysql.connection.commit()
     except IntegrityError as error:
-        mysql.connection.rollback()
-        error_text = str(error).lower()
-        if "email" in error_text:
-            return jsonify({"error": "Email already exists"}), 409
-        if "phone" in error_text:
-            return jsonify({"error": "Phone already exists"}), 409
-        return jsonify({"error": "User already exists"}), 409
+        _safe_rollback()
+        return _integrity_error_response(error, "User already exists")
+    except OperationalError:
+        _safe_rollback()
+        return _database_unavailable_response("register")
     except Exception:
-        mysql.connection.rollback()
+        _safe_rollback()
         current_app.logger.exception("Registration failed for email=%s", email)
         return jsonify({"error": "Registration failed"}), 500
     finally:
@@ -195,6 +217,8 @@ def login():
             (email,),
         )
         user = cursor.fetchone()
+    except OperationalError:
+        return _database_unavailable_response("login")
     except Exception:
         current_app.logger.exception("Login query failed for email=%s", email)
         return jsonify({"error": "Login failed"}), 500
@@ -270,6 +294,8 @@ def password_reset_identify():
                 params,
             )
         user = cursor.fetchone()
+    except OperationalError:
+        return _database_unavailable_response("password reset identify")
     except Exception:
         current_app.logger.exception("Password reset identify failed for %s=%s", identifier_type, identifier)
         return jsonify({"error": "Password reset lookup failed"}), 500
@@ -352,8 +378,11 @@ def password_reset_complete():
             (generate_password_hash(new_password), user[0]),
         )
         mysql.connection.commit()
+    except OperationalError:
+        _safe_rollback()
+        return _database_unavailable_response("password reset complete")
     except Exception:
-        mysql.connection.rollback()
+        _safe_rollback()
         current_app.logger.exception("Password reset failed for %s=%s", identifier_type, identifier)
         return jsonify({"error": "Password reset failed"}), 500
     finally:
@@ -379,6 +408,8 @@ def get_me(current_user):
             (current_user["user_id"],),
         )
         user = cursor.fetchone()
+    except OperationalError:
+        return _database_unavailable_response("get profile")
     except Exception:
         current_app.logger.exception("Failed to fetch user profile for user_id=%s", current_user.get("user_id"))
         return jsonify({"error": "Failed to fetch profile"}), 500
@@ -488,15 +519,13 @@ def update_me(current_user):
         )
         mysql.connection.commit()
     except IntegrityError as error:
-        mysql.connection.rollback()
-        error_text = str(error).lower()
-        if "email" in error_text:
-            return jsonify({"error": "Email already exists"}), 409
-        if "phone" in error_text:
-            return jsonify({"error": "Phone already exists"}), 409
-        return jsonify({"error": "Update conflict"}), 409
+        _safe_rollback()
+        return _integrity_error_response(error, "Update conflict")
+    except OperationalError:
+        _safe_rollback()
+        return _database_unavailable_response("update profile")
     except Exception:
-        mysql.connection.rollback()
+        _safe_rollback()
         current_app.logger.exception("Failed to update user profile for user_id=%s", current_user.get("user_id"))
         return jsonify({"error": "Failed to update profile"}), 500
     finally:

@@ -1,3 +1,4 @@
+from MySQLdb import OperationalError
 from flask import current_app, jsonify
 
 from extensions import mysql
@@ -14,6 +15,7 @@ from services.booking_lifecycle import (
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
+from services.db_errors import is_retryable_transaction_error
 from services.revenue_analytics import fetch_revenue_analytics as _fetch_revenue_analytics
 from services.value_utils import (
     ensure_station_geo_columns,
@@ -30,12 +32,26 @@ from utils.station_approval import (
 )
 
 
+def _run_owner_lifecycle_updates_best_effort(cursor, owner_user_id):
+    try:
+        return _run_booking_lifecycle_updates(cursor)
+    except OperationalError as error:
+        if not is_retryable_transaction_error(error):
+            raise
+        mysql.connection.rollback()
+        current_app.logger.warning(
+            "Skipped retryable lifecycle update during owner read for user_id=%s: %s",
+            owner_user_id,
+            error,
+        )
+        return []
+
+
 @owner_bp.route("/stations", methods=["GET"])
 @token_required
 @role_required("owner")
 def get_owner_stations(current_user):
     cursor = None
-    lifecycle_records = []
 
     try:
         cursor = mysql.connection.cursor()
@@ -43,7 +59,6 @@ def get_owner_stations(current_user):
         ensure_station_geo_columns(cursor)
         ensure_station_approval_table(cursor)
         backfill_missing_station_approvals(cursor, default_status=APPROVAL_STATUS_APPROVED)
-        lifecycle_records = _run_booking_lifecycle_updates(cursor)
         mysql.connection.commit()
         cursor.execute(
             """
@@ -80,8 +95,6 @@ def get_owner_stations(current_user):
         if cursor:
             cursor.close()
 
-    _emit_lifecycle_updates(lifecycle_records)
-
     result = []
     for station in stations:
         latitude, longitude = normalize_coordinate_pair(station[5], station[6])
@@ -114,7 +127,7 @@ def get_owner_stats(current_user):
     try:
         cursor = mysql.connection.cursor()
         _ensure_phase5_tables(cursor)
-        lifecycle_records = _run_booking_lifecycle_updates(cursor)
+        lifecycle_records = _run_owner_lifecycle_updates_best_effort(cursor, current_user["user_id"])
         mysql.connection.commit()
 
         cursor.execute(

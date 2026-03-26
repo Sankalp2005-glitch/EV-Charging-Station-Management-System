@@ -245,6 +245,61 @@ function buildOwnerStationEditorHtml(station, slots) {
     `;
 }
 
+async function refreshOwnerWorkspace(stationId = null, stationName = "", options = {}) {
+    if (options.includeOwnerStations !== false) {
+        await loadOwnerStations();
+    } else if (typeof applyOwnerNearbyStationFilter === "function") {
+        applyOwnerNearbyStationFilter();
+    }
+    if (stationId && dashboardState.openStationId === stationId) {
+        await toggleSlots(stationId, stationName, true);
+    }
+}
+
+function buildOwnerStationPreview(result, payload) {
+    const stationId = Number(result?.station_id || 0);
+    if (!stationId) {
+        return null;
+    }
+
+    const localNumber = String(payload?.contact_number || "").trim();
+    const countryCode = String(payload?.contact_country_code || "").trim();
+    const normalizedContact =
+        localNumber && countryCode ? `${countryCode.replace(/\D/g, "")}${localNumber}` : localNumber;
+
+    return {
+        station_id: stationId,
+        station_name: String(payload?.station_name || "").trim(),
+        location: String(payload?.location || "").trim(),
+        contact_number: normalizedContact,
+        total_slots: Number(result?.total_slots_created || payload?.total_slots || 0) || 0,
+        latitude: null,
+        longitude: null,
+        approval_status: String(result?.approval_status || "pending").trim().toLowerCase() || "pending",
+        available_slots: Number(result?.total_slots_created || payload?.total_slots || 0) || 0,
+        occupied_slots: 0,
+        charging_slots: 0,
+        out_of_service_slots: 0,
+    };
+}
+
+function showOwnerStationPreview(station) {
+    if (!station || typeof renderOwnerStations !== "function") {
+        return;
+    }
+
+    const existingStations = Array.isArray(dashboardState.ownerStationsCache) ? dashboardState.ownerStationsCache : [];
+    const nextStations = [station, ...existingStations.filter((item) => item.station_id !== station.station_id)];
+    dashboardState.ownerStationsCache = nextStations;
+    renderOwnerStations(nextStations);
+    if (typeof applyOwnerNearbyStationFilter === "function") {
+        applyOwnerNearbyStationFilter();
+    }
+    if (typeof updateDashboardSummaryState === "function") {
+        updateDashboardSummaryState({ ownerStations: nextStations });
+    }
+}
+
 async function toggleOwnerStationEditor(station, stationCard) {
     const editor = stationCard.querySelector(".owner-slot-editor");
     if (!editor) {
@@ -262,6 +317,9 @@ async function toggleOwnerStationEditor(station, stationCard) {
     editor.innerHTML = "<p class='text-muted mb-0'>Loading station details...</p>";
 
     try {
+        if (typeof window.abortPendingAuthRequests === "function") {
+            window.abortPendingAuthRequests();
+        }
         const slots = await apiRequest(`/api/owner/stations/${station.station_id}/slots`, { method: "GET" }, true);
         if (!Array.isArray(slots) || slots.length === 0) {
             editor.innerHTML = "<p class='text-muted mb-0'>No chargers found for this station.</p>";
@@ -335,21 +393,22 @@ async function toggleOwnerStationEditor(station, stationCard) {
                 alert(result.message || "Station updated.");
                 editor.style.display = "none";
                 editor.innerHTML = "";
-                await loadStations();
-                await loadOwnerStations();
-                await loadOwnerBookings(bookingViewState.owner);
-                await loadOwnerStats();
-                await loadOwnerRevenueAnalytics();
-                if (dashboardState.openStationId === station.station_id) {
-                    await toggleSlots(station.station_id, station.station_name, true);
-                }
+                await refreshOwnerWorkspace(station.station_id, station.station_name);
             } catch (error) {
+                if (error?.silent) {
+                    return;
+                }
                 alert(error.message);
             } finally {
                 saveButton.disabled = false;
             }
         });
     } catch (error) {
+        if (error?.silent) {
+            editor.style.display = "none";
+            editor.innerHTML = "";
+            return;
+        }
         editor.innerHTML = `<p class="text-danger mb-0">${escapeHtml(error.message)}</p>`;
     }
 }
@@ -435,6 +494,9 @@ async function handleCreateStation(event) {
     }
 
     try {
+        if (typeof window.abortPendingAuthRequests === "function") {
+            window.abortPendingAuthRequests();
+        }
         const result = await apiRequest(
             "/api/owner/create-station",
             {
@@ -450,12 +512,11 @@ async function handleCreateStation(event) {
             totalSlotsInput.value = "1";
             renderOwnerSlotTypeInputs(totalSlotsInput.value);
         }
-        await loadStations();
-        await loadOwnerStations();
-        await loadOwnerBookings(bookingViewState.owner);
-        await loadOwnerStats();
-        await loadOwnerRevenueAnalytics();
+        showOwnerStationPreview(buildOwnerStationPreview(result, payload));
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         alert(error.message);
     }
 }

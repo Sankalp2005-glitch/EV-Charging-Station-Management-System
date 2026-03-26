@@ -1470,7 +1470,10 @@ function renderSlots(slots, stationName, options = {}) {
         return;
     }
 
-    const minDatetime = new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16);
+    const minDatetime =
+        typeof window.formatDateTimeLocalInputValue === "function"
+            ? window.formatDateTimeLocalInputValue(new Date(Date.now() + 60 * 1000))
+            : new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16);
 
     slotsDiv.innerHTML = slots
         .map((slot) => {
@@ -1748,26 +1751,18 @@ async function bookSlot(slotId) {
         const paymentSummary = booking.payment_method === "cash"
             ? `${booking.payment_status || "pending"} (cash settles after charging)`
             : booking.payment_status || "paid";
+        const hasQrPayload = Boolean(booking.qr_value || booking.qr_token);
         alert(
-            `Booking successful.\nEstimated duration: ${booking.duration_display || formatDurationHuman(booking.duration_minutes)}\nEstimated cost: ${costText}\nPayment: ${paymentSummary}\nQR: available when the booking window starts.`
+            `Booking successful.\nEstimated duration: ${booking.duration_display || formatDurationHuman(booking.duration_minutes)}\nEstimated cost: ${costText}\nPayment: ${paymentSummary}\nQR: ${hasQrPayload ? "ready to show now" : "available when the booking window starts"}.`
         );
 
-        if (typeof hideBookingQrSection === "function") {
+        if (hasQrPayload && typeof window.renderBookingQrPayload === "function") {
+            window.renderBookingQrPayload(booking, booking.booking_id);
+        } else if (typeof hideBookingQrSection === "function") {
             hideBookingQrSection();
         }
 
-        await loadStations();
-        if (dashboardState.openStationId) {
-            await toggleSlots(dashboardState.openStationId, dashboardState.openStationName, true);
-        }
         await loadMyBookings();
-        if (role === OWNER_ROLE) {
-            await loadOwnerStations();
-            await loadOwnerBookings(bookingViewState.owner);
-            await loadOwnerMyBookings(bookingViewState.ownerMine);
-            await loadOwnerStats();
-            await loadOwnerRevenueAnalytics();
-        }
     } catch (error) {
         alert(error.message);
     }

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 
@@ -18,6 +19,41 @@ LOCAL_FRONTEND_ORIGINS = [
 
 class ConfigError(RuntimeError):
     """Raised when required runtime configuration is missing."""
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ENV_FILE_CANDIDATES = (
+    PROJECT_ROOT / ".env",
+    Path(__file__).resolve().parent / ".env",
+)
+
+
+def _strip_wrapping_quotes(value):
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value
+
+
+def _load_dotenv_files():
+    for env_path in ENV_FILE_CANDIDATES:
+        if not env_path.exists():
+            continue
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[7:].strip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if not key or key in os.environ:
+                continue
+            os.environ[key] = _strip_wrapping_quotes(value.strip())
+
+
+_load_dotenv_files()
 
 
 def _clean_env(value):
@@ -80,33 +116,34 @@ def _parse_mysql_url():
 
 def load_mysql_config():
     url_config = _parse_mysql_url()
+    use_url_config = bool(url_config)
     mysql_host = (
-        _clean_env(os.getenv("MYSQL_HOST"))
+        (url_config.get("MYSQL_HOST") if use_url_config else "")
+        or _clean_env(os.getenv("MYSQL_HOST"))
         or _clean_env(os.getenv("MYSQLHOST"))
-        or url_config.get("MYSQL_HOST")
         or ("localhost" if not is_production_environment() else "")
     )
     mysql_port = int(
-        _clean_env(os.getenv("MYSQL_PORT"))
+        (url_config.get("MYSQL_PORT") if use_url_config else "")
+        or _clean_env(os.getenv("MYSQL_PORT"))
         or _clean_env(os.getenv("MYSQLPORT"))
-        or url_config.get("MYSQL_PORT")
         or 3306
     )
     mysql_user = (
-        _clean_env(os.getenv("MYSQL_USER"))
+        (url_config.get("MYSQL_USER") if use_url_config else "")
+        or _clean_env(os.getenv("MYSQL_USER"))
         or _clean_env(os.getenv("MYSQLUSER"))
-        or url_config.get("MYSQL_USER")
         or ("root" if not is_production_environment() else "")
     )
     mysql_password = (
-        _clean_env(os.getenv("MYSQL_PASSWORD"))
+        (url_config.get("MYSQL_PASSWORD") if use_url_config else "")
+        or _clean_env(os.getenv("MYSQL_PASSWORD"))
         or _clean_env(os.getenv("MYSQLPASSWORD"))
-        or url_config.get("MYSQL_PASSWORD")
     )
     mysql_db = (
-        _clean_env(os.getenv("MYSQL_DB"))
+        (url_config.get("MYSQL_DB") if use_url_config else "")
+        or _clean_env(os.getenv("MYSQL_DB"))
         or _clean_env(os.getenv("MYSQLDATABASE"))
-        or url_config.get("MYSQL_DB")
         or ("ev_charging_system" if not is_production_environment() else "")
     )
 
@@ -175,6 +212,12 @@ def get_cors_allowed_origins():
     origins = raw_origins or ([single_origin] if single_origin else [])
     if any(origin == "*" for origin in origins):
         return "*"
+    if origins and not is_production_environment():
+        merged_origins = []
+        for origin in [*origins, *LOCAL_FRONTEND_ORIGINS]:
+            if origin and origin not in merged_origins:
+                merged_origins.append(origin)
+        return merged_origins
     if origins:
         return origins
     if is_production_environment():

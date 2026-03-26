@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 
 from flask import current_app, jsonify, request
@@ -18,7 +18,7 @@ from services.booking_lifecycle import (
     refresh_single_slot_status as _refresh_single_slot_status,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
-from services.booking_mutations import is_booking_in_active_window, is_booking_ready_for_qr_verification, is_payment_ready_for_qr
+from services.booking_mutations import is_booking_in_qr_window, is_booking_ready_for_qr_verification, is_payment_ready_for_qr
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
 from services.booking_security import (
     decode_qr_token as _decode_qr_token,
@@ -116,12 +116,12 @@ def get_booking_qr(current_user, booking_id):
         return jsonify({"error": "Booking is not eligible for QR access"}), 409
 
     now = datetime.now()
-    if row[3] > now:
-        return jsonify({"error": "QR becomes available when the charging window starts"}), 409
+    if row[3] - timedelta(minutes=GRACE_PERIOD_MINUTES) > now:
+        return jsonify({"error": f"QR becomes available {GRACE_PERIOD_MINUTES} minutes before the charging window starts"}), 409
     if row[4] <= now:
         return jsonify({"error": "Booking already ended"}), 409
-    if not is_booking_in_active_window(status, row[3], row[4], now=now):
-        return jsonify({"error": "QR is available only during the active booking window"}), 409
+    if not is_booking_in_qr_window(status, row[3], row[4], now=now):
+        return jsonify({"error": f"QR is available only during the {GRACE_PERIOD_MINUTES}-minute grace window before charging and the active booking window"}), 409
 
     payment_status = (_to_str(row[8]) or "pending").lower()
     payment_method = (_to_str(row[9]) or "").lower() or None
@@ -242,12 +242,19 @@ def scan_booking_qr(current_user):
             return jsonify({"error": "Charging already active"}), 409
         else:
             now = datetime.now()
-            if booking[3] > now:
-                return jsonify({"error": "QR verification starts at the booking time"}), 409
+            if booking[3] - timedelta(minutes=GRACE_PERIOD_MINUTES) > now:
+                return jsonify({"error": f"QR verification starts {GRACE_PERIOD_MINUTES} minutes before the booking time"}), 409
             if booking[4] <= now:
                 return jsonify({"error": "Booking already ended"}), 409
-            if not is_booking_in_active_window(status, booking[3], booking[4], now=now):
-                return jsonify({"error": "Booking is outside the active charging window"}), 409
+            if not is_booking_in_qr_window(status, booking[3], booking[4], now=now):
+                return jsonify(
+                    {
+                        "error": (
+                            f"Booking is outside the {GRACE_PERIOD_MINUTES}-minute grace window before charging "
+                            "and the active charging window"
+                        )
+                    }
+                ), 409
             if not is_payment_ready_for_qr(payment_method, payment_status):
                 return jsonify({"error": "Payment not completed"}), 409
             if not is_booking_ready_for_qr_verification(

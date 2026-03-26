@@ -5,7 +5,7 @@ try:
 except Exception:  # pragma: no cover - eventlet patching is environment-specific.
     eventlet = None
 
-from flask import Flask, g, jsonify
+from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 from MySQLdb import OperationalError
 from werkzeug.exceptions import HTTPException
@@ -30,6 +30,27 @@ CORS(app, origins=allowed_origins)
 
 mysql.init_app(app)
 socketio.init_app(app, cors_allowed_origins=allowed_origins)
+
+
+def _resolve_allowed_origin(origin):
+    if not origin:
+        return None
+    if allowed_origins == "*":
+        return "*"
+    return origin if origin in allowed_origins else None
+
+
+def _apply_cors_headers(response):
+    allowed_origin = _resolve_allowed_origin(request.headers.get("Origin"))
+    if not allowed_origin:
+        return response
+
+    response.headers["Access-Control-Allow-Origin"] = allowed_origin
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    response.headers["Access-Control-Expose-Headers"] = "X-Session-Token"
+    response.headers["Vary"] = "Origin"
+    return response
 
 
 def _safe_mysql_teardown(exception):
@@ -77,72 +98,21 @@ def health_check():
     return jsonify({"status": "ok"}), 200
 
 
-@app.get("/debug/db")
-def debug_db():
-    """Temporary diagnostic endpoint – remove after debugging."""
-    results = {"mysql_config": {}, "connection": False, "tables": [], "users_schema": [], "error": None}
-    try:
-        results["mysql_config"] = {
-            "host": app.config.get("MYSQL_HOST", ""),
-            "port": app.config.get("MYSQL_PORT", ""),
-            "user": app.config.get("MYSQL_USER", ""),
-            "db": app.config.get("MYSQL_DB", ""),
-            "has_password": bool(app.config.get("MYSQL_PASSWORD")),
-            "ssl_mode": (app.config.get("MYSQL_CUSTOM_OPTIONS") or {}).get("ssl_mode", "not set"),
-        }
-        cursor = mysql.connection.cursor()
-        results["connection"] = True
-
-        cursor.execute("SHOW TABLES")
-        results["tables"] = [row[0] if isinstance(row[0], str) else row[0].decode() for row in cursor.fetchall()]
-
-        cursor.execute("DESCRIBE Users")
-        results["users_schema"] = [
-            {
-                "field": r[0].decode() if isinstance(r[0], bytes) else r[0],
-                "type": r[1].decode() if isinstance(r[1], bytes) else r[1],
-                "null": r[2].decode() if isinstance(r[2], bytes) else r[2],
-                "key": r[3].decode() if isinstance(r[3], bytes) else r[3],
-            }
-            for r in cursor.fetchall()
-        ]
-
-        # Test a simple insert/rollback to find the exact error
-        from werkzeug.security import generate_password_hash
-        try:
-            cursor.execute(
-                "INSERT INTO Users (name, email, phone, password, role) VALUES (%s, %s, %s, %s, %s)",
-                ("__debug_test__", "__debug__@test.invalid", "0000000000", generate_password_hash("test1234"), "customer"),
-            )
-            mysql.connection.rollback()
-            results["insert_test"] = "OK (rolled back)"
-        except Exception as insert_err:
-            mysql.connection.rollback()
-            results["insert_test"] = f"FAILED: {type(insert_err).__name__}: {insert_err}"
-
-        cursor.close()
-    except Exception as exc:
-        results["error"] = f"{type(exc).__name__}: {exc}"
-    return jsonify(results), 200
-
-
 @app.after_request
 def refresh_session_token(response):
     authenticated_user = getattr(g, "authenticated_user", None)
 
-    if not authenticated_user or response.status_code >= 400:
-        return response
+    if authenticated_user and response.status_code < 400:
+        refreshed_token = generate_token(
+            authenticated_user["user_id"],
+            authenticated_user["role"],
+            session_id=authenticated_user.get("session_id"),
+        )
+        if isinstance(refreshed_token, bytes):
+            refreshed_token = refreshed_token.decode("utf-8")
 
-    refreshed_token = generate_token(
-        authenticated_user["user_id"],
-        authenticated_user["role"],
-        session_id=authenticated_user.get("session_id"),
-    )
-    if isinstance(refreshed_token, bytes):
-        refreshed_token = refreshed_token.decode("utf-8")
-
-    response.headers["X-Session-Token"] = refreshed_token
-    return response
+        response.headers["X-Session-Token"] = refreshed_token
+    return _apply_cors_headers(response)
 
 
 if __name__ == "__main__":

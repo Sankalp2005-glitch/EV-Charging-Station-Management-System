@@ -381,7 +381,7 @@ function renderAdminStationApprovals(stations) {
             `;
 
             return `
-                <tr>
+                <tr data-station-id="${Number(station.station_id) || 0}">
                     <td>
                         <span class="booking-table__primary">#${escapeHtml(station.station_id)}</span>
                         <span class="booking-table__secondary">${escapeHtml(station.location)}</span>
@@ -424,6 +424,21 @@ function renderAdminStationApprovals(stations) {
             </table>
         </div>
     `;
+}
+
+function removeAdminApprovalRow(stationId) {
+    const row = document.querySelector(`#adminStationsApprovalList tbody tr[data-station-id="${Number(stationId) || 0}"]`);
+    if (!row) {
+        return;
+    }
+
+    const tbody = row.closest("tbody");
+    row.remove();
+    if (!tbody || tbody.querySelector("tr")) {
+        return;
+    }
+
+    renderAdminStationApprovals([]);
 }
 
 async function loadAdminStationApprovals(status = adminViewState.stationStatus) {
@@ -469,14 +484,12 @@ async function updateAdminStationApproval(stationId, status) {
             true
         );
         alert(result.message || "Station approval updated.");
-        await loadAdminStats();
-        await loadAdminRevenueAnalytics();
-        await loadAdminStationApprovals(adminViewState.stationStatus);
-        if (typeof loadAdminStationsManagement === "function") {
-            await loadAdminStationsManagement(true);
+        const removedFromPendingView = adminViewState.stationStatus === "pending" && status !== "pending";
+        if (removedFromPendingView) {
+            removeAdminApprovalRow(stationId);
+        } else {
+            loadAdminStationApprovals(adminViewState.stationStatus);
         }
-        await loadStations();
-        await loadOwnerStations();
     } catch (error) {
         alert(error.message);
     }
@@ -1968,7 +1981,6 @@ function bindAdminManagementEvents() {
 
 function initAdminManagement() {
     bindAdminManagementEvents();
-    loadAdminBookingStations();
 }
 
 window.handleDashboardTabChange = (tabName) => {

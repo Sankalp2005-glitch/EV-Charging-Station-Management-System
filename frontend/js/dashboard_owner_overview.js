@@ -1,5 +1,6 @@
 let ownerRevenueStationChart = null;
 let ownerRevenueTrendChart = null;
+let ownerDashboardInsightsPrimed = false;
 
 const ownerBookingScopeState = {
     active: "station",
@@ -433,6 +434,9 @@ async function loadOwnerRevenueAnalytics() {
         const analytics = await apiRequest("/api/owner/revenue-analytics", { method: "GET" }, true);
         renderOwnerRevenueAnalytics(analytics);
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         renderRevenueBreakdownTable("ownerRevenueBreakdown", [], error.message);
     }
 }
@@ -452,6 +456,9 @@ async function loadOwnerStats() {
         renderOwnerStats(stats);
         updateDashboardSummaryState({ ownerStats: stats });
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         container.innerHTML = `<div class="col-12"><div class="empty-state text-danger">${escapeHtml(
             error.message
         )}</div></div>`;
@@ -492,6 +499,7 @@ function applyOwnerNearbyStationFilter() {
     const origin = dashboardState.nearbyOrigin;
     const meta = document.getElementById("ownerNearbyStationsMeta");
     const scheduleList = document.getElementById("ownerStationScheduleList");
+    const bookingsTab = document.getElementById("bookingsTab");
     const useNearby = Boolean(document.getElementById("ownerNearbyStationsToggle")?.checked);
     const stations = Array.isArray(dashboardState.ownerStationsCache) ? dashboardState.ownerStationsCache : [];
 
@@ -533,7 +541,11 @@ function applyOwnerNearbyStationFilter() {
     }
 
     populateOwnerStationScheduleOptions(filteredStations);
-    loadOwnerStationSchedule(ownerStationScheduleState.view);
+    if (bookingsTab?.classList.contains("active") && ownerBookingScopeState.active === "station") {
+        loadOwnerStationSchedule(ownerStationScheduleState.view);
+    } else if (scheduleList && filteredStations.length > 0) {
+        scheduleList.innerHTML = "<div class='empty-state'>Open the bookings tab to view bookings for a station.</div>";
+    }
 }
 
 function renderOwnerStationSchedule(data) {
@@ -620,6 +632,9 @@ async function loadOwnerStationSchedule(view = ownerStationScheduleState.view) {
         );
         renderOwnerStationSchedule(data);
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         container.innerHTML = `<div class="empty-state text-danger">${escapeHtml(error.message)}</div>`;
     }
 }
@@ -636,6 +651,9 @@ async function loadOwnerStations() {
         applyOwnerNearbyStationFilter();
         updateDashboardSummaryState({ ownerStations: stations });
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         const container = document.getElementById("ownerStationsList");
         if (container) {
             container.innerHTML = `<div class="col-12"><div class="empty-state text-danger">${escapeHtml(
@@ -698,17 +716,22 @@ async function submitOwnerQrVerification() {
         );
         alert(result.message || "Charging session started.");
         hideOwnerQrVerification();
-        await loadStations();
         await loadOwnerBookings(bookingViewState.owner);
-        await loadOwnerStationSchedule(ownerStationScheduleState.view);
-        await loadOwnerStations();
-        await loadOwnerStats();
-        await loadOwnerRevenueAnalytics();
-        await loadOwnerMyBookings(bookingViewState.ownerMine);
+        Promise.allSettled([
+            loadStations(),
+            loadOwnerStationSchedule(ownerStationScheduleState.view),
+            loadOwnerStations(),
+            loadOwnerStats(),
+            loadOwnerRevenueAnalytics(),
+            loadOwnerMyBookings(bookingViewState.ownerMine),
+        ]);
         if (dashboardState.openStationId) {
             await toggleSlots(dashboardState.openStationId, dashboardState.openStationName, true);
         }
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         alert(error.message);
     }
 }
@@ -868,6 +891,9 @@ async function loadOwnerBookings(view = bookingViewState.owner) {
         );
         renderOwnerBookings(bookings);
     } catch (error) {
+        if (error?.silent) {
+            return;
+        }
         const container = document.getElementById("ownerBookingsList");
         if (container) {
             container.innerHTML = `<div class="empty-state text-danger">${escapeHtml(error.message)}</div>`;
@@ -903,3 +929,11 @@ window.hideOwnerQrVerification = hideOwnerQrVerification;
 window.submitOwnerQrVerification = submitOwnerQrVerification;
 window.switchOwnerBookingScope = switchOwnerBookingScope;
 window.loadOwnerRevenueAnalytics = loadOwnerRevenueAnalytics;
+window.ownerDashboardInsightsPrimed = () => {
+    ownerDashboardInsightsPrimed = true;
+};
+window.shouldLoadOwnerDashboardInsights = () => ownerDashboardInsightsPrimed;
+window.loadVisibleOwnerBookingPane = () =>
+    ownerBookingScopeState.active === "mine"
+        ? loadOwnerMyBookings(bookingViewState.ownerMine)
+        : loadOwnerStationSchedule(ownerStationScheduleState.view);

@@ -299,6 +299,9 @@ function findEditableBooking(bookingId) {
 }
 
 function toDateTimeLocalValue(value) {
+    if (typeof window.formatDateTimeLocalInputValue === "function") {
+        return window.formatDateTimeLocalInputValue(value);
+    }
     const date = typeof parseApiDateTime === "function" ? parseApiDateTime(value) : null;
     if (!date) {
         return "";
@@ -345,7 +348,11 @@ function openBookingEditModal(bookingId) {
                         name="start_time"
                         class="form-control"
                         type="datetime-local"
-                        min="${new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}"
+                        min="${escapeHtml(
+                            typeof window.formatDateTimeLocalInputValue === "function"
+                                ? window.formatDateTimeLocalInputValue(new Date(Date.now() + 60 * 1000))
+                                : new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)
+                        )}"
                         value="${escapeHtml(toDateTimeLocalValue(booking.start_time))}"
                         required
                     >

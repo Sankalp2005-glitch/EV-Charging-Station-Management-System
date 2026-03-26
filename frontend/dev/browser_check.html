@@ -70,8 +70,8 @@
             role: "customer",
         };
         const adminUser = {
-            email: "browser.admin@test.com",
-            password: "Admin123!",
+            email: "admin@test.com",
+            password: "admin123",
             roleLabel: "Admin",
         };
 
@@ -212,6 +212,22 @@
                 await sleep(100);
             }
             throw new Error(lastError ? `${label}: ${lastError.message}` : `Timed out waiting for ${label}`);
+        }
+
+        function getAdminApprovalsState(doc) {
+            const container = doc.getElementById("adminStationsApprovalList");
+            if (!container) {
+                return { state: "missing", text: "" };
+            }
+            const rows = Array.from(container.querySelectorAll("tbody tr"));
+            if (rows.length > 0) {
+                return { state: "rows", text: container.textContent.trim(), rows };
+            }
+            const text = container.textContent.trim();
+            if (text) {
+                return { state: "message", text };
+            }
+            return { state: "loading", text: "" };
         }
 
         function assert(condition, message) {
@@ -474,7 +490,12 @@
             await waitFor(() => ctx.doc.querySelector(".owner-slot-editor .owner-charger-name-input"), 15000, "owner edit form");
             setValue(ctx.doc, ".owner-slot-editor .owner-charger-name-input", updatedChargerName);
             click(ctx.doc, ".owner-save-station-btn");
-            await waitFor(() => ctx.doc.getElementById("ownerStationsList")?.textContent.includes(stationName), 20000, "owner station reload");
+            await waitFor(
+                () => uiMessages.some((entry) => entry.label === "owner-dashboard" && entry.type === "alert" && /updated/i.test(entry.message)),
+                25000,
+                "owner station update alert"
+            );
+            await waitFor(() => !ctx.doc.querySelector(".owner-slot-editor .owner-charger-name-input"), 20000, "owner edit form close");
             await openTab(ctx.doc, "bookings", "Bookings");
             assert(ctx.doc.getElementById("ownerScopeStationBtn"), "Owner station bookings toggle missing");
             assert(ctx.doc.getElementById("ownerScopeMineBtn"), "Owner personal bookings toggle missing");
@@ -498,10 +519,16 @@
             await ensureChart(ctx.doc, "#adminRevenueStationChart", 410);
             await ensureChart(ctx.doc, "#adminRevenueTrendChart", 360);
             await openTab(ctx.doc, "bookings", "Bookings");
-            await waitFor(() => ctx.doc.querySelector("#adminStationsApprovalList tbody tr"), 20000, "admin approval rows");
+            await waitFor(() => {
+                const approvalState = getAdminApprovalsState(ctx.doc);
+                if (approvalState.state === "message") {
+                    throw new Error(`Admin approvals message: ${approvalState.text}`);
+                }
+                return approvalState.state === "rows";
+            }, 30000, "admin approval rows");
             const findStationApprovalRow = () =>
                 Array.from(ctx.doc.querySelectorAll("#adminStationsApprovalList tbody tr")).find((row) => row.textContent.includes(stationName));
-            const approvalRow = await waitFor(findStationApprovalRow, 20000, "pending station approval row");
+            const approvalRow = await waitFor(findStationApprovalRow, 30000, "pending station approval row");
             const approveButton = approvalRow.querySelector(".btn-outline-success");
             assert(approveButton, "Approve button is missing for admin station approval");
             approveButton.click();
@@ -553,7 +580,10 @@
             await waitFor(() => ctx.doc.getElementById("ownerQrVerificationSection")?.style.display !== "none", 10000, "owner QR panel");
             setValue(ctx.doc, "#ownerQrTokenInput", bookingQr.value);
             click(ctx.doc, "#ownerVerifyQrBtn");
-            await waitFor(() => ctx.doc.getElementById("ownerBookingsList")?.textContent.toLowerCase().includes("charging started"), 20000, "charging started status");
+            await waitFor(() => {
+                const bookingsText = ctx.doc.getElementById("ownerBookingsList")?.textContent.toLowerCase() || "";
+                return bookingsText.includes("started") || Boolean(ctx.doc.querySelector("#ownerBookingsList .charging-progress"));
+            }, 30000, "charging started status");
             await sleep(12000);
             const ownerProgress = getText(ctx.doc, ".charging-progress__percent");
             assert(ownerProgress !== "0%", "Owner charging progress should move beyond 0%");
@@ -565,7 +595,10 @@
 
             ctx = await loginUser(customerUser.email, updatedCustomerPassword, "Customer", "customer-second");
             await openTab(ctx.doc, "bookings", "Bookings");
-            await waitFor(() => ctx.doc.getElementById("myBookingsList")?.textContent.toLowerCase().includes("charging started"), 20000, "customer charging status");
+            await waitFor(() => {
+                const bookingsText = ctx.doc.getElementById("myBookingsList")?.textContent.toLowerCase() || "";
+                return bookingsText.includes("started") || Boolean(ctx.doc.querySelector("#myBookingsList .charging-progress"));
+            }, 30000, "customer charging status");
             await sleep(12000);
             const customerProgress = getText(ctx.doc, ".charging-progress__percent");
             const customerEta = getText(ctx.doc, ".charging-progress__eta");

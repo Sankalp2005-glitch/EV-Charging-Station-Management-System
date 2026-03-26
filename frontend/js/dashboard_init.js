@@ -46,6 +46,10 @@ async function initDashboard() {
         return;
     }
 
+    if (typeof window.markAuthSessionActive === "function") {
+        window.markAuthSessionActive();
+    }
+
     const role = getRole();
 
     setRoleDisplay();
@@ -118,12 +122,18 @@ async function initDashboard() {
     document.getElementById("refreshOwnerMyBookings")?.addEventListener("click", () =>
         loadOwnerMyBookings(bookingViewState.ownerMine)
     );
-    document.getElementById("ownerScopeStationBtn")?.addEventListener("click", () =>
-        switchOwnerBookingScope("station")
-    );
-    document.getElementById("ownerScopeMineBtn")?.addEventListener("click", () =>
-        switchOwnerBookingScope("mine")
-    );
+    document.getElementById("ownerScopeStationBtn")?.addEventListener("click", () => {
+        switchOwnerBookingScope("station");
+        if (typeof window.loadVisibleOwnerBookingPane === "function") {
+            window.loadVisibleOwnerBookingPane();
+        }
+    });
+    document.getElementById("ownerScopeMineBtn")?.addEventListener("click", () => {
+        switchOwnerBookingScope("mine");
+        if (typeof window.loadVisibleOwnerBookingPane === "function") {
+            window.loadVisibleOwnerBookingPane();
+        }
+    });
     document.getElementById("ownerStationBookingsUpcomingBtn")?.addEventListener("click", () =>
         loadOwnerStationSchedule("upcoming")
     );
@@ -189,23 +199,17 @@ async function initDashboard() {
     renderOwnerSlotTypeInputs(ownerTotalSlotsInput?.value || "1");
 
     await loadMyProfile();
-    await loadStations();
+    if (role === CUSTOMER_ROLE) {
+        await loadStations();
+    }
 
     if (role === CUSTOMER_ROLE) {
         await loadMyBookings(bookingViewState.customer);
     }
     if (role === OWNER_ROLE) {
-        await loadOwnerStats();
-        await loadOwnerRevenueAnalytics();
-        await loadOwnerStations();
-        await loadOwnerBookings(bookingViewState.owner);
-        await loadOwnerMyBookings(bookingViewState.ownerMine);
         switchOwnerBookingScope("station");
     }
     if (role === "admin") {
-        await loadAdminStats();
-        await loadAdminRevenueAnalytics();
-        await loadAdminStationApprovals(adminViewState.stationStatus);
         if (typeof window.initAdminManagement === "function") {
             window.initAdminManagement();
         }
@@ -213,15 +217,51 @@ async function initDashboard() {
 }
 
 function logout() {
+    if (typeof window.markAuthSessionEnding === "function") {
+        window.markAuthSessionEnding();
+    }
     stopInactivityTracking();
     disconnectRealtimeUpdates();
+    if (typeof window.abortPendingAuthRequests === "function") {
+        window.abortPendingAuthRequests();
+    }
     hideBookingQrSection();
     closeDashboardSidebar?.();
     localStorage.clear();
-    window.location.href = "login.html";
+    window.location.replace("login.html");
 }
 
 window.logout = logout;
+
+const existingDashboardTabChangeHandler =
+    typeof window.handleDashboardTabChange === "function" ? window.handleDashboardTabChange : null;
+
+window.handleDashboardTabChange = (tabName) => {
+    if (getRole() === OWNER_ROLE) {
+        if (tabName === "dashboard") {
+            if (typeof window.shouldLoadOwnerDashboardInsights === "function" && window.shouldLoadOwnerDashboardInsights()) {
+                Promise.allSettled([loadOwnerStats(), loadOwnerRevenueAnalytics()]);
+            } else if (typeof window.ownerDashboardInsightsPrimed === "function") {
+                window.ownerDashboardInsightsPrimed();
+            }
+        }
+        if (tabName === "bookings") {
+            Promise.allSettled([
+                loadOwnerBookings(bookingViewState.owner),
+                typeof window.loadVisibleOwnerBookingPane === "function"
+                    ? window.loadVisibleOwnerBookingPane()
+                    : Promise.resolve(),
+            ]);
+        }
+    }
+    if (getRole() === "admin" && tabName === "bookings") {
+        Promise.allSettled([loadAdminStationApprovals(adminViewState.stationStatus)]);
+    }
+
+    if (typeof existingDashboardTabChangeHandler === "function") {
+        existingDashboardTabChangeHandler(tabName);
+    }
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDashboardPage()) {

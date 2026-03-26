@@ -8,6 +8,7 @@ const {
     parseJsonSafe,
     resolveErrorMessage,
 } = window.EVgoShared;
+const MOBILE_AUTH_MEDIA_QUERY = window.matchMedia("(max-width: 767.98px)");
 
 function setAuthFeedback(message = "", tone = "danger") {
     const feedback = document.getElementById("authFeedback");
@@ -71,9 +72,22 @@ function bindPasswordToggles() {
     });
 }
 
-function getStoredToken() {
-    const token = localStorage.getItem("token");
-    return token ? token : null;
+function storeSession({ token, role, user_id: userId } = {}) {
+    if (token) {
+        localStorage.setItem("token", token);
+    }
+    if (role) {
+        localStorage.setItem("role", role);
+    }
+    if (userId) {
+        localStorage.setItem("user_id", String(userId));
+    }
+}
+
+function clearSession() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("user_id");
 }
 
 function navigateBackWithFallback(fallbackPath) {
@@ -94,7 +108,7 @@ async function redirectIfAuthenticated() {
     if (!isAuthEntryPage()) {
         return;
     }
-    const token = getStoredToken();
+    const token = localStorage.getItem("token");
     if (!token) {
         return;
     }
@@ -106,21 +120,14 @@ async function redirectIfAuthenticated() {
         });
         if (response.ok) {
             const payload = await parseJsonSafe(response);
-            if (payload?.role) {
-                localStorage.setItem("role", payload.role);
-            }
-            if (payload?.user_id) {
-                localStorage.setItem("user_id", String(payload.user_id));
-            }
+            storeSession({ token, ...payload });
             window.location.replace("dashboard.html");
             return;
         }
     } catch (_error) {
         // Best-effort check before forcing a redirect.
     }
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("user_id");
+    clearSession();
 }
 
 function setRecoveryStep(identifyVisible) {
@@ -161,7 +168,6 @@ async function handleRecoveryIdentify(event) {
         const result = await apiRequest("/api/auth/password-reset/identify", {
             method: "POST",
             body: JSON.stringify({ identifier }),
-            headers: { "Content-Type": "application/json" },
         });
         const resetForm = document.getElementById("recoveryResetForm");
         if (resetForm) {
@@ -215,7 +221,6 @@ async function handleRecoveryReset(event) {
                 verification,
                 new_password: newPassword,
             }),
-            headers: { "Content-Type": "application/json" },
         });
         setAuthFeedback(result.message || "Password updated. Redirecting to sign in...", "success");
         window.setTimeout(() => {
@@ -260,7 +265,6 @@ async function handleRegister(event) {
         const result = await apiRequest("/api/auth/register", {
             method: "POST",
             body: JSON.stringify(payload),
-            headers: { "Content-Type": "application/json" },
         });
         setAuthFeedback(result.message || "Registration successful. Redirecting to sign in...", "success");
         window.setTimeout(() => {
@@ -287,14 +291,9 @@ async function handleLogin(event) {
         const result = await apiRequest("/api/auth/login", {
             method: "POST",
             body: JSON.stringify(payload),
-            headers: { "Content-Type": "application/json" },
         });
 
-        localStorage.setItem("token", result.token);
-        localStorage.setItem("role", result.role);
-        if (result.user_id) {
-            localStorage.setItem("user_id", String(result.user_id));
-        }
+        storeSession(result);
 
         setAuthFeedback(result.message || "Login successful. Opening EVgo...", "success");
         window.setTimeout(() => {
@@ -329,7 +328,7 @@ function syncIntegratedAuthCardState() {
         return;
     }
 
-    card.classList.toggle("auth-card--mobile-inline", window.matchMedia("(max-width: 767.98px)").matches);
+    card.classList.toggle("auth-card--mobile-inline", MOBILE_AUTH_MEDIA_QUERY.matches);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -338,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bindPhoneInputGuards();
     bindBackButtons();
     syncIntegratedAuthCardState();
-    window.matchMedia("(max-width: 767.98px)").addEventListener("change", syncIntegratedAuthCardState);
+    MOBILE_AUTH_MEDIA_QUERY.addEventListener("change", syncIntegratedAuthCardState);
 });
 
 window.addEventListener("pageshow", () => {
