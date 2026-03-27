@@ -3,8 +3,8 @@ from datetime import datetime
 from flask import Blueprint, current_app, jsonify, request
 
 from extensions import mysql
-from services.booking_config import BOOKING_STATUS_WAITING_TO_START
-from services.booking_mutations import is_booking_qr_accessible, is_booking_ready_for_qr_verification
+from services.booking_config import BOOKING_STATUS_WAITING_TO_START, LEGACY_BOOKING_STATUS_CONFIRMED
+from services.booking_mutations import is_booking_qr_accessible, is_booking_ready_for_qr_verification, is_payment_ready_for_qr
 from services.charging_profiles import build_live_charging_snapshot, format_duration_human
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
@@ -17,6 +17,18 @@ from utils.jwt_handler import role_required, token_required
 from utils.realtime_events import emit_booking_update
 
 owner_bookings_bp = Blueprint("owner_bookings", __name__, url_prefix="/api/owner")
+
+
+def _should_show_owner_verify_qr_action(status, end_time, payment_method, payment_status, *, charging_started_at=None, now=None):
+    reference_time = now or datetime.now()
+    normalized_status = str(status or "").lower()
+    if normalized_status not in {BOOKING_STATUS_WAITING_TO_START, LEGACY_BOOKING_STATUS_CONFIRMED}:
+        return False
+    if charging_started_at is not None:
+        return False
+    if not end_time or end_time <= reference_time:
+        return False
+    return is_payment_ready_for_qr(payment_method, payment_status)
 
 
 @owner_bookings_bp.route("/stations/<int:station_id>/bookings", methods=["GET"])
@@ -170,6 +182,14 @@ def get_owner_station_bookings(current_user, station_id):
             charging_started_at=charging_started_at,
             now=now,
         )
+        show_verify_qr_action = _should_show_owner_verify_qr_action(
+            status,
+            row[10],
+            payment_method,
+            payment_status,
+            charging_started_at=charging_started_at,
+            now=now,
+        )
 
         slot_item["bookings"].append(
             {
@@ -188,6 +208,8 @@ def get_owner_station_bookings(current_user, station_id):
                 "is_active": is_active,
                 "can_cancel": can_cancel,
                 "can_verify_qr": can_verify_qr,
+                "show_verify_qr_action": show_verify_qr_action,
+                "verify_qr_hint": "" if can_verify_qr else "Verify QR will be available closer to the booking start time.",
                 "charging_started_at": _format_dt(charging_started_at),
             }
         )
@@ -308,6 +330,23 @@ def get_owner_bookings(current_user):
             energy_required_kwh=energy_required_kwh,
             now=now,
         )
+        can_verify_qr = is_managed_station and is_booking_ready_for_qr_verification(
+            status,
+            row[14],
+            row[15],
+            payment_method,
+            payment_status,
+            charging_started_at=charging_started_at,
+            now=now,
+        )
+        show_verify_qr_action = is_managed_station and _should_show_owner_verify_qr_action(
+            status,
+            row[15],
+            payment_method,
+            payment_status,
+            charging_started_at=charging_started_at,
+            now=now,
+        )
         result.append(
             {
                 "booking_id": row[0],
@@ -330,22 +369,16 @@ def get_owner_bookings(current_user):
                 "duration_display": format_duration_human(duration_minutes),
                 "status": status,
                 "can_cancel": can_cancel,
-                "can_show_qr": is_owner_booking and is_booking_qr_accessible(
+                "can_show_qr": (is_owner_booking or is_managed_station) and is_booking_qr_accessible(
                     status,
                     row[15],
                     payment_method,
                     payment_status,
                     now=now,
                 ),
-                "can_verify_qr": is_managed_station and is_booking_ready_for_qr_verification(
-                    status,
-                    row[14],
-                    row[15],
-                    payment_method,
-                    payment_status,
-                    charging_started_at=charging_started_at,
-                    now=now,
-                ),
+                "can_verify_qr": can_verify_qr,
+                "show_verify_qr_action": show_verify_qr_action,
+                "verify_qr_hint": "" if can_verify_qr else "Verify QR will be available closer to the booking start time.",
                 "charging_started_at": _format_dt(charging_started_at),
                 "charging_completed_at": _format_dt(charging_completed_at),
                 "battery_capacity_kwh": battery_capacity_kwh,

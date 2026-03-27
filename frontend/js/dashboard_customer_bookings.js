@@ -563,6 +563,7 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
     const canvas = document.getElementById("bookingQrCanvas");
     const bookingId = Number(bookingIdOverride || qrPayload?.booking_id || 0);
     const qrValue = qrPayload?.qr_value || qrPayload?.qr_token || "";
+    const qrImageAvailable = qrPayload?.qr_image_available !== false;
     const qrImageDataUrl = qrPayload?.qr_image_data_url || "";
 
     if (!section || !meta || !value || !canvas) {
@@ -607,7 +608,7 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
                 }
             }
         );
-    } else if (bookingId) {
+    } else if (bookingId && qrImageAvailable) {
         loadBookingQrImageFallback(bookingId, image, canvas);
     } else {
         setBookingQrRenderStatus("QR image is unavailable right now. Use the QR value below for confirmation.");

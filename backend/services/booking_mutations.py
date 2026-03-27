@@ -87,14 +87,15 @@ def is_booking_ready_for_qr_verification(
     charging_started_at=None,
     now=None,
 ):
+    reference_time = now or datetime.now()
     normalized_status = str(status or "").lower()
     if normalized_status not in QR_VERIFICATION_BOOKING_STATUSES:
         return False
     if charging_started_at is not None:
         return False
-    return is_booking_in_qr_window(normalized_status, start_time, end_time, now=now) and is_payment_ready_for_qr(
-        payment_method, payment_status
-    )
+    if not end_time or end_time <= reference_time:
+        return False
+    return is_payment_ready_for_qr(payment_method, payment_status)
 
 
 def prepare_booking_mutation(

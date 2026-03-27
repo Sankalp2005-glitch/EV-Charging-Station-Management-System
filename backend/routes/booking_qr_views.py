@@ -19,7 +19,6 @@ from services.booking_lifecycle import (
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
 from services.booking_mutations import (
-    is_booking_in_qr_window,
     is_booking_qr_accessible,
     is_booking_ready_for_qr_verification,
     is_payment_ready_for_qr,
@@ -116,7 +115,11 @@ def get_booking_qr(current_user, booking_id):
     station_owner_id = int(row[7] or 0)
     requester_id = int(current_user.get("user_id") or 0)
     requester_role = current_user.get("role")
-    can_access = requester_role == "admin" or requester_id == booking_owner_id
+    can_access = (
+        requester_role == "admin"
+        or requester_id == booking_owner_id
+        or (requester_role == "owner" and requester_id == station_owner_id)
+    )
     if not can_access:
         return jsonify({"error": "Unauthorized"}), 403
 
@@ -135,9 +138,22 @@ def get_booking_qr(current_user, booking_id):
 
     qr_token = _encode_qr_token(row[0], row[1], row[2])
     qr_value = f"evcs://booking/{row[0]}?token={qr_token}"
-    qr_image_bytes = _build_qr_image_bytes(qr_value)
-    qr_image_data_url = f"data:image/png;base64,{base64.b64encode(qr_image_bytes).decode('ascii')}"
+    qr_image_bytes = None
+    qr_image_data_url = ""
+    qr_image_available = True
+    try:
+        qr_image_bytes = _build_qr_image_bytes(qr_value)
+        qr_image_data_url = f"data:image/png;base64,{base64.b64encode(qr_image_bytes).decode('ascii')}"
+    except Exception:
+        qr_image_available = False
+        current_app.logger.exception(
+            "Failed to build QR image for booking_id=%s user_id=%s",
+            booking_id,
+            current_user.get("user_id"),
+        )
     if (request.args.get("format") or "").strip().lower() == "image":
+        if not qr_image_bytes:
+            return jsonify({"error": "Booking QR image is unavailable"}), 503
         response = Response(qr_image_bytes, mimetype="image/png")
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
@@ -155,6 +171,7 @@ def get_booking_qr(current_user, booking_id):
             "grace_period_minutes": GRACE_PERIOD_MINUTES,
             "qr_token": qr_token,
             "qr_value": qr_value,
+            "qr_image_available": qr_image_available,
             "qr_image_data_url": qr_image_data_url,
         }
     )
@@ -254,19 +271,8 @@ def scan_booking_qr(current_user):
             return jsonify({"error": "Charging already active"}), 409
         else:
             now = datetime.now()
-            if booking[3] - timedelta(minutes=GRACE_PERIOD_MINUTES) > now:
-                return jsonify({"error": f"QR verification starts {GRACE_PERIOD_MINUTES} minutes before the booking time"}), 409
             if booking[4] <= now:
                 return jsonify({"error": "Booking already ended"}), 409
-            if not is_booking_in_qr_window(status, booking[3], booking[4], now=now):
-                return jsonify(
-                    {
-                        "error": (
-                            f"Booking is outside the {GRACE_PERIOD_MINUTES}-minute grace window before charging "
-                            "and the active charging window"
-                        )
-                    }
-                ), 409
             if not is_payment_ready_for_qr(payment_method, payment_status):
                 return jsonify({"error": "Payment not completed"}), 409
             if not is_booking_ready_for_qr_verification(
