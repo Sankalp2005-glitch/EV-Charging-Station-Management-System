@@ -908,13 +908,21 @@ h5,
 }
 
 .sidebar-note__label {
-    display: inline-block;
+    display: block;
     margin-bottom: 0.45rem;
     color: #5eead4;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.11em;
+}
+
+.sidebar-note strong {
+    display: block;
+    margin: 0;
+    color: rgba(226, 232, 240, 0.92);
+    font-weight: 700;
+    line-height: 1.5;
 }
 
 .dashboard-main {

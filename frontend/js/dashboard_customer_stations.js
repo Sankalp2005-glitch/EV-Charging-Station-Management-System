@@ -100,8 +100,9 @@ function renderStations(stations) {
     });
 }
 
-const STATION_MAP_DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
-const STATION_MAP_DEFAULT_ZOOM = 5;
+const STATION_MAP_DEFAULT_CENTER = { lat: 20.2961, lng: 85.8245 };
+const STATION_MAP_DEFAULT_LABEL = "Bhubaneswar, Odisha";
+const STATION_MAP_DEFAULT_ZOOM = 12;
 const STATION_MAP_NEARBY_ZOOM = 12;
 const STATION_MAP_SUGGESTION_LIMIT = 5;
 const STATION_MAP_MIN_SEARCH_LENGTH = 2;
@@ -259,13 +260,33 @@ function getCurrentDistanceOriginLabel() {
     return "";
 }
 
+function applyStationFallbackOrigin() {
+    updateNearbyOrigin(
+        STATION_MAP_DEFAULT_CENTER.lat,
+        STATION_MAP_DEFAULT_CENTER.lng,
+        STATION_MAP_DEFAULT_LABEL
+    );
+    dashboardState.deviceDistanceOrigin = {
+        latitude: STATION_MAP_DEFAULT_CENTER.lat,
+        longitude: STATION_MAP_DEFAULT_CENTER.lng,
+    };
+    const searchInput = getStationMapSearchInput();
+    if (searchInput && !searchInput.value.trim()) {
+        searchInput.value = STATION_MAP_DEFAULT_LABEL;
+    }
+    return {
+        latitude: STATION_MAP_DEFAULT_CENTER.lat,
+        longitude: STATION_MAP_DEFAULT_CENTER.lng,
+    };
+}
+
 async function ensureStationDistanceOrigin() {
     const existingOrigin = getDistanceOrigin();
     if (existingOrigin) {
         return existingOrigin;
     }
     if (stationMapState.distanceOriginUnavailable || !navigator.geolocation) {
-        return null;
+        return applyStationFallbackOrigin();
     }
     if (stationMapState.distanceOriginPromise) {
         return stationMapState.distanceOriginPromise;
@@ -284,7 +305,7 @@ async function ensureStationDistanceOrigin() {
             () => {
                 stationMapState.distanceOriginUnavailable = true;
                 stationMapState.distanceOriginPromise = null;
-                resolve(null);
+                resolve(applyStationFallbackOrigin());
             },
             {
                 enableHighAccuracy: true,
@@ -318,7 +339,8 @@ async function primeStationCurrentLocation(options = {}) {
         return existingOrigin;
     }
     if (stationMapState.distanceOriginUnavailable || !navigator.geolocation) {
-        return null;
+        stationMapState.autoLocateTriggered = true;
+        return applyStationFallbackOrigin();
     }
 
     stationMapState.autoLocateTriggered = true;
@@ -1241,8 +1263,11 @@ async function handleStationNearbySearch() {
 
 async function handleStationUseMyLocation() {
     if (!navigator.geolocation) {
-        setStationMapSearchMeta("Browser geolocation is not available on this device.", true);
-        return;
+        const fallbackOrigin = applyStationFallbackOrigin();
+        setStationMapSearchMeta(`Location access is unavailable. Showing ${STATION_MAP_DEFAULT_LABEL}.`);
+        await loadStations();
+        await syncRelatedNearbyViews();
+        return fallbackOrigin;
     }
 
     setStationMapSearchMeta("Detecting your current location...");
@@ -1268,12 +1293,17 @@ async function handleStationUseMyLocation() {
             }
         },
         (error) => {
+            applyStationFallbackOrigin();
             const message =
                 error.code === error.PERMISSION_DENIED
-                    ? "Location permission was denied."
-                    : "Unable to read your current location.";
-            setStationMapSearchMeta(message, true);
-            setStationSearchBusy(false);
+                    ? `Location permission was denied. Showing ${STATION_MAP_DEFAULT_LABEL}.`
+                    : `Unable to read your current location. Showing ${STATION_MAP_DEFAULT_LABEL}.`;
+            setStationMapSearchMeta(message);
+            Promise.resolve(loadStations())
+                .then(() => syncRelatedNearbyViews())
+                .finally(() => {
+                    setStationSearchBusy(false);
+                });
         },
         {
             enableHighAccuracy: true,
@@ -1604,7 +1634,9 @@ function renderSlots(slots, stationName, options = {}) {
                       { title: "Live charging" }
                   )
                 : currentStatus === "occupied" && slot.active_booking
-                ? `<div class="slot-session-note">Reserved until ${escapeHtml(slot.active_booking.end_time)}</div>`
+                ? `<div class="slot-session-note">Reserved from ${escapeHtml(slot.active_booking.start_time)} to ${escapeHtml(
+                      slot.active_booking.end_time
+                  )}</div>`
                 : `<div class="slot-session-note">Ready for the next <span class="evgo-wordmark evgo-wordmark--inline">EV<span class="evgo-wordmark__go">go</span></span> session.</div>`;
 
             return `
@@ -1847,7 +1879,11 @@ async function bookSlot(slotId) {
             hideBookingQrSection();
         }
 
-        await loadMyBookings();
+        await Promise.allSettled([
+            loadStations(),
+            loadMyBookings(),
+            refreshOpenStationSlotsIfVisible(),
+        ]);
     } catch (error) {
         alert(error.message);
     }

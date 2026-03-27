@@ -1263,6 +1263,11 @@ function renderAdminBookingsTable(bookings) {
             actions.push(
                 `<button class="btn btn-outline-primary btn-sm admin-booking-view" type="button" data-booking-id="${booking.booking_id}">View</button>`
             );
+            if (booking.can_show_qr) {
+                actions.push(
+                    `<button class="btn btn-outline-secondary btn-sm" type="button" onclick="showBookingQr(${booking.booking_id})">Show QR</button>`
+                );
+            }
             if (booking.can_cancel) {
                 actions.push(
                     `<button class="btn btn-outline-danger btn-sm admin-booking-cancel" type="button" data-booking-id="${booking.booking_id}">Cancel</button>`

@@ -16,6 +16,7 @@ from services.booking_lifecycle import (
     refresh_single_slot_status as _refresh_single_slot_status,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
+from services.booking_mutations import is_booking_qr_accessible
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
 from services.charging_profiles import build_live_charging_snapshot
 from services.revenue_analytics import fetch_revenue_analytics as _fetch_revenue_analytics
@@ -675,6 +676,7 @@ def get_admin_bookings(_current_user):
                 sl.charger_name,
                 sl.power_kw,
                 p.amount,
+                p.payment_method,
                 p.payment_status,
                 sess.total_cost,
                 sess.start_time AS charging_started_at,
@@ -735,8 +737,8 @@ def get_admin_bookings(_current_user):
         start_time = row[2]
         end_time = row[3]
         duration_minutes = int(row[5] or max(int((end_time - start_time).total_seconds() // 60), 0))
-        charging_started_at = row[24]
-        charging_completed_at = row[25]
+        charging_started_at = row[25]
+        charging_completed_at = row[26]
         live_snapshot = build_live_charging_snapshot(
             booking_status=status,
             charging_started_at=charging_started_at,
@@ -748,7 +750,9 @@ def get_admin_bookings(_current_user):
             now=now,
         )
         payment_amount = row[21]
-        total_cost = row[23]
+        payment_method = _to_str(row[22])
+        payment_status = _to_str(row[23])
+        total_cost = row[24]
         price_value = total_cost if total_cost is not None else payment_amount
 
         can_cancel = (
@@ -780,16 +784,18 @@ def get_admin_bookings(_current_user):
                 "charger_name": _to_str(row[19]),
                 "power_kw": float(row[20]) if row[20] is not None else None,
                 "payment_amount": float(payment_amount) if payment_amount is not None else None,
-                "payment_status": _to_str(row[22]),
+                "payment_method": payment_method,
+                "payment_status": payment_status,
                 "total_cost": float(total_cost) if total_cost is not None else None,
                 "price": float(price_value) if price_value is not None else None,
-                "charging_started_at": _format_dt(charging_started_at),
-                "charging_completed_at": _format_dt(charging_completed_at),
+                "charging_started_at": _format_dt(row[25]),
+                "charging_completed_at": _format_dt(row[26]),
                 "charging_progress_percent": live_snapshot["progress_percent"],
                 "estimated_current_battery_percent": live_snapshot["estimated_current_battery_percent"],
                 "estimated_completion_time": _format_dt(live_snapshot["estimated_completion_time"]),
                 "remaining_minutes": live_snapshot["remaining_minutes"],
                 "can_cancel": can_cancel,
+                "can_show_qr": is_booking_qr_accessible(status, end_time, payment_method, payment_status, now=now),
             }
         )
 

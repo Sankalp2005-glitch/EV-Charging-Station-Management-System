@@ -780,8 +780,6 @@ function setupTopNavbarScrollBehavior() {
                 setHidden(false);
             } else if (delta > 0 && currentY > hideOffset) {
                 setHidden(true);
-            } else if (delta < 0) {
-                setHidden(false);
             }
             lastScrollY = currentY;
         }

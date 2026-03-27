@@ -2,7 +2,7 @@ import base64
 from datetime import datetime, timedelta
 from io import BytesIO
 
-from flask import current_app, jsonify, request
+from flask import Response, current_app, jsonify, request
 import qrcode
 
 from extensions import mysql
@@ -18,7 +18,12 @@ from services.booking_lifecycle import (
     refresh_single_slot_status as _refresh_single_slot_status,
     run_booking_lifecycle_updates as _run_booking_lifecycle_updates,
 )
-from services.booking_mutations import is_booking_in_qr_window, is_booking_ready_for_qr_verification, is_payment_ready_for_qr
+from services.booking_mutations import (
+    is_booking_in_qr_window,
+    is_booking_qr_accessible,
+    is_booking_ready_for_qr_verification,
+    is_payment_ready_for_qr,
+)
 from services.booking_schema import ensure_phase5_tables as _ensure_phase5_tables
 from services.booking_security import (
     decode_qr_token as _decode_qr_token,
@@ -34,7 +39,7 @@ from utils.jwt_handler import role_required, token_required
 from utils.realtime_events import emit_booking_update
 
 
-def _build_qr_image_data_url(value):
+def _build_qr_image_bytes(value):
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_M,
@@ -47,7 +52,11 @@ def _build_qr_image_data_url(value):
     image = qr.make_image(fill_color="black", back_color="white")
     buffer = BytesIO()
     image.save(buffer, format="PNG")
-    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return buffer.getvalue()
+
+
+def _build_qr_image_data_url(value):
+    encoded = base64.b64encode(_build_qr_image_bytes(value)).decode("ascii")
     return f"data:image/png;base64,{encoded}"
 
 
@@ -116,21 +125,24 @@ def get_booking_qr(current_user, booking_id):
         return jsonify({"error": "Booking is not eligible for QR access"}), 409
 
     now = datetime.now()
-    if row[3] - timedelta(minutes=GRACE_PERIOD_MINUTES) > now:
-        return jsonify({"error": f"QR becomes available {GRACE_PERIOD_MINUTES} minutes before the charging window starts"}), 409
     if row[4] <= now:
         return jsonify({"error": "Booking already ended"}), 409
-    if not is_booking_in_qr_window(status, row[3], row[4], now=now):
-        return jsonify({"error": f"QR is available only during the {GRACE_PERIOD_MINUTES}-minute grace window before charging and the active booking window"}), 409
 
     payment_status = (_to_str(row[8]) or "pending").lower()
     payment_method = (_to_str(row[9]) or "").lower() or None
-    if not is_payment_ready_for_qr(payment_method, payment_status):
+    if not is_booking_qr_accessible(status, row[4], payment_method, payment_status, now=now):
         return jsonify({"error": "Payment is pending for this booking"}), 409
 
     qr_token = _encode_qr_token(row[0], row[1], row[2])
     qr_value = f"evcs://booking/{row[0]}?token={qr_token}"
-    qr_image_data_url = _build_qr_image_data_url(qr_value)
+    qr_image_bytes = _build_qr_image_bytes(qr_value)
+    qr_image_data_url = f"data:image/png;base64,{base64.b64encode(qr_image_bytes).decode('ascii')}"
+    if (request.args.get("format") or "").strip().lower() == "image":
+        response = Response(qr_image_bytes, mimetype="image/png")
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response, 200
     response = jsonify(
         {
             "booking_id": int(row[0]),

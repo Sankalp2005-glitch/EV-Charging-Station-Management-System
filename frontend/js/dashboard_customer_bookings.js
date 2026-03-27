@@ -567,11 +567,46 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
                 }
             }
         );
+    } else if (bookingId) {
+        loadBookingQrImageFallback(bookingId, canvas, context);
     } else {
         setBookingQrRenderStatus("QR library not available. Use the QR value below for confirmation.");
     }
 
     window.scrollTo({ top: section.offsetTop - 20, behavior: "smooth" });
+}
+
+async function loadBookingQrImageFallback(bookingId, canvas, context) {
+    try {
+        const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/qr?format=image&ts=${Date.now()}`, {
+            headers: buildAuthHeaders(),
+        });
+        if (!response.ok) {
+            throw new Error(`QR image request failed (${response.status})`);
+        }
+
+        const imageBlob = await response.blob();
+        const objectUrl = URL.createObjectURL(imageBlob);
+        const image = new Image();
+        image.onload = () => {
+            if (!context) {
+                URL.revokeObjectURL(objectUrl);
+                return;
+            }
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = "#ffffff";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(objectUrl);
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            setBookingQrRenderStatus("Unable to display the QR image. Use the QR value below for confirmation.");
+        };
+        image.src = objectUrl;
+    } catch (_error) {
+        setBookingQrRenderStatus("QR library not available. Use the QR value below for confirmation.");
+    }
 }
 
 async function copyBookingQrValue() {

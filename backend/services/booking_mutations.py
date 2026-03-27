@@ -67,6 +67,16 @@ def is_booking_in_qr_window(status, start_time, end_time, now=None):
     return qr_window_start <= reference_time < end_time
 
 
+def is_booking_qr_accessible(status, end_time, payment_method, payment_status, now=None):
+    reference_time = now or datetime.now()
+    normalized_status = str(status or '').lower()
+    if normalized_status not in ACTIVE_BOOKING_STATUSES:
+        return False
+    if not end_time or end_time <= reference_time:
+        return False
+    return is_payment_ready_for_qr(payment_method, payment_status)
+
+
 def is_booking_ready_for_qr_verification(
     status,
     start_time,

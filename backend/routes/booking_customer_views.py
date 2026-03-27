@@ -8,6 +8,7 @@ from routes.booking_bp import booking_bp
 from services.booking_config import BOOKING_STATUS_WAITING_TO_START, DATETIME_FMT
 from services.booking_mutations import (
     BookingMutationError,
+    is_booking_qr_accessible,
     is_booking_in_qr_window,
     is_payment_ready_for_qr,
     prepare_booking_mutation,
@@ -168,9 +169,7 @@ def my_bookings(current_user):
         can_cancel = status == BOOKING_STATUS_WAITING_TO_START and row[11] > now and charging_started_at is None
         can_edit = status == BOOKING_STATUS_WAITING_TO_START and row[10] > now and charging_started_at is None
         is_future_booking = row[10] >= now
-        can_show_qr = is_booking_in_qr_window(status, row[10], row[11], now=now) and is_payment_ready_for_qr(
-            payment_method, payment_status
-        )
+        can_show_qr = is_booking_qr_accessible(status, row[11], payment_method, payment_status, now=now)
         can_start_charging = can_show_qr and charging_started_at is None
         live_snapshot = build_live_charging_snapshot(
             booking_status=status,

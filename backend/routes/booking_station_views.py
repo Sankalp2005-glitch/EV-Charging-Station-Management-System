@@ -69,9 +69,30 @@ def get_stations(_current_user):
                 cs.latitude,
                 cs.longitude,
                 COUNT(sl.slot_id) AS matching_slots,
-                SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
-                SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
-                SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                SUM(
+                    CASE
+                        WHEN sl.status = 'out_of_service' THEN 0
+                        WHEN COALESCE(slot_activity.has_charging, 0) = 1 OR sl.status = 'charging' THEN 0
+                        WHEN COALESCE(slot_activity.has_reserved, 0) = 1 OR sl.status = 'occupied' THEN 0
+                        WHEN sl.slot_id IS NOT NULL THEN 1
+                        ELSE 0
+                    END
+                ) AS available_slots,
+                SUM(
+                    CASE
+                        WHEN sl.status = 'out_of_service' THEN 0
+                        WHEN COALESCE(slot_activity.has_charging, 0) = 1 OR sl.status = 'charging' THEN 0
+                        WHEN COALESCE(slot_activity.has_reserved, 0) = 1 OR sl.status = 'occupied' THEN 1
+                        ELSE 0
+                    END
+                ) AS occupied_slots,
+                SUM(
+                    CASE
+                        WHEN sl.status = 'out_of_service' THEN 0
+                        WHEN COALESCE(slot_activity.has_charging, 0) = 1 OR sl.status = 'charging' THEN 1
+                        ELSE 0
+                    END
+                ) AS charging_slots,
                 SUM(CASE WHEN sl.status = 'out_of_service' THEN 1 ELSE 0 END) AS out_of_service_slots,
                 MIN(sl.price_per_kwh) AS min_price_kwh,
                 MIN(sl.price_per_minute) AS min_price_minute,
@@ -79,6 +100,31 @@ def get_stations(_current_user):
             FROM ChargingStation cs
             JOIN StationApproval sa ON sa.station_id = cs.station_id
             LEFT JOIN ChargingSlot sl ON cs.station_id = sl.station_id
+            LEFT JOIN (
+                SELECT
+                    b.slot_id,
+                    MAX(
+                        CASE
+                            WHEN b.status = 'charging_started'
+                                 AND sess.start_time IS NOT NULL
+                                 AND (sess.end_time IS NULL OR sess.end_time > NOW())
+                            THEN 1
+                            ELSE 0
+                        END
+                    ) AS has_charging,
+                    MAX(
+                        CASE
+                            WHEN b.status IN ('waiting_to_start', 'confirmed') AND b.end_time > NOW() THEN 1
+                            WHEN b.status = 'charging_started' AND b.end_time > NOW() AND sess.start_time IS NULL THEN 1
+                            ELSE 0
+                        END
+                    ) AS has_reserved
+                FROM Booking b
+                LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+                WHERE b.status IN ('waiting_to_start', 'confirmed', 'charging_started')
+                  AND b.end_time > NOW()
+                GROUP BY b.slot_id
+            ) AS slot_activity ON slot_activity.slot_id = sl.slot_id
             WHERE sa.status = %s
         """
         params = [APPROVAL_STATUS_APPROVED]
@@ -112,14 +158,60 @@ def get_stations(_current_user):
                         cs.latitude,
                         cs.longitude,
                         COUNT(sl.slot_id) AS matching_slots,
-                        SUM(CASE WHEN sl.status = 'available' THEN 1 ELSE 0 END) AS available_slots,
-                        SUM(CASE WHEN sl.status = 'occupied' THEN 1 ELSE 0 END) AS occupied_slots,
-                        SUM(CASE WHEN sl.status = 'charging' THEN 1 ELSE 0 END) AS charging_slots,
+                        SUM(
+                            CASE
+                                WHEN sl.status = 'out_of_service' THEN 0
+                                WHEN COALESCE(slot_activity.has_charging, 0) = 1 OR sl.status = 'charging' THEN 0
+                                WHEN COALESCE(slot_activity.has_reserved, 0) = 1 OR sl.status = 'occupied' THEN 0
+                                WHEN sl.slot_id IS NOT NULL THEN 1
+                                ELSE 0
+                            END
+                        ) AS available_slots,
+                        SUM(
+                            CASE
+                                WHEN sl.status = 'out_of_service' THEN 0
+                                WHEN COALESCE(slot_activity.has_charging, 0) = 1 OR sl.status = 'charging' THEN 0
+                                WHEN COALESCE(slot_activity.has_reserved, 0) = 1 OR sl.status = 'occupied' THEN 1
+                                ELSE 0
+                            END
+                        ) AS occupied_slots,
+                        SUM(
+                            CASE
+                                WHEN sl.status = 'out_of_service' THEN 0
+                                WHEN COALESCE(slot_activity.has_charging, 0) = 1 OR sl.status = 'charging' THEN 1
+                                ELSE 0
+                            END
+                        ) AS charging_slots,
                         SUM(CASE WHEN sl.status = 'out_of_service' THEN 1 ELSE 0 END) AS out_of_service_slots,
                         GROUP_CONCAT(DISTINCT sl.vehicle_category ORDER BY sl.vehicle_category SEPARATOR ',') AS vehicle_categories
                     FROM ChargingStation cs
                     JOIN StationApproval sa ON sa.station_id = cs.station_id
                     LEFT JOIN ChargingSlot sl ON cs.station_id = sl.station_id
+                    LEFT JOIN (
+                        SELECT
+                            b.slot_id,
+                            MAX(
+                                CASE
+                                    WHEN b.status = 'charging_started'
+                                         AND sess.start_time IS NOT NULL
+                                         AND (sess.end_time IS NULL OR sess.end_time > NOW())
+                                    THEN 1
+                                    ELSE 0
+                                END
+                            ) AS has_charging,
+                            MAX(
+                                CASE
+                                    WHEN b.status IN ('waiting_to_start', 'confirmed') AND b.end_time > NOW() THEN 1
+                                    WHEN b.status = 'charging_started' AND b.end_time > NOW() AND sess.start_time IS NULL THEN 1
+                                    ELSE 0
+                                END
+                            ) AS has_reserved
+                        FROM Booking b
+                        LEFT JOIN ChargingSession sess ON sess.booking_id = b.booking_id
+                        WHERE b.status IN ('waiting_to_start', 'confirmed', 'charging_started')
+                          AND b.end_time > NOW()
+                        GROUP BY b.slot_id
+                    ) AS slot_activity ON slot_activity.slot_id = sl.slot_id
                     WHERE sa.status = %s
                 """
                 if location_filter:
@@ -320,7 +412,7 @@ def get_slots(current_user, station_id):
                         "estimated_completion_time": _format_dt(live_snapshot["estimated_completion_time"]),
                         "remaining_minutes": live_snapshot["remaining_minutes"],
                     }
-                elif is_current_window:
+                elif active_booking is None:
                     active_booking = booking_item
 
             parsed_power_kw = slot["power_kw"]
