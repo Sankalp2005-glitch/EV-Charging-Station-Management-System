@@ -2,6 +2,7 @@ let currentQrToken = null;
 let currentQrBookingId = null;
 let currentQrValue = "";
 let currentQrImageDataUrl = "";
+let currentQrImageObjectUrl = "";
 let myBookingsCache = [];
 let ownerMyBookingsCache = [];
 let activeBookingEdit = null;
@@ -463,6 +464,7 @@ function hideBookingQrSection() {
     const section = document.getElementById("bookingQrSection");
     const meta = document.getElementById("bookingQrMeta");
     const value = document.getElementById("bookingQrValue");
+    const image = document.getElementById("bookingQrImage");
     const canvas = document.getElementById("bookingQrCanvas");
     const status = document.getElementById("bookingQrRenderStatus");
 
@@ -470,6 +472,7 @@ function hideBookingQrSection() {
     currentQrBookingId = null;
     currentQrValue = "";
     currentQrImageDataUrl = "";
+    releaseCurrentQrImageObjectUrl();
     if (section) {
         section.style.display = "none";
     }
@@ -483,7 +486,12 @@ function hideBookingQrSection() {
         status.hidden = true;
         status.innerText = "";
     }
+    if (image) {
+        image.hidden = true;
+        image.removeAttribute("src");
+    }
     if (canvas) {
+        canvas.hidden = false;
         const context = canvas.getContext("2d");
         if (context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -500,10 +508,58 @@ function setBookingQrRenderStatus(message = "") {
     status.hidden = !message;
 }
 
+function releaseCurrentQrImageObjectUrl() {
+    if (!currentQrImageObjectUrl) {
+        return;
+    }
+    URL.revokeObjectURL(currentQrImageObjectUrl);
+    currentQrImageObjectUrl = "";
+}
+
+function resetBookingQrVisuals(image, canvas, context) {
+    if (image) {
+        image.hidden = true;
+        image.removeAttribute("src");
+    }
+    if (canvas) {
+        canvas.hidden = false;
+        canvas.width = 260;
+        canvas.height = 260;
+    }
+    if (context && canvas) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+function showBookingQrImage(image, canvas, source) {
+    if (!image || !source) {
+        return false;
+    }
+    image.onload = () => {
+        setBookingQrRenderStatus("");
+    };
+    image.onerror = () => {
+        image.hidden = true;
+        if (canvas) {
+            canvas.hidden = false;
+        }
+        setBookingQrRenderStatus("Unable to display the QR image. Use the QR value below for confirmation.");
+    };
+    image.hidden = false;
+    image.src = source;
+    if (canvas) {
+        canvas.hidden = true;
+    }
+    return true;
+}
+
 function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
     const section = document.getElementById("bookingQrSection");
     const meta = document.getElementById("bookingQrMeta");
     const value = document.getElementById("bookingQrValue");
+    const image = document.getElementById("bookingQrImage");
     const canvas = document.getElementById("bookingQrCanvas");
     const bookingId = Number(bookingIdOverride || qrPayload?.booking_id || 0);
     const qrValue = qrPayload?.qr_value || qrPayload?.qr_token || "";
@@ -518,36 +574,20 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
     currentQrBookingId = bookingId || null;
     currentQrValue = qrValue;
     currentQrImageDataUrl = qrImageDataUrl;
+    releaseCurrentQrImageObjectUrl();
     section.style.display = "block";
     meta.innerText = `Booking #${bookingId} | Active until ${qrPayload?.end_time || "-"} | Show this QR to the station owner`;
     value.innerText = qrValue;
     canvas.setAttribute("aria-label", `Charging confirmation QR for booking ${bookingId}`);
     setBookingQrRenderStatus("");
 
-    canvas.width = 260;
-    canvas.height = 260;
     const context = canvas.getContext("2d");
-    if (context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    resetBookingQrVisuals(image, canvas, context);
 
     if (qrImageDataUrl) {
-        const image = new Image();
-        image.onload = () => {
-            if (!context) {
-                return;
-            }
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "#ffffff";
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        };
-        image.onerror = () => {
+        if (!showBookingQrImage(image, canvas, qrImageDataUrl)) {
             setBookingQrRenderStatus("Unable to display the QR image. Use the QR value below for confirmation.");
-        };
-        image.src = qrImageDataUrl;
+        }
     } else if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
         window.QRCode.toCanvas(
             canvas,
@@ -568,15 +608,15 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
             }
         );
     } else if (bookingId) {
-        loadBookingQrImageFallback(bookingId, canvas, context);
+        loadBookingQrImageFallback(bookingId, image, canvas);
     } else {
-        setBookingQrRenderStatus("QR library not available. Use the QR value below for confirmation.");
+        setBookingQrRenderStatus("QR image is unavailable right now. Use the QR value below for confirmation.");
     }
 
     window.scrollTo({ top: section.offsetTop - 20, behavior: "smooth" });
 }
 
-async function loadBookingQrImageFallback(bookingId, canvas, context) {
+async function loadBookingQrImageFallback(bookingId, image, canvas) {
     try {
         const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/qr?format=image&ts=${Date.now()}`, {
             headers: buildAuthHeaders(),
@@ -587,25 +627,13 @@ async function loadBookingQrImageFallback(bookingId, canvas, context) {
 
         const imageBlob = await response.blob();
         const objectUrl = URL.createObjectURL(imageBlob);
-        const image = new Image();
-        image.onload = () => {
-            if (!context) {
-                URL.revokeObjectURL(objectUrl);
-                return;
-            }
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = "#ffffff";
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            URL.revokeObjectURL(objectUrl);
-        };
-        image.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
+        currentQrImageDataUrl = "";
+        currentQrImageObjectUrl = objectUrl;
+        if (!showBookingQrImage(image, canvas, objectUrl)) {
             setBookingQrRenderStatus("Unable to display the QR image. Use the QR value below for confirmation.");
-        };
-        image.src = objectUrl;
+        }
     } catch (_error) {
-        setBookingQrRenderStatus("QR library not available. Use the QR value below for confirmation.");
+        setBookingQrRenderStatus("Unable to load the QR image. Use the QR value below for confirmation.");
     }
 }
 
@@ -637,14 +665,22 @@ async function copyBookingQrValue() {
 
 function downloadBookingQrImage() {
     const canvas = document.getElementById("bookingQrCanvas");
-    if (!canvas || !currentQrValue) {
+    const image = document.getElementById("bookingQrImage");
+    if (!currentQrValue) {
         alert("Generate the booking QR first.");
         return;
     }
 
     try {
+        const downloadSource =
+            currentQrImageDataUrl ||
+            currentQrImageObjectUrl ||
+            (canvas && !canvas.hidden ? canvas.toDataURL("image/png") : image?.getAttribute("src") || "");
+        if (!downloadSource) {
+            throw new Error("Unable to download the QR image.");
+        }
         const link = document.createElement("a");
-        link.href = currentQrImageDataUrl || canvas.toDataURL("image/png");
+        link.href = downloadSource;
         link.download = `booking-${currentQrBookingId || "qr"}.png`;
         document.body.appendChild(link);
         link.click();

@@ -2814,6 +2814,7 @@ body.modal-open {
     border: 1px solid rgba(226, 232, 240, 0.95);
 }
 
+.qr-panel img,
 .qr-panel canvas {
     width: 220px;
     height: 220px;
@@ -2822,6 +2823,10 @@ body.modal-open {
     background: #ffffff;
     padding: 0.8rem;
     box-shadow: var(--shadow-soft);
+}
+
+.qr-panel img[hidden] {
+    display: none;
 }
 
 .qr-panel__actions {
