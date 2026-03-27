@@ -1,4 +1,0 @@
-2026/03/27-01:22:41.151 38b4 Creating DB C:\Projects\ev_charging_system\scripts\_edge_profile\Default\EdgeCoupons/coupons_data.db since it was missing.
-2026/03/27-01:22:41.156 38b4 Reusing MANIFEST C:\Projects\ev_charging_system\scripts\_edge_profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/03/27-01:22:41.158 3f78 Level-0 table #5: started
-2026/03/27-01:22:41.162 3f78 Level-0 table #5: 681961 bytes OK
