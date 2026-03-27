@@ -4,6 +4,7 @@ function setupDashboardRoleSections() {
     const customerDashboardSection = document.getElementById("customerDashboardSection");
     const ownerDashboardSection = document.getElementById("ownerDashboardSection");
     const adminDashboardSection = document.getElementById("adminDashboardSection");
+    const dashboardStatsCards = document.getElementById("dashboardStatsCards");
     const customerBookingsSection = document.getElementById("customerBookingsSection");
     const ownerBookingsSection = document.getElementById("ownerBookingsSection");
     const adminStationBookingsSection = document.getElementById("adminStationBookingsSection");
@@ -22,6 +23,9 @@ function setupDashboardRoleSections() {
     if (adminDashboardSection) {
         adminDashboardSection.style.display = role === "admin" ? "block" : "none";
     }
+    if (dashboardStatsCards) {
+        dashboardStatsCards.style.display = role === CUSTOMER_ROLE ? "grid" : "none";
+    }
     if (customerBookingsSection) {
         customerBookingsSection.style.display = role === CUSTOMER_ROLE ? "block" : "none";
     }
@@ -38,6 +42,143 @@ function setupDashboardRoleSections() {
     document.querySelectorAll(".admin-only").forEach((element) => {
         element.style.display = role === "admin" ? "" : "none";
     });
+}
+
+const dashboardDataGroupLoaded = Object.create(null);
+const dashboardDataGroupPending = new Map();
+
+function getDashboardDataGroupsForTab(role, tabName) {
+    if (role === CUSTOMER_ROLE) {
+        if (tabName === "dashboard") {
+            return ["customerStations", "customerBookings"];
+        }
+        if (tabName === "stations") {
+            return ["customerStations"];
+        }
+        if (tabName === "bookings") {
+            return ["customerBookings"];
+        }
+        return [];
+    }
+
+    if (role === OWNER_ROLE) {
+        if (tabName === "dashboard") {
+            return ["ownerOverview", "ownerStations"];
+        }
+        if (tabName === "stations") {
+            return ["ownerStations"];
+        }
+        if (tabName === "bookings") {
+            return ["ownerStations", "ownerBookings", "ownerBookingPane"];
+        }
+        return [];
+    }
+
+    if (role === "admin") {
+        if (tabName === "dashboard") {
+            return ["adminOverview"];
+        }
+        if (tabName === "bookings") {
+            return ["adminApprovals"];
+        }
+        if (tabName === "admin-users") {
+            return ["adminUsers"];
+        }
+        if (tabName === "admin-stations") {
+            return ["adminStations"];
+        }
+        if (tabName === "admin-bookings") {
+            return ["adminBookings"];
+        }
+        if (tabName === "admin-revenue") {
+            return ["adminRevenue"];
+        }
+    }
+
+    return [];
+}
+
+function runDashboardDataGroupLoad(groupKey) {
+    switch (groupKey) {
+        case "customerStations":
+            return Promise.resolve(loadStations());
+        case "customerBookings":
+            return Promise.resolve(loadMyBookings(bookingViewState.customer));
+        case "ownerOverview":
+            return Promise.allSettled([loadOwnerStats(), loadOwnerRevenueAnalytics()]);
+        case "ownerStations":
+            return Promise.resolve(loadOwnerStations());
+        case "ownerBookings":
+            return Promise.resolve(loadOwnerBookings(bookingViewState.owner));
+        case "ownerBookingPane":
+            return typeof window.loadVisibleOwnerBookingPane === "function"
+                ? Promise.resolve(window.loadVisibleOwnerBookingPane())
+                : Promise.resolve();
+        case "adminOverview":
+            return Promise.allSettled([loadAdminStats(), loadAdminRevenueAnalytics()]);
+        case "adminApprovals":
+            return Promise.resolve(loadAdminStationApprovals(adminViewState.stationStatus));
+        case "adminUsers":
+            return Promise.resolve(loadAdminUsers());
+        case "adminStations":
+            return Promise.resolve(loadAdminStationsManagement());
+        case "adminBookings":
+            return Promise.resolve(loadAdminBookings());
+        case "adminRevenue":
+            return Promise.resolve(loadAdminRevenuePage());
+        default:
+            return Promise.resolve();
+    }
+}
+
+function loadDashboardDataGroup(groupKey, options = {}) {
+    const { force = false } = options;
+    const pendingLoad = dashboardDataGroupPending.get(groupKey);
+    if (pendingLoad) {
+        return pendingLoad;
+    }
+    if (!force && dashboardDataGroupLoaded[groupKey]) {
+        return Promise.resolve();
+    }
+
+    const loadPromise = Promise.resolve(runDashboardDataGroupLoad(groupKey)).finally(() => {
+        dashboardDataGroupPending.delete(groupKey);
+        dashboardDataGroupLoaded[groupKey] = true;
+    });
+
+    dashboardDataGroupPending.set(groupKey, loadPromise);
+    return loadPromise;
+}
+
+function getActiveDashboardTabName() {
+    const activeTab = document.querySelector(".dashboard-tab.active");
+    const activeId = String(activeTab?.id || "").trim();
+    return activeId.endsWith("Tab") ? activeId.slice(0, -3) : "dashboard";
+}
+
+function maybePrimeCustomerStationsLocation() {
+    if (getRole() !== CUSTOMER_ROLE || typeof window.primeStationCurrentLocation !== "function") {
+        return;
+    }
+
+    Promise.resolve(window.primeStationCurrentLocation()).catch(() => {
+        // Location priming is best-effort and should never block tab rendering.
+    });
+}
+
+function loadDashboardTabData(tabName, options = {}) {
+    const role = getRole();
+    const dataGroups = getDashboardDataGroupsForTab(role, tabName);
+
+    if (role === CUSTOMER_ROLE && tabName === "stations") {
+        maybePrimeCustomerStationsLocation();
+    }
+
+    if (dataGroups.length === 0) {
+        return Promise.resolve();
+    }
+
+    return Promise.allSettled(dataGroups.map((groupKey) => loadDashboardDataGroup(groupKey, options)));
 }
 
 async function initDashboard() {
@@ -204,98 +345,21 @@ async function initDashboard() {
     const startupTasks = [loadMyProfile()];
 
     if (role === CUSTOMER_ROLE) {
-        if (initialTab === "dashboard" || initialTab === "stations") {
-            startupTasks.push(loadStations());
-        }
-        if (initialTab === "dashboard" || initialTab === "bookings") {
-            startupTasks.push(loadMyBookings(bookingViewState.customer));
-        }
-        if ((initialTab === "dashboard" || initialTab === "stations") && typeof window.primeStationCurrentLocation === "function") {
-            window.primeStationCurrentLocation({ refreshStations: true });
+        if (initialTab === "stations") {
+            maybePrimeCustomerStationsLocation();
         }
     }
     if (role === OWNER_ROLE) {
         switchOwnerBookingScope("station");
-        if (initialTab === "dashboard") {
-            startupTasks.push(loadOwnerStats(), loadOwnerRevenueAnalytics(), loadOwnerStations());
-        }
-        if (initialTab === "stations") {
-            startupTasks.push(loadOwnerStations());
-        }
-        if (initialTab === "bookings") {
-            startupTasks.push(loadOwnerStations(), loadOwnerBookings(bookingViewState.owner));
-        }
     }
     if (role === "admin") {
         if (typeof window.initAdminManagement === "function") {
             window.initAdminManagement();
         }
-        if (initialTab === "dashboard") {
-            startupTasks.push(loadAdminStats(), loadAdminRevenueAnalytics());
-        }
-        if (initialTab === "bookings") {
-            startupTasks.push(loadAdminStationApprovals(adminViewState.stationStatus));
-        }
-        if (initialTab === "admin-users") {
-            startupTasks.push(loadAdminUsers());
-        }
-        if (initialTab === "admin-stations") {
-            startupTasks.push(loadAdminStationsManagement());
-        }
-        if (initialTab === "admin-bookings") {
-            startupTasks.push(loadAdminBookings());
-        }
-        if (initialTab === "admin-revenue") {
-            startupTasks.push(loadAdminRevenuePage());
-        }
     }
 
+    startupTasks.push(loadDashboardTabData(initialTab));
     await Promise.allSettled(startupTasks);
-
-    const scheduleBackgroundWork =
-        typeof window.requestIdleCallback === "function"
-            ? (callback) => window.requestIdleCallback(callback, { timeout: 1200 })
-            : (callback) => window.setTimeout(callback, 450);
-
-    scheduleBackgroundWork(() => {
-        if (role === CUSTOMER_ROLE) {
-            if (initialTab === "bookings") {
-                loadStations().catch(() => {});
-            }
-            if (initialTab === "stations") {
-                loadMyBookings(bookingViewState.customer).catch(() => {});
-            }
-            return;
-        }
-
-        if (role === OWNER_ROLE) {
-            if (initialTab === "stations" || initialTab === "bookings") {
-                Promise.allSettled([loadOwnerStats(), loadOwnerRevenueAnalytics()]);
-            }
-            if (initialTab === "bookings") {
-                loadOwnerStations().catch(() => {});
-            }
-            if (initialTab === "dashboard" || initialTab === "stations") {
-                loadOwnerBookings(bookingViewState.owner).catch(() => {});
-            }
-            return;
-        }
-
-        if (role === "admin") {
-            if (initialTab !== "admin-users") {
-                loadAdminUsers().catch(() => {});
-            }
-            if (initialTab !== "admin-stations") {
-                loadAdminStationsManagement().catch(() => {});
-            }
-            if (initialTab !== "admin-bookings") {
-                loadAdminBookings().catch(() => {});
-            }
-            if (initialTab !== "admin-revenue") {
-                loadAdminRevenuePage().catch(() => {});
-            }
-        }
-    });
 }
 
 function logout() {
@@ -315,41 +379,17 @@ function logout() {
 
 window.logout = logout;
 
-const existingDashboardTabChangeHandler =
-    typeof window.handleDashboardTabChange === "function" ? window.handleDashboardTabChange : null;
-
 window.handleDashboardTabChange = (tabName) => {
-    if (getRole() === CUSTOMER_ROLE && tabName === "stations" && typeof window.primeStationCurrentLocation === "function") {
-        window.primeStationCurrentLocation({ refreshStations: true });
-    }
-    if (getRole() === OWNER_ROLE) {
-        if (tabName === "dashboard") {
-            if (typeof window.shouldLoadOwnerDashboardInsights === "function" && window.shouldLoadOwnerDashboardInsights()) {
-                Promise.allSettled([loadOwnerStats(), loadOwnerRevenueAnalytics()]);
-            } else if (typeof window.ownerDashboardInsightsPrimed === "function") {
-                window.ownerDashboardInsightsPrimed();
-            }
-        }
-        if (tabName === "bookings") {
-            Promise.allSettled([
-                loadOwnerBookings(bookingViewState.owner),
-                typeof window.loadVisibleOwnerBookingPane === "function"
-                    ? window.loadVisibleOwnerBookingPane()
-                    : Promise.resolve(),
-            ]);
-        }
-    }
-    if (getRole() === "admin" && tabName === "bookings") {
-        Promise.allSettled([loadAdminStationApprovals(adminViewState.stationStatus)]);
-    }
-
-    if (typeof existingDashboardTabChangeHandler === "function") {
-        existingDashboardTabChangeHandler(tabName);
-    }
+    loadDashboardTabData(tabName).catch(() => {});
 };
+
+window.loadDashboardTabData = loadDashboardTabData;
+window.getActiveDashboardTabName = getActiveDashboardTabName;
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDashboardPage()) {
         initDashboard();
     }
 });
+
+

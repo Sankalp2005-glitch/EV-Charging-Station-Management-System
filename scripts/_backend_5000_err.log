@@ -967,3 +967,2201 @@ Press CTRL+C to quit
 127.0.0.1 - - [27/Mar/2026 02:25:49] "POST /socket.io/?EIO=4&transport=polling&t=PqhxfV1&sid=Dz0qt--WEdhvGAwOAACN HTTP/1.1" 200 -
 127.0.0.1 - - [27/Mar/2026 02:25:49] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfV1.0&sid=Dz0qt--WEdhvGAwOAACN HTTP/1.1" 200 -
 127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfb4 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "POST /socket.io/?EIO=4&transport=polling&t=PqhxfbL&sid=vB8NeMm7W_yc-8_gAACP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfbM&sid=vB8NeMm7W_yc-8_gAACP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfic HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxfiw&sid=Z1eKmxCjaOANTyoqAACR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfiw.0&sid=Z1eKmxCjaOANTyoqAACR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:50] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfpG HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxfpa&sid=77EPdIjMTceJxt1BAACT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfpa.0&sid=77EPdIjMTceJxt1BAACT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfy9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "POST /socket.io/?EIO=4&transport=polling&t=PqhxfyS&sid=dZDpOZG1qh0-w6S5AACV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfyT&sid=dZDpOZG1qh0-w6S5AACV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:51] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg2F HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxg2a&sid=wqQvET62k_KPQEw_AACX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg2b&sid=wqQvET62k_KPQEw_AACX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg8R HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxg8h&sid=tNA1GHBlOv6ksNBPAACZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg8h.0&sid=tNA1GHBlOv6ksNBPAACZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:52] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgEc HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "POST /socket.io/?EIO=4&transport=polling&t=PqhxgEw&sid=9mV6J5ZMtPHfOpP3AACb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgEw.0&sid=9mV6J5ZMtPHfOpP3AACb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgKd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "POST /socket.io/?EIO=4&transport=polling&t=PqhxgMG&sid=aSUX-s0mQ9fPrSFhAACd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgMG.0&sid=aSUX-s0mQ9fPrSFhAACd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgQ_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "POST /socket.io/?EIO=4&transport=polling&t=PqhxgSc&sid=V5SatXejkEjLLK91AACf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:53] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgSc.0&sid=V5SatXejkEjLLK91AACf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgWm HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "POST /socket.io/?EIO=4&transport=polling&t=PqhxgY2&sid=Wos7N9TvYSp-c1y7AACh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgY3&sid=Wos7N9TvYSp-c1y7AACh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgd0 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "POST /socket.io/?EIO=4&transport=polling&t=PqhxgdI&sid=1X-fafbYVbmz3OvCAACj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgdI.0&sid=1X-fafbYVbmz3OvCAACj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgjH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxgja&sid=ss0ik5xNgDwbyPkgAACl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:54] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgja.0&sid=ss0ik5xNgDwbyPkgAACl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgpK HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxgpd&sid=myvxBA-42y2yHpo9AACn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgpd.0&sid=myvxBA-42y2yHpo9AACn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgvP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxgvh&sid=RHf5YPYNX2VJTEsyAACp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgvh.0&sid=RHf5YPYNX2VJTEsyAACp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:55] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg_R HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxg_k&sid=9GT5f7TWhCJ1ugSXAACr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg_k.0&sid=9GT5f7TWhCJ1ugSXAACr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxh5R HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxh5i&sid=87LIqyR4EbG3H6MAAACt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxh5j&sid=87LIqyR4EbG3H6MAAACt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhBT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "POST /socket.io/?EIO=4&transport=polling&t=PqhxhBn&sid=3WUhPACROOxTqwpxAACv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:56] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhBo&sid=3WUhPACROOxTqwpxAACv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhHn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "POST /socket.io/?EIO=4&transport=polling&t=PqhxhI2&sid=nztMHDLCNcVJqG7WAACx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhI2.0&sid=nztMHDLCNcVJqG7WAACx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhPY HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "POST /socket.io/?EIO=4&transport=polling&t=PqhxhPr&sid=FK5TQ8z2aZBMDvGgAACz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhPr.0&sid=FK5TQ8z2aZBMDvGgAACz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:57] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhWC HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "POST /socket.io/?EIO=4&transport=polling&t=PqhxhWS&sid=BESdfhZnS8JG89qRAAC1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhWS.0&sid=BESdfhZnS8JG89qRAAC1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhc8 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "POST /socket.io/?EIO=4&transport=polling&t=PqhxhcQ&sid=c7_v6MkYL_4AFZSGAAC3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhcR&sid=c7_v6MkYL_4AFZSGAAC3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:58] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhiN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxhid&sid=ZhEMNcX3TLrVWvj1AAC5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhid.0&sid=ZhEMNcX3TLrVWvj1AAC5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhoI HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxhoc&sid=ClCUnAvccNJehAZhAAC7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhoc.0&sid=ClCUnAvccNJehAZhAAC7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxhuu&sid=sI3CX53qogrQxYfWAAC9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhuu.0&sid=sI3CX53qogrQxYfWAAC9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:25:59] "GET /socket.io/?EIO=4&transport=polling&t=PqhxbpL&sid=iCB6Lf28F1F3HDw3AABX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxh-n HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxh_3&sid=A4Zzjix8QdDPzQgJAAC_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxh_3.0&sid=A4Zzjix8QdDPzQgJAAC_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxi54 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxi5N&sid=UcIU6nsUeK_h9t_tAADB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxi5N.0&sid=UcIU6nsUeK_h9t_tAADB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:00] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiBF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "POST /socket.io/?EIO=4&transport=polling&t=PqhxiCo&sid=KGdqQT-E--eMMZ13AADD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiCp&sid=KGdqQT-E--eMMZ13AADD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiH9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "POST /socket.io/?EIO=4&transport=polling&t=PqhxiHR&sid=0C3aY9Gc_fizUprcAADF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiHR.0&sid=0C3aY9Gc_fizUprcAADF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiNg HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "POST /socket.io/?EIO=4&transport=polling&t=PqhxiNy&sid=9XHJtID3keB5KIx6AADH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiNy.0&sid=9XHJtID3keB5KIx6AADH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:01] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiTf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "POST /socket.io/?EIO=4&transport=polling&t=PqhxiTy&sid=oeQlZqosAipr3HIrAADJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiTz&sid=oeQlZqosAipr3HIrAADJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiaJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxiac&sid=ewJii5F2iU8wpy1xAADL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxiac.0&sid=ewJii5F2iU8wpy1xAADL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxift HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "POST /socket.io/?EIO=4&transport=polling&t=PqhxigE&sid=Z1arjPuJQLG5nZiaAADN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:02] "GET /socket.io/?EIO=4&transport=polling&t=PqhxigE.0&sid=Z1arjPuJQLG5nZiaAADN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxilk HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxim1&sid=X5eJ5MMAg_T4aleNAADP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxim2&sid=X5eJ5MMAg_T4aleNAADP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxirt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxis8&sid=04dEhHb3MmkiOF5YAADR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxis9&sid=04dEhHb3MmkiOF5YAADR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:03] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /socket.io/?EIO=4&transport=polling&t=PqhxizW HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxi-o&sid=XRKYImz3Ur2IOXe0AADT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxi-p&sid=XRKYImz3Ur2IOXe0AADT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxj3S HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxj3k&sid=YDOrZaj2v4-WJ9COAADV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxj3k.0&sid=YDOrZaj2v4-WJ9COAADV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxd1b&sid=IvChrBiNcnVIkzqpAABZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:04] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxj9l HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjA3&sid=x2uTH_On0KWplIhUAADX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjA4&sid=x2uTH_On0KWplIhUAADX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxd7p&sid=muXfWhdOLnlkmLDNAABb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjG8 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjGR&sid=3Z_DzmmYmG6xlcA4AADZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjGR.0&sid=3Z_DzmmYmG6xlcA4AADZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxdEL&sid=JQ_HxUfjNCqeuCoVAABd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjML HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjMb&sid=o0mOx1hgCyzNRKk9AADb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjMc&sid=o0mOx1hgCyzNRKk9AADb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:05] "GET /socket.io/?EIO=4&transport=polling&t=PqhxdKB&sid=ooHxWjEof9cNZ6DzAABf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjSW HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjSq&sid=qxCSsKm4mPMeptkIAADd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjSr&sid=qxCSsKm4mPMeptkIAADd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=PqhxdQC&sid=PGw3onin5r2fWxDHAABh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjYb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjZl&sid=_L6RDtH6BhwXyWjlAADf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjZl.0&sid=_L6RDtH6BhwXyWjlAADf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=PqhxdW6&sid=xu0Jqlb7bqnGnPoLAABj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjel HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxjf2&sid=bPH5PMfhaPuObB27AADh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:06] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjf2.0&sid=bPH5PMfhaPuObB27AADh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxdb-&sid=zBNEIdGWG6pRGaHMAABl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjkw HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjlC&sid=9sthYPGmTC-r-QdrAADj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjlD&sid=9sthYPGmTC-r-QdrAADj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxdid&sid=LswD89AhQxflZYTeAABn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjrx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "POST /socket.io/?EIO=4&transport=polling&t=PqhxjsB&sid=BSd75visoi_8zcooAADl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjsB.0&sid=BSd75visoi_8zcooAADl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /socket.io/?EIO=4&transport=polling&t=PqhxdoP&sid=Yvq3aVP0kSt_4T3LAABp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:07] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjxP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxjxh&sid=HSJWLbKYAqe1Up_1AADn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjxh.0&sid=HSJWLbKYAqe1Up_1AADn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=PqhxduZ&sid=l1ZBXs0s0T0WPiEGAABr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk1U HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxk2w&sid=bHtony0hVkGcAxH0AADp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk2x&sid=bHtony0hVkGcAxH0AADp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxd-V&sid=nBeDidMNsHJ6OJBBAABt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk7T HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxk7l&sid=vkItXDD3SAfXUg8dAADr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:08] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk7m&sid=vkItXDD3SAfXUg8dAADr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxe4t&sid=jdztERpUROWkyRGNAABv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkDc HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "POST /socket.io/?EIO=4&transport=polling&t=PqhxkDr&sid=15B9EE4bIfRHWhAjAADt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkDr.0&sid=15B9EE4bIfRHWhAjAADt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=PqhxeA-&sid=zXETCxVpUCYcbrf3AABx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkJc HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "POST /socket.io/?EIO=4&transport=polling&t=PqhxkJu&sid=3nwkxuqJoo7p6hd3AADv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkJu.0&sid=3nwkxuqJoo7p6hd3AADv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /socket.io/?EIO=4&transport=polling&t=PqhxeHF&sid=uptN7Ton8HJTXGYxAABz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:09] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkPc HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "POST /socket.io/?EIO=4&transport=polling&t=PqhxkPt&sid=GG0-oeX01oYw850uAADx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkPu&sid=GG0-oeX01oYw850uAADx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxeMy&sid=CzSHuj4xBAuWjMEPAAB1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkWb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "POST /socket.io/?EIO=4&transport=polling&t=PqhxkWs&sid=NbdQHWtsiCmNFUVMAADz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkWt&sid=NbdQHWtsiCmNFUVMAADz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxeT6&sid=Dc_ce_C8C9898aKCAAB3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxkb_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "POST /socket.io/?EIO=4&transport=polling&t=PqhxkcH&sid=yj707jKfy7tsblOHAAD1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:10] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkcH.0&sid=yj707jKfy7tsblOHAAD1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=PqhxeZ9&sid=Y7_SdKBSd9zYvRQhAAB5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkiJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxkib&sid=VYkIIZ8UT_yqvE2dAAD3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxkib.0&sid=VYkIIZ8UT_yqvE2dAAD3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=PqhxefB&sid=Rf0gV8qbALdWes5qAAB7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkoX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxkoq&sid=nHjZs69jSheS4S4uAAD5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxkor&sid=nHjZs69jSheS4S4uAAD5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /socket.io/?EIO=4&transport=polling&t=PqhxelQ&sid=60bJFI88VxpXZPAsAAB9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:11] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkuZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxkut&sid=EqJeA-vSNS7HzePDAAD7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxkut.0&sid=EqJeA-vSNS7HzePDAAD7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxeqe&sid=i8c3kRE-wUDrWumxAAB_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk-v HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxk_J&sid=rD2IHnByc5mJ_yMhAAD9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk_J.0&sid=rD2IHnByc5mJ_yMhAAD9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxeww&sid=OIZUy_DWBQEiMnd9AACB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxl53 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxl5O&sid=Mu8XEusadEvDyd1FAAD_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxl5O.0&sid=Mu8XEusadEvDyd1FAAD_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:12] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxf12&sid=FN-OmWKyuvLEGJydAACD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlBA HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "POST /socket.io/?EIO=4&transport=polling&t=PqhxlBR&sid=pujdM72qPuAD5zctAAEB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlBS&sid=pujdM72qPuAD5zctAAEB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxf77&sid=4L-muJ2CY6z3-UZgAACF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlHk HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "POST /socket.io/?EIO=4&transport=polling&t=PqhxlI1&sid=dT0CIv9nXi-6MvODAAED HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlI1.0&sid=dT0CIv9nXi-6MvODAAED HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfE3&sid=LdbY9WKSroI0uG9kAACH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:13] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlNu HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "POST /socket.io/?EIO=4&transport=polling&t=PqhxlOA&sid=j6e9MykXJ_2FRfjgAAEF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlOA.0&sid=j6e9MykXJ_2FRfjgAAEF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfK7&sid=uHHsD3nzGv6cOWghAACJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlUL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "POST /socket.io/?EIO=4&transport=polling&t=PqhxlUd&sid=XhjCYjVsd4T0-jqxAAEH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlUd.0&sid=XhjCYjVsd4T0-jqxAAEH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfQ0&sid=D575SHr2tWg5YHL9AACL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlab HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxlaq&sid=nVjdIFXHi00d0sV5AAEJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlaq.0&sid=nVjdIFXHi00d0sV5AAEJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:14] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfW5&sid=Dz0qt--WEdhvGAwOAACN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlgU HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfcP&sid=vB8NeMm7W_yc-8_gAACP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxlhs&sid=fypUdmxBCdGZmBVGAAEL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlht&sid=fypUdmxBCdGZmBVGAAEL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlmy HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "POST /socket.io/?EIO=4&transport=polling&t=PqhxlnI&sid=AxLI1FKZGlkn6Ga2AAEN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlnJ&sid=AxLI1FKZGlkn6Ga2AAEN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:15] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfk9&sid=Z1eKmxCjaOANTyoqAACR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=PqhxltB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "POST /socket.io/?EIO=4&transport=polling&t=PqhxltX&sid=ALb9Uhq-4pfFVmKdAAEP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=PqhxltX.0&sid=ALb9Uhq-4pfFVmKdAAEP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxfqn&sid=77EPdIjMTceJxt1BAACT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlzd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxlzw&sid=bGbbgwkuZpJMc3wyAAER HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlzw.0&sid=bGbbgwkuZpJMc3wyAAER HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=PqhxfzO&sid=dZDpOZG1qh0-w6S5AACV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxm4x HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxm5A&sid=mO7mlGN6QrCuH_lYAAET HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:16] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxm5A.0&sid=mO7mlGN6QrCuH_lYAAET HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg3n&sid=wqQvET62k_KPQEw_AACX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmAP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "POST /socket.io/?EIO=4&transport=polling&t=PqhxmAi&sid=NGD8ROG46cR2C7PfAAEV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmAj&sid=NGD8ROG46cR2C7PfAAEV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxg9Z&sid=tNA1GHBlOv6ksNBPAACZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmGe HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "POST /socket.io/?EIO=4&transport=polling&t=PqhxmGu&sid=0baI9IIg0CVge1NmAAEX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmGv&sid=0baI9IIg0CVge1NmAAEX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:17] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgFo&sid=9mV6J5ZMtPHfOpP3AACb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmM- HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "POST /socket.io/?EIO=4&transport=polling&t=PqhxmND&sid=gWJM110CEOK7BDTMAAEZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmNE&sid=gWJM110CEOK7BDTMAAEZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgMU&sid=aSUX-s0mQ9fPrSFhAACd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmT3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "POST /socket.io/?EIO=4&transport=polling&t=PqhxmTK&sid=llZ0RgjWPKm7xkKFAAEb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmTL&sid=llZ0RgjWPKm7xkKFAAEb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgSm&sid=V5SatXejkEjLLK91AACf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmZ5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "POST /socket.io/?EIO=4&transport=polling&t=PqhxmZN&sid=SgmERAZsEhRp3Ns2AAEd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:18] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmZN.0&sid=SgmERAZsEhRp3Ns2AAEd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgYE&sid=Wos7N9TvYSp-c1y7AACh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmfa HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxmfq&sid=yoW-sb_x6ZsYKIelAAEf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmfr&sid=yoW-sb_x6ZsYKIelAAEf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=PqhxgeN&sid=1X-fafbYVbmz3OvCAACj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmle HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxmlw&sid=wq-eRudWio4vF1m7AAEh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmlw.0&sid=wq-eRudWio4vF1m7AAEh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:19] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgkh&sid=ss0ik5xNgDwbyPkgAACl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmtR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxmtj&sid=v7k7EDF2FpnZj26pAAEj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmtj.0&sid=v7k7EDF2FpnZj26pAAEj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgqj&sid=myvxBA-42y2yHpo9AACn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmyi HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxmz0&sid=wuuG9afTFF0V7A6FAAEl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxmz1&sid=wuuG9afTFF0V7A6FAAEl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:20] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxgws&sid=RHf5YPYNX2VJTEsyAACp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxn4M HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxn4f&sid=avQIcKzxFVpG2mbaAAEn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxn4f.0&sid=avQIcKzxFVpG2mbaAAEn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxh0i&sid=9GT5f7TWhCJ1ugSXAACr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnAn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "POST /socket.io/?EIO=4&transport=polling&t=PqhxnB2&sid=jcIIywg3dfTxhi3fAAEp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnB2.0&sid=jcIIywg3dfTxhi3fAAEp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxh6u&sid=87LIqyR4EbG3H6MAAACt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnGr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "POST /socket.io/?EIO=4&transport=polling&t=PqhxnH8&sid=yNjpYsZDTfTawjNtAAEr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnH9&sid=yNjpYsZDTfTawjNtAAEr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:21] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhCg&sid=3WUhPACROOxTqwpxAACv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnN3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "POST /socket.io/?EIO=4&transport=polling&t=PqhxnNN&sid=XG8RMcLT1NcuIXXcAAEt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnNN.0&sid=XG8RMcLT1NcuIXXcAAEt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhJ2&sid=nztMHDLCNcVJqG7WAACx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnTH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "POST /socket.io/?EIO=4&transport=polling&t=PqhxnTb&sid=Da4q5IbikeR1Kp6bAAEv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnTc&sid=Da4q5IbikeR1Kp6bAAEv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:22] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhRS&sid=FK5TQ8z2aZBMDvGgAACz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnZl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxna5&sid=ng4zlEjdDCmwcAQ6AAEx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxna5.0&sid=ng4zlEjdDCmwcAQ6AAEx HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhXy&sid=BESdfhZnS8JG89qRAAC1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxngg HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxngv&sid=hi5oKhRfomh31nDxAAEz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxngv.0&sid=hi5oKhRfomh31nDxAAEz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=PqhxhdV&sid=c7_v6MkYL_4AFZSGAAC3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=PqhxnnL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxnnf&sid=HCb7wYRkjYwm1ZqZAAE1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxnng&sid=HCb7wYRkjYwm1ZqZAAE1 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:23] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhjn&sid=ZhEMNcX3TLrVWvj1AAC5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxntd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxntw&sid=VNUNLilL-TpVjekQAAE3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxntw.0&sid=VNUNLilL-TpVjekQAAE3 HTTP/1.1" 200 -
+[2026-03-27 02:26:24,350] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhpn&sid=ClCUnAvccNJehAZhAAC7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxnzu HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxn-D&sid=H-zOP9l7BSTEIrfJAAE5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxn-D.0&sid=H-zOP9l7BSTEIrfJAAE5 HTTP/1.1" 200 -
+[2026-03-27 02:26:24,779] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxhw7&sid=sI3CX53qogrQxYfWAAC9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:24] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxo4C HTTP/1.1" 200 -
+[2026-03-27 02:26:25,113] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxo4U&sid=ch3_PKjBbBeJ7jUhAAE7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxo4U.0&sid=ch3_PKjBbBeJ7jUhAAE7 HTTP/1.1" 200 -
+[2026-03-27 02:26:25,152] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /api/auth/me HTTP/1.1" 503 -
+[2026-03-27 02:26:25,153] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxi08&sid=A4Zzjix8QdDPzQgJAAC_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoAZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "POST /socket.io/?EIO=4&transport=polling&t=PqhxoAq&sid=A-50D9caN3OFB4H2AAE9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoAr&sid=A-50D9caN3OFB4H2AAE9 HTTP/1.1" 200 -
+[2026-03-27 02:26:25,563] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxi6S&sid=UcIU6nsUeK_h9t_tAADB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoGh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "POST /socket.io/?EIO=4&transport=polling&t=PqhxoG_&sid=nSmZaqrz5FpUsto6AAE_ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoG_.0&sid=nSmZaqrz5FpUsto6AAE_ HTTP/1.1" 200 -
+[2026-03-27 02:26:25,966] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:25] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiCz&sid=KGdqQT-E--eMMZ13AADD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoN5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "POST /socket.io/?EIO=4&transport=polling&t=PqhxoNP&sid=c06Povhiau-lSQtdAAFB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoNQ&sid=c06Povhiau-lSQtdAAFB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiIY&sid=0C3aY9Gc_fizUprcAADF HTTP/1.1" 200 -
+[2026-03-27 02:26:26,371] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:26,410] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoTU HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "POST /socket.io/?EIO=4&transport=polling&t=PqhxoTl&sid=Po1-QQLD7RoR7tEfAAFD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoTm&sid=Po1-QQLD7RoR7tEfAAFD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiO-&sid=9XHJtID3keB5KIx6AADH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /api/auth/me HTTP/1.1" 200 -
+[2026-03-27 02:26:26,915] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:26,922] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:26] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/admin/revenue HTTP/1.1" 200 -
+[2026-03-27 02:26:27,092] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoZO HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "POST /socket.io/?EIO=4&transport=polling&t=PqhxoZg&sid=9dlI5KF6C-swghOJAAFF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=PqhxoZg.0&sid=9dlI5KF6C-swghOJAAFF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=PqhxiVc&sid=oeQlZqosAipr3HIrAADJ HTTP/1.1" 200 -
+[2026-03-27 02:26:27,216] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=PqhxofP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxofh&sid=LTcuyh8jRWPsBatZAAFH HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxofh.0&sid=LTcuyh8jRWPsBatZAAFH HTTP/1.1" 200 -
+[2026-03-27 02:26:27,558] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/admin/revenue HTTP/1.1[2026-03-27 02:26:27,558] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxic2&sid=ewJii5F2iU8wpy1xAADL HTTP/1.1" 200 -
+[2026-03-27 02:26:27,869] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxola HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxolp&sid=6PcMFEtsMtHzyMDAAAFJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxolp.0&sid=6PcMFEtsMtHzyMDAAAFJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxihc&sid=Z1arjPuJQLG5nZiaAADN HTTP/1.1" 200 -
+[2026-03-27 02:26:27,946] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:27,951] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:27] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxorm HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxos2&sid=xlWBfCjzeGfUGV7oAAFL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxos3&sid=xlWBfCjzeGfUGV7oAAFL HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /socket.io/?EIO=4&transport=polling&t=PqhxinT&sid=X5eJ5MMAg_T4aleNAADP HTTP/1.1" 200 -
+[2026-03-27 02:26:28,337] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxoxs HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxoy8&sid=oCvVJsyJP_IdWnTDAAFN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxoy8.0&sid=oCvVJsyJP_IdWnTDAAFN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxit9&sid=04dEhHb3MmkiOF5YAADR HTTP/1.1" 200 -
+[2026-03-27 02:26:28,729] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:28,796] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:28] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxp2E HTTP/1.1" 200 -
+[2026-03-27 02:26:29,078] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxp2Y&sid=s5s0odPYNKE3wTtrAAFP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxp2Y.0&sid=s5s0odPYNKE3wTtrAAFP HTTP/1.1" 200 -
+[2026-03-27 02:26:29,115] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/auth/me HTTP/1.1[2026-03-27 02:26:29,115] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxi_2&sid=XRKYImz3Ur2IOXe0AADT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxp8O HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxp8g&sid=1aCvADwyEyNYXTfYAAFR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxp8h&sid=1aCvADwyEyNYXTfYAAFR HTTP/1.1" 200 -
+[2026-03-27 02:26:29,539] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:29,547] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxj3t&sid=YDOrZaj2v4-WJ9COAADV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpEl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "POST /socket.io/?EIO=4&transport=polling&t=PqhxpF0&sid=t8BeyfNEGLICbCfFAAFT HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpF0.0&sid=t8BeyfNEGLICbCfFAAFT HTTP/1.1" 200 -
+[2026-03-27 02:26:29,917] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:29,954] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:29] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjBG&sid=x2uTH_On0KWplIhUAADX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpKR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "POST /socket.io/?EIO=4&transport=polling&t=PqhxpKi&sid=lDUQSluA8G1IPv1VAAFV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpKj&sid=lDUQSluA8G1IPv1VAAFV HTTP/1.1" 200 -
+[2026-03-27 02:26:30,330] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /api/auth/me HTTP/1.1" 503 -
+[2026-03-27 02:26:30,367] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjHl&sid=3Z_DzmmYmG6xlcA4AADZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpQg HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "POST /socket.io/?EIO=4&transport=polling&t=PqhxpQ_&sid=dp7mxzKs7avCgiMQAAFX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpQ_.0&sid=dp7mxzKs7avCgiMQAAFX HTTP/1.1" 200 -
+[2026-03-27 02:26:30,725] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:30] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjNZ&sid=o0mOx1hgCyzNRKk9AADb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpWj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "POST /socket.io/?EIO=4&transport=polling&t=PqhxpX0&sid=EKr0U0X9g9JTTN89AAFZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpX0.0&sid=EKr0U0X9g9JTTN89AAFZ HTTP/1.1" 200 -
+[2026-03-27 02:26:31,098] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:31,133] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjUA&sid=qxCSsKm4mPMeptkIAADd HTTP/1.1" 200 -
+[2026-03-27 02:26:31,399] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxpcf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "OPTIONS /api/auth/me HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "OPTIONS /api/admin/revenue HTTP/1.1" 200 -
+[2026-03-27 02:26:31,477] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/auth/me HTTP/1.1" 503 -
+[2026-03-27 02:26:31,506] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "POST /socket.io/?EIO=4&transport=polling&t=PqhxpeH&sid=p5mSO3p6_3vliF8SAAFb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpeH.0&sid=p5mSO3p6_3vliF8SAAFb HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjZx&sid=_L6RDtH6BhwXyWjlAADf HTTP/1.1" 200 -
+[2026-03-27 02:26:31,792] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpjG HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "POST /socket.io/?EIO=4&transport=polling&t=PqhxpjV&sid=X_ck-LeF6EieyzqeAAFd HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpjW&sid=X_ck-LeF6EieyzqeAAFd HTTP/1.1" 200 -
+[2026-03-27 02:26:31,903] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:31,928] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:31] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjfv&sid=bPH5PMfhaPuObB27AADh HTTP/1.1" 200 -
+[2026-03-27 02:26:32,193] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=PqhxppV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxppr&sid=dQYV1r-A67Lj6TrJAAFf HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxppr.0&sid=dQYV1r-A67Lj6TrJAAFf HTTP/1.1" 200 -
+[2026-03-27 02:26:32,280] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /api/auth/me HTTP/1.1" 503 -
+[2026-03-27 02:26:32,335] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjmu&sid=9sthYPGmTC-r-QdrAADj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=PqhxpvM HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxpvg&sid=r4mANW80dHmHF7I1AAFh HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxpvh&sid=r4mANW80dHmHF7I1AAFh HTTP/1.1" 200 -
+[2026-03-27 02:26:32,681] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:32,686] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=PqhxjsP&sid=BSd75visoi_8zcooAADl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:32] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxp_S HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxp_l&sid=qqXiQx9aENi9j2fhAAFj HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxp_l.0&sid=qqXiQx9aENi9j2fhAAFj HTTP/1.1" 200 -
+[2026-03-27 02:26:33,062] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/auth/me HTTP/1.1" 503 -
+[2026-03-27 02:26:33,089] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxjyk&sid=HSJWLbKYAqe1Up_1AADn HTTP/1.1" 200 -
+[2026-03-27 02:26:33,371] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxq5m HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "POST /socket.io/?EIO=4&transport=polling&t=Pqhxq61&sid=mHU7TtU5I1jg-RuIAAFl HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxq61.0&sid=mHU7TtU5I1jg-RuIAAFl HTTP/1.1" 200 -
+[2026-03-27 02:26:33,443] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/auth/me HTTP/1.1" 503 -
+[2026-03-27 02:26:33,444] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk39&sid=bHtony0hVkGcAxH0AADp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/admin/revenue HTTP/1.1" 200 -
+[2026-03-27 02:26:33,790] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqB- HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "POST /socket.io/?EIO=4&transport=polling&t=PqhxqCI&sid=5c4OsSdcTz96AVXUAAFn HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqCJ&sid=5c4OsSdcTz96AVXUAAFn HTTP/1.1" 200 -
+[2026-03-27 02:26:33,842] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:33,848] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:33] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxk8o&sid=vkItXDD3SAfXUg8dAADr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqIe HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "POST /socket.io/?EIO=4&transport=polling&t=PqhxqIv&sid=5PZVGQrbtgjU-bydAAFp HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqIw&sid=5PZVGQrbtgjU-bydAAFp HTTP/1.1" 200 -
+[2026-03-27 02:26:34,254] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkF2&sid=15B9EE4bIfRHWhAjAADt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqO8 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "POST /socket.io/?EIO=4&transport=polling&t=PqhxqOP&sid=6CQ5VL6IzDVFXZXQAAFr HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqOQ&sid=6CQ5VL6IzDVFXZXQAAFr HTTP/1.1" 200 -
+[2026-03-27 02:26:34,670] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:34,674] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkL7&sid=3nwkxuqJoo7p6hd3AADv HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqUX HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "POST /socket.io/?EIO=4&transport=polling&t=PqhxqUp&sid=g6PztHPJelWyME7PAAFt HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:34] "GET /socket.io/?EIO=4&transport=polling&t=PqhxqUq&sid=g6PztHPJelWyME7PAAFt HTTP/1.1" 200 -
+[2026-03-27 02:26:35,053] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkQm&sid=GG0-oeX01oYw850uAADx HTTP/1.1" 200 -
+[2026-03-27 02:26:35,439] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /api/admin/revenue HTTP/1.1[2026-03-27 02:26:35,439] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkYB&sid=NbdQHWtsiCmNFUVMAADz HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkdP&sid=yj707jKfy7tsblOHAAD1 HTTP/1.1" 200 -
+[2026-03-27 02:26:35,919] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 876, in get_admin_revenue
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:35] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:36,059] ERROR in auth: Database unavailable during get profile
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\auth.py", line 400, in get_me
+    cursor = mysql.connection.cursor()
+             ^^^^^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 109, in connection
+    ctx.mysql_db = self.connect
+                   ^^^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\flask_mysqldb\__init__.py", line 97, in connect
+    return MySQLdb.connect(**kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 206, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1040, 'Too many connections')
+127.0.0.1 - - [27/Mar/2026 02:26:36] "GET /api/auth/me HTTP/1.1" 503 -
+127.0.0.1 - - [27/Mar/2026 02:26:36] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkjS&sid=VYkIIZ8UT_yqvE2dAAD3 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:36] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkqE&sid=nHjZs69jSheS4S4uAAD5 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:36] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:37] "GET /socket.io/?EIO=4&transport=polling&t=PqhxkwM&sid=EqJeA-vSNS7HzePDAAD7 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:37] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxl0M&sid=rD2IHnByc5mJ_yMhAAD9 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:37] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxl6R&sid=Mu8XEusadEvDyd1FAAD_ HTTP/1.1" 200 -
+[2026-03-27 02:26:37,921] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:37] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:38] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlCK&sid=pujdM72qPuAD5zctAAEB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:38] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlJF&sid=dT0CIv9nXi-6MvODAAED HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlPH&sid=j6e9MykXJ_2FRfjgAAEF HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlVg&sid=XhjCYjVsd4T0-jqxAAEH HTTP/1.1" 200 -
+[2026-03-27 02:26:39,649] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:39] "[2026-03-27 02:26:39,650] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:39,655] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /api/admin/revenue HTTP/1.1[2026-03-27 02:26:39,655] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:39,662] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:39] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxlc7&sid=nVjdIFXHi00d0sV5AAEJ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:40] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:40] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxli1&sid=fypUdmxBCdGZmBVGAAEL HTTP/1.1" 200 -
+[2026-03-27 02:26:40,649] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:40] "[2026-03-27 02:26:40,652] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:40] "[2026-03-27 02:26:40,655] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:40] "GET /api/admin/revenue HTTP/1.1[2026-03-27 02:26:40,658] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:40] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:40,669] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:40] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:40] "GET /socket.io/?EIO=4&transport=polling&t=PqhxloE&sid=AxLI1FKZGlkn6Ga2AAEN HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:41] "GET /socket.io/?EIO=4&transport=polling&t=PqhxlvR&sid=ALb9Uhq-4pfFVmKdAAEP HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:41] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxl_b&sid=bGbbgwkuZpJMc3wyAAER HTTP/1.1" 200 -
+[2026-03-27 02:26:41,650] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:41] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:41,656] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:41] "[2026-03-27 02:26:41,656] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:41] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:41] "GET /socket.io/?EIO=4&transport=polling&t=Pqhxm6C&sid=mO7mlGN6QrCuH_lYAAET HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:42] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmB-&sid=NGD8ROG46cR2C7PfAAEV HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:42] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmHw&sid=0baI9IIg0CVge1NmAAEX HTTP/1.1" 200 -
+[2026-03-27 02:26:42,869] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:42] "[2026-03-27 02:26:42,872] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:42] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:42,874] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:42] "[2026-03-27 02:26:42,874] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:42] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:42,882] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:42] "GET /api/admin/revenue HTTP/1.1" 500 -
+[2026-03-27 02:26:42,884] ERROR in admin: Failed to fetch admin revenue
+Traceback (most recent call last):
+  File "C:\Projects\ev_charging_system\backend\routes\admin.py", line 877, in get_admin_revenue
+    _ensure_phase5_tables(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 220, in ensure_phase5_tables
+    _ensure_charging_slot_schema(cursor)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Projects\ev_charging_system\backend\services\booking_schema.py", line 83, in _ensure_charging_slot_schema
+    cursor.execute(
+    ~~~~~~~~~~~~~~^
+        """
+        ^^^
+    ...<3 lines>...
+        """
+        ^^^
+    )
+    ^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Projects\ev_charging_system\.venv\Lib\site-packages\MySQLdb\connections.py", line 286, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+127.0.0.1 - - [27/Mar/2026 02:26:42] "GET /api/admin/revenue HTTP/1.1" 500 -
+127.0.0.1 - - [27/Mar/2026 02:26:43] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmON&sid=gWJM110CEOK7BDTMAAEZ HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:43] "GET /api/admin/revenue HTTP/1.1" 200 -
+127.0.0.1 - - [27/Mar/2026 02:26:43] "GET /socket.io/?EIO=4&transport=polling&t=PqhxmUY&sid=llZ0RgjWPKm7xkKFAAEb HTTP/1.1" 200 -

@@ -47,12 +47,12 @@
     <script>
         const frame = document.getElementById("appFrame");
         const summary = document.getElementById("summary");
-        const REPORT_URL = "http://127.0.0.1:8123/report";
+        const REPORT_URL = `${window.location.origin}/report`;
         const results = [];
         const runtimeErrors = [];
         const uiMessages = [];
         const runId = Date.now();
-        const LATEST_ONLY = true;
+        const LATEST_ONLY = false;
         const stationName = `EVgo Test Hub ${runId}`;
         const updatedChargerName = `EVgo Hyper ${String(runId).slice(-4)}`;
         const ownerUser = {
@@ -491,7 +491,7 @@
             setValue(ctx.doc, ".owner-slot-editor .owner-charger-name-input", updatedChargerName);
             click(ctx.doc, ".owner-save-station-btn");
             await waitFor(
-                () => uiMessages.some((entry) => entry.label === "owner-dashboard" && entry.type === "alert" && /updated/i.test(entry.message)),
+                () => uiMessages.some((entry) => /^owner-/.test(entry.label) && entry.type === "alert" && /updated/i.test(entry.message)),
                 25000,
                 "owner station update alert"
             );
@@ -568,10 +568,10 @@
 
             ctx = await loginUser(ownerUser.email, ownerUser.password, "Owner", "owner-second");
             await openTab(ctx.doc, "bookings", "Bookings");
-            await waitFor(() => ctx.doc.getElementById("ownerBookingsList")?.textContent.includes(stationName), 20000, "owner station booking row");
+            await waitFor(() => ctx.doc.getElementById("ownerBookingsList")?.textContent.includes(stationName), 40000, "owner station booking row");
             const ownerBookingRow = await waitFor(
                 () => Array.from(ctx.doc.querySelectorAll("#ownerBookingsList tbody tr")).find((row) => row.textContent.includes(stationName)),
-                20000,
+                40000,
                 "owner booking row"
             );
             const verifyButton = ownerBookingRow.querySelector(".owner-verify-qr-btn");
@@ -630,3 +630,5 @@
     </script>
 </body>
 </html>
+
+

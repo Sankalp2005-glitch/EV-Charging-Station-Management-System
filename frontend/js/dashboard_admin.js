@@ -86,8 +86,17 @@ function buildAdminRevenueScaleOptions(values, options = {}) {
     return scaleOptions;
 }
 
-function formatAdminSessionStatusLabel(status) {
+function normalizeAdminSessionStatusKey(status) {
     const normalized = String(status || "").trim().toLowerCase();
+    const aliases = {
+        completed: "charging_completed",
+        charging: "charging_started",
+    };
+    return aliases[normalized] || normalized;
+}
+
+function formatAdminSessionStatusLabel(status) {
+    const normalized = normalizeAdminSessionStatusKey(status);
     const labels = {
         charging_completed: "Completed",
         completed: "Completed",
@@ -103,7 +112,7 @@ function formatAdminSessionStatusLabel(status) {
 }
 
 function getAdminSessionStatusColor(status) {
-    const normalized = String(status || "").trim().toLowerCase();
+    const normalized = normalizeAdminSessionStatusKey(status);
     const colors = {
         charging_completed: "#0f9f8f",
         completed: "#0f9f8f",
@@ -116,6 +125,17 @@ function getAdminSessionStatusColor(status) {
         pending: "#64748b",
     };
     return colors[normalized] || "#14b8a6";
+}
+
+function formatAdminSessionPercentage(count, total) {
+    const safeCount = Number(count || 0);
+    const safeTotal = Number(total || 0);
+
+    if (safeTotal <= 0) {
+        return "0.00%";
+    }
+
+    return `${((safeCount / safeTotal) * 100).toFixed(2)}%`;
 }
 
 function ensureAnalyticsChartCanvas(shellId, canvasId) {
@@ -1523,11 +1543,35 @@ function renderAdminRevenueCharts(analytics) {
     const sessionDistribution = Array.isArray(analytics?.session_distribution)
         ? analytics.session_distribution.filter((item) => Number(item?.count || 0) > 0)
         : [];
+    const sessionSegments = Array.from(
+        sessionDistribution.reduce((groups, item) => {
+            const count = Number(item?.count || 0);
+            const normalizedStatus = normalizeAdminSessionStatusKey(item?.status) || "pending";
+
+            if (count <= 0) {
+                return groups;
+            }
+
+            const existing = groups.get(normalizedStatus);
+            if (existing) {
+                existing.count += count;
+                return groups;
+            }
+
+            groups.set(normalizedStatus, {
+                status: normalizedStatus,
+                label: formatAdminSessionStatusLabel(normalizedStatus),
+                color: getAdminSessionStatusColor(normalizedStatus),
+                count,
+            });
+            return groups;
+        }, new Map()).values()
+    ).sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
     const monthlyValues = monthlyTrend.map((item) => Number(item.total_revenue || 0));
     const dailyValues = dailyTrend.map((item) => Number(item.total_revenue || 0));
-    const sessionLabels = sessionDistribution.map((item) => formatAdminSessionStatusLabel(item.status));
-    const sessionCounts = sessionDistribution.map((item) => Number(item.count || 0));
-    const sessionColors = sessionDistribution.map((item) => getAdminSessionStatusColor(item.status));
+    const sessionLabels = sessionSegments.map((item) => item.label);
+    const sessionCounts = sessionSegments.map((item) => item.count);
+    const sessionColors = sessionSegments.map((item) => item.color);
     const totalSessions = sessionCounts.reduce((sum, value) => sum + value, 0);
 
     const stationCanvas = document.getElementById("adminRevenuePageStationChart");
@@ -1729,19 +1773,17 @@ function renderAdminRevenueCharts(analytics) {
                                 boxWidth: 12,
                                 padding: 16,
                                 generateLabels: (chart) => {
-                                    const labels = chart.data.labels || [];
-                                    const dataset = chart.data.datasets?.[0];
-                                    const data = Array.isArray(dataset?.data) ? dataset.data : [];
-                                    const colors = Array.isArray(dataset?.backgroundColor) ? dataset.backgroundColor : [];
-                                    const total = data.reduce((sum, value) => sum + Number(value || 0), 0);
+                                    const total = sessionSegments.reduce(
+                                        (sum, item) => sum + Number(item?.count || 0),
+                                        0
+                                    );
 
-                                    return labels.map((label, index) => {
-                                        const count = Number(data[index] || 0);
-                                        const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                                    return sessionSegments.map((item, index) => {
+                                        const count = Number(item.count || 0);
                                         return {
-                                            text: `${label} (${count}, ${percentage}%)`,
-                                            fillStyle: colors[index] || "#14b8a6",
-                                            strokeStyle: colors[index] || "#14b8a6",
+                                            text: `${item.label} (${count} bookings, ${formatAdminSessionPercentage(count, total)})`,
+                                            fillStyle: item.color || "#14b8a6",
+                                            strokeStyle: item.color || "#14b8a6",
                                             lineWidth: 0,
                                             hidden: !chart.getDataVisibility(index),
                                             index,
@@ -1754,8 +1796,10 @@ function renderAdminRevenueCharts(analytics) {
                             callbacks: {
                                 label: (context) => {
                                     const count = Number(context.raw || 0);
-                                    const percentage = totalSessions > 0 ? Math.round((count / totalSessions) * 100) : 0;
-                                    return `${context.label}: ${count} booking${count === 1 ? "" : "s"} (${percentage}%)`;
+                                    return `${context.label}: ${count} booking${count === 1 ? "" : "s"} (${formatAdminSessionPercentage(
+                                        count,
+                                        totalSessions
+                                    )})`;
                                 },
                             },
                         },

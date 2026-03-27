@@ -630,23 +630,31 @@ async function refreshRealtimeViews() {
         return;
     }
 
-    await loadStations();
+    const activeTab =
+        typeof window.getActiveDashboardTabName === "function" ? window.getActiveDashboardTabName() : "dashboard";
+
+    if (typeof window.loadDashboardTabData === "function") {
+        await window.loadDashboardTabData(activeTab, { force: true });
+    } else {
+        await loadStations();
+        if (role === CUSTOMER_ROLE || role === OWNER_ROLE) {
+            await loadMyBookings(bookingViewState.customer);
+        }
+        if (role === OWNER_ROLE) {
+            await loadOwnerStations();
+            await loadOwnerBookings(bookingViewState.owner);
+            await loadOwnerMyBookings(bookingViewState.ownerMine);
+            await loadOwnerStats();
+            await loadOwnerRevenueAnalytics();
+        }
+        if (role === "admin") {
+            await loadAdminStats();
+            await loadAdminRevenueAnalytics();
+        }
+    }
+
     if (dashboardState.openStationId) {
         await toggleSlots(dashboardState.openStationId, dashboardState.openStationName, true);
-    }
-    if (role === CUSTOMER_ROLE || role === OWNER_ROLE) {
-        await loadMyBookings(bookingViewState.customer);
-    }
-    if (role === OWNER_ROLE) {
-        await loadOwnerStations();
-        await loadOwnerBookings(bookingViewState.owner);
-        await loadOwnerMyBookings(bookingViewState.ownerMine);
-        await loadOwnerStats();
-        await loadOwnerRevenueAnalytics();
-    }
-    if (role === "admin") {
-        await loadAdminStats();
-        await loadAdminRevenueAnalytics();
     }
     refreshChargingProgressWidgets();
 }
@@ -751,7 +759,8 @@ async function apiRequest(path, options = {}, useAuth = false) {
 
         return payload;
     } catch (error) {
-        if (error?.name === "AbortError") {
+        const errorMessage = String(error?.message || "").toLowerCase();
+        if (error?.name === "AbortError" || errorMessage.includes("signal is aborted")) {
             error.silent = true;
         }
         throw error;
