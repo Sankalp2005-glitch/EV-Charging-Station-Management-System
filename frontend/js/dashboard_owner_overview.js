@@ -754,6 +754,11 @@ function renderOwnerBookings(bookings) {
     const rows = bookings
         .map((booking) => {
             const actions = [];
+            if (booking.can_show_qr) {
+                actions.push(
+                    `<button class="btn btn-outline-primary btn-sm" type="button" onclick="showBookingQr(${booking.booking_id})">Show QR</button>`
+                );
+            }
             if (booking.can_verify_qr) {
                 actions.push(
                     `<button

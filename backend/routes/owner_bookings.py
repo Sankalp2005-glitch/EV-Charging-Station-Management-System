@@ -4,7 +4,7 @@ from flask import Blueprint, current_app, jsonify, request
 
 from extensions import mysql
 from services.booking_config import BOOKING_STATUS_WAITING_TO_START
-from services.booking_mutations import is_booking_ready_for_qr_verification
+from services.booking_mutations import is_booking_qr_accessible, is_booking_ready_for_qr_verification
 from services.charging_profiles import build_live_charging_snapshot, format_duration_human
 from services.booking_lifecycle import (
     emit_lifecycle_updates as _emit_lifecycle_updates,
@@ -287,6 +287,7 @@ def get_owner_bookings(current_user):
         status = _to_str(row[16])
         payment_status = (_to_str(row[4]) or "pending").lower()
         payment_method = (_to_str(row[5]) or "").lower() or None
+        is_owner_booking = int(row[1]) == int(current_user["user_id"])
         is_managed_station = int(row[8] or 0) == int(current_user["user_id"])
         charging_started_at = row[17]
         charging_completed_at = row[18]
@@ -313,7 +314,7 @@ def get_owner_bookings(current_user):
                 "customer_id": row[1],
                 "customer_name": _to_str(row[2]),
                 "customer_email": _to_str(row[3]),
-                "is_owner_booking": int(row[1]) == int(current_user["user_id"]),
+                "is_owner_booking": is_owner_booking,
                 "is_managed_station": is_managed_station,
                 "payment_status": payment_status,
                 "station_id": row[6],
@@ -329,6 +330,13 @@ def get_owner_bookings(current_user):
                 "duration_display": format_duration_human(duration_minutes),
                 "status": status,
                 "can_cancel": can_cancel,
+                "can_show_qr": is_owner_booking and is_booking_qr_accessible(
+                    status,
+                    row[15],
+                    payment_method,
+                    payment_status,
+                    now=now,
+                ),
                 "can_verify_qr": is_managed_station and is_booking_ready_for_qr_verification(
                     status,
                     row[14],
