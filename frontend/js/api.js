@@ -425,12 +425,38 @@ function getLiveChargingProgressSnapshot(entity = {}) {
         );
     }
 
+    let displayBatteryPercent = null;
+    if (state === "completed") {
+        if (Number.isFinite(targetBatteryPercent)) {
+            displayBatteryPercent = targetBatteryPercent;
+        } else if (estimatedBatteryPercent !== null) {
+            displayBatteryPercent = estimatedBatteryPercent;
+        } else if (Number.isFinite(currentBatteryPercent)) {
+            displayBatteryPercent = currentBatteryPercent;
+        } else {
+            displayBatteryPercent = 100;
+        }
+    } else if (state === "charging") {
+        if (estimatedBatteryPercent !== null) {
+            displayBatteryPercent = estimatedBatteryPercent;
+        } else if (Number.isFinite(currentBatteryPercent)) {
+            displayBatteryPercent = currentBatteryPercent;
+        }
+    } else if (Number.isFinite(currentBatteryPercent)) {
+        displayBatteryPercent = currentBatteryPercent;
+    }
+
+    if (displayBatteryPercent !== null) {
+        displayBatteryPercent = Math.max(0, Math.min(displayBatteryPercent, 100));
+    }
+
     return {
         state,
         progressPercent: Math.max(0, Math.min(progressPercent, 100)),
         remainingMinutes,
         estimatedCompletionTime,
         estimatedBatteryPercent,
+        displayBatteryPercent,
         currentBatteryPercent: Number.isFinite(currentBatteryPercent) ? currentBatteryPercent : null,
         targetBatteryPercent: Number.isFinite(targetBatteryPercent) ? targetBatteryPercent : null,
         durationMinutes,
@@ -495,12 +521,12 @@ function refreshChargingProgressWidgets(root = document) {
         card.classList.toggle("charging-progress-card--completed", snapshot.state === "completed");
 
         if (fillEl) {
-            fillEl.style.width = `${snapshot.progressPercent}%`;
+            fillEl.style.width = `${snapshot.displayBatteryPercent ?? 0}%`;
         }
 
         if (snapshot.state === "completed") {
             if (percentEl) {
-                percentEl.innerText = "100%";
+                percentEl.innerText = `${Math.round(snapshot.displayBatteryPercent ?? 100)}%`;
             }
             if (batteryEl) {
                 batteryEl.innerText =
@@ -518,14 +544,16 @@ function refreshChargingProgressWidgets(root = document) {
 
         if (snapshot.state === "charging") {
             if (percentEl) {
-                percentEl.innerText = `${Math.round(snapshot.progressPercent)}%`;
+                percentEl.innerText = `${Math.round(snapshot.displayBatteryPercent ?? 0)}%`;
             }
             if (batteryEl) {
                 batteryEl.innerText =
-                    snapshot.estimatedBatteryPercent !== null && snapshot.targetBatteryPercent !== null
-                        ? `${Math.round(snapshot.estimatedBatteryPercent)}% now | target ${Math.round(
+                    snapshot.displayBatteryPercent !== null && snapshot.targetBatteryPercent !== null
+                        ? `${Math.round(snapshot.displayBatteryPercent)}% now | target ${Math.round(
                               snapshot.targetBatteryPercent
                           )}%`
+                        : snapshot.displayBatteryPercent !== null
+                        ? `${Math.round(snapshot.displayBatteryPercent)}% battery now`
                         : "Charging in progress";
             }
             if (etaEl) {
@@ -539,11 +567,15 @@ function refreshChargingProgressWidgets(root = document) {
         }
 
         if (percentEl) {
-            percentEl.innerText = "0%";
+            percentEl.innerText = `${Math.round(snapshot.displayBatteryPercent ?? 0)}%`;
         }
         if (batteryEl) {
             batteryEl.innerText =
-                snapshot.targetBatteryPercent !== null
+                snapshot.displayBatteryPercent !== null && snapshot.targetBatteryPercent !== null
+                    ? `${Math.round(snapshot.displayBatteryPercent)}% now | target ${Math.round(
+                          snapshot.targetBatteryPercent
+                      )}%`
+                    : snapshot.targetBatteryPercent !== null
                     ? `Ready to charge to ${Math.round(snapshot.targetBatteryPercent)}%`
                     : "Waiting for owner verification";
         }

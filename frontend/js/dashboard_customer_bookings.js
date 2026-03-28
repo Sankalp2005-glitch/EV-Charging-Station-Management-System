@@ -589,25 +589,6 @@ function renderBookingQrPayload(qrPayload, bookingIdOverride = null) {
         if (!showBookingQrImage(image, canvas, qrImageDataUrl)) {
             setBookingQrRenderStatus("Unable to display the QR image. Use the QR value below for confirmation.");
         }
-    } else if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
-        window.QRCode.toCanvas(
-            canvas,
-            qrValue,
-            {
-                width: 260,
-                margin: 2,
-                errorCorrectionLevel: "M",
-                color: {
-                    dark: "#0f172a",
-                    light: "#ffffff",
-                },
-            },
-            (error) => {
-                if (error) {
-                    setBookingQrRenderStatus("Unable to render the QR image. Use the QR value below for confirmation.");
-                }
-            }
-        );
     } else if (bookingId && qrImageAvailable) {
         loadBookingQrImageFallback(bookingId, image, canvas);
     } else {

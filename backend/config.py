@@ -224,3 +224,23 @@ def get_cors_allowed_origins():
             "Set it to your deployed Vercel frontend URL."
         )
     return LOCAL_FRONTEND_ORIGINS
+
+
+def get_support_admin_email():
+    return _clean_env(os.getenv("SUPPORT_ADMIN_EMAIL")) or _clean_env(os.getenv("ADMIN_EMAIL"))
+
+
+def get_support_from_email():
+    return _clean_env(os.getenv("SUPPORT_FROM_EMAIL")) or get_support_admin_email()
+
+
+def get_smtp_settings():
+    return {
+        "host": _clean_env(os.getenv("SMTP_HOST")),
+        "port": int(_clean_env(os.getenv("SMTP_PORT")) or 587),
+        "username": _clean_env(os.getenv("SMTP_USERNAME")),
+        "password": _clean_env(os.getenv("SMTP_PASSWORD")),
+        "use_tls": _is_truthy(os.getenv("SMTP_USE_TLS")) or not _is_truthy(os.getenv("SMTP_USE_SSL")),
+        "use_ssl": _is_truthy(os.getenv("SMTP_USE_SSL")),
+        "timeout": int(_clean_env(os.getenv("SMTP_TIMEOUT")) or 15),
+    }

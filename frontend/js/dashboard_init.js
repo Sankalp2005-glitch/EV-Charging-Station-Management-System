@@ -1,6 +1,7 @@
 function setupDashboardRoleSections() {
     const role = getRole();
     const openProfileBtn = document.getElementById("openProfileBtn");
+    const openSupportBtn = document.getElementById("openSupportBtn");
     const customerDashboardSection = document.getElementById("customerDashboardSection");
     const ownerDashboardSection = document.getElementById("ownerDashboardSection");
     const adminDashboardSection = document.getElementById("adminDashboardSection");
@@ -12,6 +13,9 @@ function setupDashboardRoleSections() {
 
     if (openProfileBtn) {
         openProfileBtn.style.display = role ? "inline-flex" : "none";
+    }
+    if (openSupportBtn) {
+        openSupportBtn.style.display = role === CUSTOMER_ROLE || role === OWNER_ROLE ? "inline-flex" : "none";
     }
 
     if (customerDashboardSection) {
@@ -42,6 +46,9 @@ function setupDashboardRoleSections() {
     document.querySelectorAll(".admin-only").forEach((element) => {
         element.style.display = role === "admin" ? "" : "none";
     });
+    document.querySelectorAll(".member-only").forEach((element) => {
+        element.style.display = role === CUSTOMER_ROLE || role === OWNER_ROLE ? "" : "none";
+    });
 }
 
 const dashboardDataGroupLoaded = Object.create(null);
@@ -58,6 +65,9 @@ function getDashboardDataGroupsForTab(role, tabName) {
         if (tabName === "bookings") {
             return ["customerBookings"];
         }
+        if (tabName === "support") {
+            return ["memberSupport"];
+        }
         return [];
     }
 
@@ -70,6 +80,9 @@ function getDashboardDataGroupsForTab(role, tabName) {
         }
         if (tabName === "bookings") {
             return ["ownerStations", "ownerBookings", "ownerBookingPane"];
+        }
+        if (tabName === "support") {
+            return ["memberSupport"];
         }
         return [];
     }
@@ -126,6 +139,10 @@ function runDashboardDataGroupLoad(groupKey) {
             return Promise.resolve(loadAdminBookings());
         case "adminRevenue":
             return Promise.resolve(loadAdminRevenuePage());
+        case "memberSupport":
+            return typeof window.loadSupportRequests === "function"
+                ? Promise.resolve(window.loadSupportRequests())
+                : Promise.resolve();
         default:
             return Promise.resolve();
     }
@@ -317,6 +334,10 @@ async function initDashboard() {
     document.getElementById("refreshOwnerStations")?.addEventListener("click", loadOwnerStations);
     document.getElementById("createStationForm")?.addEventListener("submit", handleCreateStation);
     document.getElementById("profileForm")?.addEventListener("submit", handleProfileUpdate);
+    document.getElementById("supportRequestForm")?.addEventListener("submit", submitSupportRequest);
+    document.getElementById("refreshSupportRequestsBtn")?.addEventListener("click", () =>
+        loadSupportRequests()
+    );
     document.getElementById("openProfileBtn")?.addEventListener("click", () => {
         openProfileSection(false);
         loadMyProfile();

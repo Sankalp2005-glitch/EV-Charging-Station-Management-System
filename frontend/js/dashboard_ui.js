@@ -2,6 +2,7 @@ const DASHBOARD_TITLES = {
     dashboard: "Dashboard",
     stations: "Stations",
     bookings: "Bookings",
+    support: "Help",
     profile: "Profile",
     "admin-users": "User Management",
     "admin-stations": "Station Management",
@@ -609,6 +610,9 @@ function resolveInitialTab(savedTab) {
     }
     const role = typeof getRole === "function" ? getRole() : null;
     if (tabSection.classList.contains("admin-only") && role !== "admin") {
+        return "dashboard";
+    }
+    if (tabSection.classList.contains("member-only") && ![CUSTOMER_ROLE, OWNER_ROLE].includes(role)) {
         return "dashboard";
     }
     return candidate;

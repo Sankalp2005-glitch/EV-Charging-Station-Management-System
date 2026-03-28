@@ -74,6 +74,7 @@ from routes.booking import booking_bp
 from routes.admin import admin_bp
 from routes.owner import owner_bp   
 from routes.owner_bookings import owner_bookings_bp
+from routes.support import support_bp
 from routes.stations import stations_bp
 
 app.register_blueprint(auth_bp)
@@ -81,6 +82,7 @@ app.register_blueprint(booking_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(owner_bp)
 app.register_blueprint(owner_bookings_bp)
+app.register_blueprint(support_bp)
 app.register_blueprint(stations_bp)
 
 

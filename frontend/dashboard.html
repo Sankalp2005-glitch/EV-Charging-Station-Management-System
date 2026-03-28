@@ -43,6 +43,10 @@
                     <i class="bi bi-calendar2-check-fill"></i>
                     <span>Bookings</span>
                 </button>
+                    <button type="button" class="sidebar-link member-only" data-tab="support">
+                        <i class="bi bi-life-preserver"></i>
+                        <span>Help</span>
+                    </button>
                     <button type="button" class="sidebar-link" data-tab="profile">
                         <i class="bi bi-person-badge-fill"></i>
                         <span>Profile</span>
@@ -115,6 +119,10 @@
                         <i class="bi bi-broadcast-pin"></i>
                         <span>Realtime sync</span>
                     </div>
+                    <button id="openSupportBtn" class="btn btn-outline-secondary profile-trigger member-only" type="button" data-tab-trigger="support">
+                        <i class="bi bi-life-preserver"></i>
+                        <span>Help</span>
+                    </button>
                     <button id="openProfileBtn" class="btn btn-outline-primary profile-trigger" type="button">
                         <i class="bi bi-person-circle"></i>
                         <span>Profile</span>
@@ -972,6 +980,108 @@
                         </form>
                     </div>
                 </section>
+
+                <section id="supportTab" class="dashboard-tab tab-content member-only" style="display:none;">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-7">
+                            <div class="surface-card surface-card--padded h-100">
+                                <div class="section-heading">
+                                    <div>
+                                        <span class="section-heading__eyebrow">Support</span>
+                                        <h4 class="section-heading__title mb-1">Contact the system admin</h4>
+                                        <p class="section-heading__text mb-0">Report booking, charging, payment, or station issues. Each request gets a ticket number and can be emailed to the system admin automatically.</p>
+                                    </div>
+                                </div>
+                                <div id="supportFeedback" class="support-feedback" role="status" aria-live="polite"></div>
+                                <form id="supportRequestForm" class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="supportCategory">Issue category</label>
+                                        <select id="supportCategory" name="category" class="form-select" required>
+                                            <option value="charging">Charging issue</option>
+                                            <option value="booking">Booking issue</option>
+                                            <option value="payment">Payment issue</option>
+                                            <option value="station">Station listing issue</option>
+                                            <option value="account">Account access</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="supportPriority">Priority</label>
+                                        <select id="supportPriority" name="priority" class="form-select" required>
+                                            <option value="normal">Normal</option>
+                                            <option value="high">High</option>
+                                            <option value="urgent">Urgent</option>
+                                            <option value="low">Low</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label" for="supportSubject">Subject</label>
+                                        <input id="supportSubject" name="subject" class="form-control" type="text" maxlength="160" placeholder="Example: Charging session did not update after verification" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="supportBookingId">Booking ID</label>
+                                        <input id="supportBookingId" name="booking_id" class="form-control" type="number" min="1" placeholder="Optional">
+                                        <p class="form-helper-text mb-0">Use this when the issue is tied to a specific reservation.</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="supportStationId">Station ID</label>
+                                        <input id="supportStationId" name="station_id" class="form-control" type="number" min="1" placeholder="Optional">
+                                        <p class="form-helper-text mb-0">Helpful for owner station issues or listing mismatches.</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label" for="supportMessage">What happened?</label>
+                                        <textarea id="supportMessage" name="message" class="form-control" rows="7" maxlength="4000" placeholder="Describe what you were trying to do, what you expected, and what happened instead." required></textarea>
+                                    </div>
+                                    <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
+                                        <button id="supportSubmitBtn" type="submit" class="btn btn-primary">
+                                            <i class="bi bi-send"></i>
+                                            Send to admin
+                                        </button>
+                                        <span class="form-helper-text mb-0">We use your signed-in account email as the reply contact.</span>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-5">
+                            <div class="surface-card surface-card--padded mb-4">
+                                <div class="section-heading section-heading--compact">
+                                    <div>
+                                        <span class="section-heading__eyebrow">Good requests</span>
+                                        <h4 class="section-heading__title mb-1">What support teams need</h4>
+                                    </div>
+                                </div>
+                                <div class="support-guidance-list">
+                                    <div class="support-guidance-item">
+                                        <strong>Point to the exact workflow step.</strong>
+                                        <p class="mb-0">For example: payment succeeded but QR stayed locked, charger activated with the wrong battery value, or station changes are not visible.</p>
+                                    </div>
+                                    <div class="support-guidance-item">
+                                        <strong>Add IDs when you have them.</strong>
+                                        <p class="mb-0">Booking and station references help the admin review logs and database records quickly.</p>
+                                    </div>
+                                    <div class="support-guidance-item">
+                                        <strong>Use urgent for active blockers only.</strong>
+                                        <p class="mb-0">That keeps live charging failures and payment problems visible during operations.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="surface-card surface-card--padded">
+                                <div class="section-heading">
+                                    <div>
+                                        <span class="section-heading__eyebrow">History</span>
+                                        <h4 class="section-heading__title mb-1">Recent support requests</h4>
+                                        <p class="section-heading__text mb-0">Track your latest tickets and reuse the ticket number when following up.</p>
+                                    </div>
+                                    <button id="refreshSupportRequestsBtn" class="btn btn-outline-secondary btn-sm" type="button">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                        Refresh
+                                    </button>
+                                </div>
+                                <div id="supportRequestsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
 
             <div id="adminBookingModal" class="modal-overlay" aria-hidden="true">
@@ -993,12 +1103,12 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/runtime-config.js"></script>
     <script src="js/shared.js"></script>
     <script src="js/api.js"></script>
     <script src="js/dashboard_profile.js"></script>
+    <script src="js/dashboard_support.js"></script>
     <script src="js/dashboard_customer_stations.js"></script>
     <script src="js/dashboard_customer_bookings.js"></script>
     <script src="js/dashboard_owner_editor.js"></script>

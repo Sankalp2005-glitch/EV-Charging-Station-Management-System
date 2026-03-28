@@ -23,6 +23,7 @@ The app supports three main roles:
 - Station owner management for stations, chargers, and bookings
 - Admin approval and oversight views
 - QR-based booking confirmation and owner-side verification
+- Customer and owner help workflow with ticketed support requests
 - Real-time booking updates with Socket.IO
 - MySQL-backed persistence for operational data
 
@@ -159,6 +160,15 @@ Common backend environment variables:
 - `MYSQL_SSL_MODE`
 - `FRONTEND_ORIGIN`
 - `CORS_ALLOWED_ORIGINS`
+- `SUPPORT_ADMIN_EMAIL`
+- `SUPPORT_FROM_EMAIL`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `SMTP_USE_TLS`
+- `SMTP_USE_SSL`
+- `SMTP_TIMEOUT`
 
 ## Deployment
 
