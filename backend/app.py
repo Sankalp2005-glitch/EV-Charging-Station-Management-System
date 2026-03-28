@@ -1,6 +1,7 @@
-try:
-    import eventlet
+from importlib import import_module
 
+try:
+    eventlet = import_module("eventlet")
     eventlet.monkey_patch()
 except Exception:  # pragma: no cover - eventlet patching is environment-specific.
     eventlet = None
@@ -72,7 +73,7 @@ app.teardown_appcontext_funcs = [
 from routes.auth import auth_bp
 from routes.booking import booking_bp
 from routes.admin import admin_bp
-from routes.owner import owner_bp   
+from routes.owner import owner_bp
 from routes.owner_bookings import owner_bookings_bp
 from routes.support import support_bp
 from routes.stations import stations_bp
